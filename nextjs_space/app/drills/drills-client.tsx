@@ -4,15 +4,28 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { staggerContainer, fadeInUp, cardHover, buttonVariants } from '@/lib/animations';
 import { BottomNav } from '@/components/bottom-nav';
-import { Target, Search } from 'lucide-react';
+import { Target, Search, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { DrillCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
+import { useRouter } from 'next/navigation';
+import { triggerHaptic } from '@/lib/mobile-utils';
 
 export function DrillsClient({ drills }: any) {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  const { scrollableRef, pullDistance, isRefreshing, isReady } = usePullToRefresh({
+    onRefresh: async () => {
+      triggerHaptic('medium');
+      router.refresh();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    },
+    threshold: 80,
+  });
 
   const categories = ['All', 'Anchor', 'Engine', 'Whip', 'Tempo', 'General'];
 
@@ -59,7 +72,25 @@ export function DrillsClient({ drills }: any) {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a2332] pb-20">
+    <div ref={scrollableRef} className="min-h-screen bg-[#1a2332] pb-20 overflow-y-auto scroll-container">
+      {/* Pull to Refresh Indicator */}
+      <div 
+        className="flex items-center justify-center transition-all duration-200"
+        style={{ 
+          height: `${pullDistance}px`,
+          opacity: pullDistance > 0 ? 1 : 0,
+        }}
+      >
+        <motion.div
+          animate={{ rotate: isRefreshing ? 360 : 0 }}
+          transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: 'linear' }}
+        >
+          <RefreshCw 
+            className={`w-5 h-5 ${isReady ? 'text-[#2196F3]' : 'text-gray-400'}`}
+          />
+        </motion.div>
+      </div>
+
       <div className="p-6 max-w-7xl mx-auto">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
