@@ -8,7 +8,7 @@ export default async function VideoListPage() {
   const session = await getServerSession(authOptions);
   
   if (!session) {
-    redirect('/auth/login');
+    redirect('/welcome');
   }
 
   const videos = await prisma.video.findMany({

@@ -12,9 +12,10 @@ datasource db {
 model User {
   id              String    @id @default(uuid())
   username        String    @unique
-  password        String
+  password        String?   // Optional - Phase 5 will use Whop OAuth instead
   email           String?
   name            String?
+  whopUserId      String?   @unique  // For Phase 5 Whop integration
   
   // Profile data from onboarding
   dateOfBirth     DateTime?

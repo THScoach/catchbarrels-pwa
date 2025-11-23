@@ -4,6 +4,9 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from './db';
 import bcrypt from 'bcryptjs';
 
+// PHASE 1: Simple credentials auth for prototype
+// PHASE 5: Will add Whop OAuth provider here for subscription management
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -26,6 +29,11 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Handle optional password (for future Whop OAuth users)
+        if (!user.password) {
+          return null;
+        }
+
         const isValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValid) {
@@ -40,13 +48,18 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
+    // Phase 5: Add Whop OAuth provider here
+    // WhopProvider({
+    //   clientId: process.env.WHOP_CLIENT_ID,
+    //   clientSecret: process.env.WHOP_CLIENT_SECRET,
+    // }),
   ],
   session: {
     strategy: 'jwt',
   },
   pages: {
-    signIn: '/auth/login',
-    signOut: '/auth/login',
+    signIn: '/welcome',
+    signOut: '/welcome',
   },
   callbacks: {
     async jwt({ token, user }) {

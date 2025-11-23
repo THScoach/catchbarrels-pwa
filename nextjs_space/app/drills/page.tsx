@@ -8,7 +8,7 @@ export default async function DrillsPage() {
   const session = await getServerSession(authOptions);
   
   if (!session) {
-    redirect('/auth/login');
+    redirect('/welcome');
   }
 
   const drills = await prisma.drill.findMany({

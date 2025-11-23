@@ -8,7 +8,7 @@ export default async function DrillDetailPage({ params }: { params: { id: string
   const session = await getServerSession(authOptions);
   
   if (!session) {
-    redirect('/auth/login');
+    redirect('/welcome');
   }
 
   const drill = await prisma.drill.findUnique({

@@ -8,7 +8,7 @@ export default async function ProgressPage() {
   const session = await getServerSession(authOptions);
   
   if (!session) {
-    redirect('/auth/login');
+    redirect('/welcome');
   }
 
   const progress = await prisma.progressEntry.findMany({
