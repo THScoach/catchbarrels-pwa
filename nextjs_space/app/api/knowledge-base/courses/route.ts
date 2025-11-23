@@ -29,11 +29,9 @@ export async function GET(request: NextRequest) {
     // Filter by visibility
     if (visibility) {
       where.visibility = visibility;
-    } else {
-      // Default: show athlete-facing content to regular users
-      // TODO: Add admin role check to show all content to admins
-      where.visibility = 'athlete';
     }
+    // If no visibility filter is provided, show all courses
+    // This allows the admin panel to see everything
 
     // Filter by category
     if (category) {

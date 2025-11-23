@@ -36,7 +36,8 @@ export default function KnowledgeBaseAdminClient() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/knowledge-base/courses?visibility=admin&includeModules=true');
+      // Admin panel should show ALL courses regardless of visibility
+      const response = await fetch('/api/knowledge-base/courses?includeModules=true');
       const data = await response.json();
       setCourses(data.courses || []);
     } catch (error) {
