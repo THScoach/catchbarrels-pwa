@@ -1,0 +1,127 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/barrels_pwa/nextjs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  username        String    @unique
+  password        String
+  email           String?
+  name            String?
+  
+  // Profile data from onboarding
+  dateOfBirth     DateTime?
+  height          Int?      // inches
+  weight          Int?      // lbs
+  bats            String?   // "Right", "Left", "Switch"
+  throws          String?   // "Right", "Left"
+  position        String?
+  level           String?   // "Youth (8-12)", "High School (13-18)", etc.
+  batLength       Int?      // inches
+  batWeight       Int?      // oz
+  batType         String?
+  
+  // Psychological questionnaire
+  struggles       String[]  @default([])
+  goals           String[]  @default([])
+  mentalApproach  String?   // "Aggressive", "Selective", "Balanced"
+  confidenceLevel Int?      // 1-10
+  
+  profileComplete Boolean   @default(false)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  videos          Video[]
+  drillProgress   DrillProgress[]
+}
+
+model Video {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title           String    @default("My Swing")
+  videoUrl        String    // Mock URL for prototype
+  thumbnailUrl    String?   // Mock thumbnail
+  
+  // Analysis data (mock for prototype)
+  analyzed        Boolean   @default(false)
+  anchorScore     Int?      // 0-100
+  rotationScore   Int?      // 0-100
+  rearElbowScore  Int?      // 0-100
+  launchScore     Int?      // 0-100
+  sequenceScore   Int?      // 0-100
+  balanceScore    Int?      // 0-100
+  overallScore    Int?      // 0-100
+  tier            String?   // "Beginner", "JV", "Varsity", "College", "Pro"
+  
+  exitVelocity    Int?      // mph
+  
+  // AI Coach feedback
+  coachFeedback   String?
+  
+  uploadDate      DateTime  @default(now())
+  
+  @@index([userId, uploadDate])
+}
+
+model Drill {
+  id              String    @id @default(uuid())
+  name            String    @unique
+  source          String
+  category        String    // "Balance", "Anchor", "Rotation", etc.
+  primaryPurpose  String
+  setup           String    @db.Text
+  execution       String    @db.Text
+  keyPoints       String[]  @default([])
+  commonMistakes  String[]  @default([])
+  equipment       String[]  @default([])
+  targetSkills    String[]  @default([])
+  difficulty      String    // "Beginner", "Intermediate", "Advanced"
+  videoUrl        String?   // Mock video URL
+  thumbnailUrl    String?
+  
+  progress        DrillProgress[]
+}
+
+model DrillProgress {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  drillId     String
+  drill       Drill     @relation(fields: [drillId], references: [id], onDelete: Cascade)
+  
+  completed   Boolean   @default(false)
+  reps        Int?
+  sets        Int?
+  notes       String?
+  
+  completedAt DateTime  @default(now())
+  
+  @@index([userId, drillId])
+}
+
+model ProgressEntry {
+  id              String    @id @default(uuid())
+  userId          String
+  date            DateTime  @default(now())
+  
+  // Weekly averages (mock data for prototype)
+  avgBalance      Int
+  avgAnchor       Int
+  avgRotation     Int
+  avgRearElbow    Int
+  avgLaunch       Int
+  avgSequence     Int
+  avgOverall      Int
+  
+  @@index([userId, date])
+}

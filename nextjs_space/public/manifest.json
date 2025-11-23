@@ -1,0 +1,19 @@
+{
+  "name": "BARRELS Baseball Training",
+  "short_name": "BARRELS",
+  "description": "AI-Powered Baseball Swing Analysis & Training",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#1a2332",
+  "theme_color": "#2196F3",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "health", "education"]
+}
