@@ -1,36 +1,58 @@
 import { PrismaClient } from '@prisma/client';
-import * as dotenv from 'dotenv';
 
-dotenv.config();
 const prisma = new PrismaClient();
 
-async function checkLessons() {
-  // Search for "Launch Angle Ladder" lesson
-  const lessons = await prisma.lesson.findMany({
-    where: {
-      title: {
-        contains: 'Launch',
-        mode: 'insensitive',
-      },
-    },
+async function main() {
+  console.log('\n📚 Checking current lesson library...\n');
+
+  const courses = await prisma.course.findMany({
     include: {
-      module: {
+      modules: {
         include: {
-          course: {
-            select: {
-              title: true,
-              published: true,
-              visibility: true,
-            },
-          },
-        },
-      },
+          lessons: true
+        }
+      }
     },
+    orderBy: { title: 'asc' }
   });
 
-  console.log('Found lessons:', JSON.stringify(lessons, null, 2));
-  
-  await prisma.$disconnect();
+  console.log(`Total Courses: ${courses.length}\n`);
+
+  for (const course of courses) {
+    const lessonCount = course.modules.reduce((sum, m) => sum + m.lessons.length, 0);
+    console.log(`📖 ${course.title}`);
+    console.log(`   Category: ${course.category || 'General'}`);
+    console.log(`   Modules: ${course.modules.length}`);
+    console.log(`   Lessons: ${lessonCount}`);
+    
+    // Show first few lesson titles
+    const allLessons = course.modules.flatMap(m => m.lessons);
+    if (allLessons.length > 0) {
+      console.log(`   Sample lessons:`);
+      allLessons.slice(0, 3).forEach(l => {
+        console.log(`     - ${l.title}`);
+      });
+    }
+    console.log('');
+  }
+
+  // Summary
+  const totalModules = courses.reduce((sum, c) => sum + c.modules.length, 0);
+  const totalLessons = courses.reduce((sum, c) => 
+    sum + c.modules.reduce((mSum, m) => mSum + m.lessons.length, 0), 0
+  );
+
+  console.log(`\n📊 Summary:`);
+  console.log(`   ${courses.length} courses`);
+  console.log(`   ${totalModules} modules`);
+  console.log(`   ${totalLessons} lessons`);
 }
 
-checkLessons().catch(console.error);
+main()
+  .catch((e) => {
+    console.error('Error:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
