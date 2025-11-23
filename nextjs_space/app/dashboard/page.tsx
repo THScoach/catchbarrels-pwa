@@ -35,6 +35,27 @@ export default async function DashboardPage() {
     overall: latestVideo?.overallScore || 0,
     tier: latestVideo?.tier || 'Developing',
     exitVelocity: latestVideo?.exitVelocity || 0,
+    // Anchor subcategories
+    anchorSubs: {
+      stance: latestVideo?.anchorStance || 0,
+      weightShift: latestVideo?.anchorWeightShift || 0,
+      groundConnection: latestVideo?.anchorGroundConnection || 0,
+      lowerBodyMechanics: latestVideo?.anchorLowerBodyMechanics || 0,
+    },
+    // Engine subcategories
+    engineSubs: {
+      hipRotation: latestVideo?.engineHipRotation || 0,
+      separation: latestVideo?.engineSeparation || 0,
+      corePower: latestVideo?.engineCorePower || 0,
+      torsoMechanics: latestVideo?.engineTorsoMechanics || 0,
+    },
+    // Whip subcategories
+    whipSubs: {
+      armPath: latestVideo?.whipArmPath || 0,
+      batSpeed: latestVideo?.whipBatSpeed || 0,
+      batPath: latestVideo?.whipBatPath || 0,
+      connection: latestVideo?.whipConnection || 0,
+    },
   };
 
   return <DashboardClient user={user} scores={scores} videos={user?.videos || []} />;

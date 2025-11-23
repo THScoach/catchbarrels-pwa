@@ -151,9 +151,45 @@ export function VideoDetailClient({ video }: any) {
                 <div>
                   <h2 className="text-lg font-semibold text-white mb-4">Body Metrics Breakdown</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <ScoreCard title="Anchor" score={video.anchor} icon="⚓" description="Lower Body" />
-                    <ScoreCard title="Engine" score={video.engine} icon="🔄" description="Trunk/Core" />
-                    <ScoreCard title="Whip" score={video.whip} icon="⚡" description="Arms & Bat" />
+                    <ScoreCard 
+                      title="Anchor" 
+                      score={video.anchor} 
+                      icon="⚓" 
+                      description="Lower Body" 
+                      color="blue"
+                      subCategories={[
+                        { name: 'Stance/Setup', score: video.anchorStance || 0, description: 'Initial position quality' },
+                        { name: 'Weight Shift', score: video.anchorWeightShift || 0, description: 'Weight transfer efficiency' },
+                        { name: 'Ground Connection', score: video.anchorGroundConnection || 0, description: 'Ground force utilization' },
+                        { name: 'Lower Body Mechanics', score: video.anchorLowerBodyMechanics || 0, description: 'Overall leg movement' },
+                      ]}
+                    />
+                    <ScoreCard 
+                      title="Engine" 
+                      score={video.engine} 
+                      icon="🔄" 
+                      description="Trunk/Core" 
+                      color="green"
+                      subCategories={[
+                        { name: 'Hip Rotation', score: video.engineHipRotation || 0, description: 'Hip rotation power' },
+                        { name: 'Separation', score: video.engineSeparation || 0, description: 'Upper/lower body separation' },
+                        { name: 'Core Power', score: video.engineCorePower || 0, description: 'Core engagement & strength' },
+                        { name: 'Torso Mechanics', score: video.engineTorsoMechanics || 0, description: 'Torso rotation quality' },
+                      ]}
+                    />
+                    <ScoreCard 
+                      title="Whip" 
+                      score={video.whip} 
+                      icon="⚡" 
+                      description="Arms & Bat" 
+                      color="purple"
+                      subCategories={[
+                        { name: 'Arm Path', score: video.whipArmPath || 0, description: 'Arm path efficiency' },
+                        { name: 'Bat Speed', score: video.whipBatSpeed || 0, description: 'Bat speed generation' },
+                        { name: 'Bat Path', score: video.whipBatPath || 0, description: 'Bat path quality' },
+                        { name: 'Connection', score: video.whipConnection || 0, description: 'Arms-body connection' },
+                      ]}
+                    />
                   </div>
                 </div>
               </div>

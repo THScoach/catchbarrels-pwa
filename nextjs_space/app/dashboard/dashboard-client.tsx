@@ -98,6 +98,12 @@ export function DashboardClient({ user, scores, videos }: any) {
               icon="⚓"
               description="Lower Body"
               color="blue"
+              subCategories={[
+                { name: 'Stance/Setup', score: scores.anchorSubs?.stance || 0, description: 'Initial position quality' },
+                { name: 'Weight Shift', score: scores.anchorSubs?.weightShift || 0, description: 'Weight transfer efficiency' },
+                { name: 'Ground Connection', score: scores.anchorSubs?.groundConnection || 0, description: 'Ground force utilization' },
+                { name: 'Lower Body Mechanics', score: scores.anchorSubs?.lowerBodyMechanics || 0, description: 'Overall leg movement' },
+              ]}
             />
             <ScoreCard
               title="Engine"
@@ -105,6 +111,12 @@ export function DashboardClient({ user, scores, videos }: any) {
               icon="🔄"
               description="Trunk/Core"
               color="green"
+              subCategories={[
+                { name: 'Hip Rotation', score: scores.engineSubs?.hipRotation || 0, description: 'Hip rotation power' },
+                { name: 'Separation', score: scores.engineSubs?.separation || 0, description: 'Upper/lower body separation' },
+                { name: 'Core Power', score: scores.engineSubs?.corePower || 0, description: 'Core engagement & strength' },
+                { name: 'Torso Mechanics', score: scores.engineSubs?.torsoMechanics || 0, description: 'Torso rotation quality' },
+              ]}
             />
             <ScoreCard
               title="Whip"
@@ -112,6 +124,12 @@ export function DashboardClient({ user, scores, videos }: any) {
               icon="⚡"
               description="Arms & Bat"
               color="purple"
+              subCategories={[
+                { name: 'Arm Path', score: scores.whipSubs?.armPath || 0, description: 'Arm path efficiency' },
+                { name: 'Bat Speed', score: scores.whipSubs?.batSpeed || 0, description: 'Bat speed generation' },
+                { name: 'Bat Path', score: scores.whipSubs?.batPath || 0, description: 'Bat path quality' },
+                { name: 'Connection', score: scores.whipSubs?.connection || 0, description: 'Arms-body connection' },
+              ]}
             />
           </div>
         </div>

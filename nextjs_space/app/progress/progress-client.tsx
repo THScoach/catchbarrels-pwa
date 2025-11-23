@@ -40,12 +40,10 @@ const Legend = dynamic(
 export function ProgressClient({ progress }: any) {
   const chartData = progress?.map((entry: any) => ({
     date: format(new Date(entry?.date), 'MMM d'),
-    Balance: entry?.avgBalance,
-    Anchor: entry?.avgAnchor,
-    Rotation: entry?.avgRotation,
-    'Rear Elbow': entry?.avgRearElbow,
-    Launch: entry?.avgLaunch,
-    Sequence: entry?.avgSequence,
+    'Anchor (Lower Body)': entry?.avgAnchor,
+    'Engine (Trunk/Core)': entry?.avgEngine,
+    'Whip (Arms & Bat)': entry?.avgWhip,
+    'Overall': entry?.avgOverall,
   }));
 
   return (
@@ -56,10 +54,11 @@ export function ProgressClient({ progress }: any) {
         {chartData?.length > 0 ? (
           <div className="space-y-6">
             <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-              <h2 className="text-white font-semibold mb-4">BARRELS Score Trends</h2>
+              <h2 className="text-white font-semibold mb-4">Body Metrics Score Trends</h2>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis
                       dataKey="date"
                       stroke="#9ca3af"
@@ -81,45 +80,36 @@ export function ProgressClient({ progress }: any) {
                     <Legend wrapperStyle={{ fontSize: '12px' }} />
                     <Line
                       type="monotone"
-                      dataKey="Balance"
-                      stroke="#60B5FF"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
+                      dataKey="Anchor (Lower Body)"
+                      stroke="#2196F3"
+                      strokeWidth={3}
+                      dot={{ r: 5, fill: '#2196F3' }}
+                      activeDot={{ r: 7 }}
                     />
                     <Line
                       type="monotone"
-                      dataKey="Anchor"
-                      stroke="#FF9149"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
+                      dataKey="Engine (Trunk/Core)"
+                      stroke="#4CAF50"
+                      strokeWidth={3}
+                      dot={{ r: 5, fill: '#4CAF50' }}
+                      activeDot={{ r: 7 }}
                     />
                     <Line
                       type="monotone"
-                      dataKey="Rotation"
-                      stroke="#FF9898"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
+                      dataKey="Whip (Arms & Bat)"
+                      stroke="#9C27B0"
+                      strokeWidth={3}
+                      dot={{ r: 5, fill: '#9C27B0' }}
+                      activeDot={{ r: 7 }}
                     />
                     <Line
                       type="monotone"
-                      dataKey="Rear Elbow"
-                      stroke="#FF90BB"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Launch"
-                      stroke="#80D8C3"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Sequence"
-                      stroke="#A19AD3"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
+                      dataKey="Overall"
+                      stroke="#FF9800"
+                      strokeWidth={3}
+                      strokeDasharray="5 5"
+                      dot={{ r: 5, fill: '#FF9800' }}
+                      activeDot={{ r: 7 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -127,24 +117,28 @@ export function ProgressClient({ progress }: any) {
             </div>
 
             {/* Stats Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Balance', value: chartData[chartData.length - 1]?.Balance, color: '#60B5FF' },
-                { label: 'Anchor', value: chartData[chartData.length - 1]?.Anchor, color: '#FF9149' },
-                { label: 'Rotation', value: chartData[chartData.length - 1]?.Rotation, color: '#FF9898' },
-                { label: 'Rear Elbow', value: chartData[chartData.length - 1]?.['Rear Elbow'], color: '#FF90BB' },
-                { label: 'Launch', value: chartData[chartData.length - 1]?.Launch, color: '#80D8C3' },
-                { label: 'Sequence', value: chartData[chartData.length - 1]?.Sequence, color: '#A19AD3' },
+                { label: 'Anchor', subtitle: 'Lower Body', value: chartData[chartData.length - 1]?.['Anchor (Lower Body)'], color: '#2196F3', icon: '⚓' },
+                { label: 'Engine', subtitle: 'Trunk/Core', value: chartData[chartData.length - 1]?.['Engine (Trunk/Core)'], color: '#4CAF50', icon: '🔄' },
+                { label: 'Whip', subtitle: 'Arms & Bat', value: chartData[chartData.length - 1]?.['Whip (Arms & Bat)'], color: '#9C27B0', icon: '⚡' },
+                { label: 'Overall', subtitle: 'Average', value: chartData[chartData.length - 1]?.['Overall'], color: '#FF9800', icon: '📊' },
               ].map((stat) => (
                 <div key={stat?.label} className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: stat?.color }}
-                    />
-                    <span className="text-gray-400 text-sm">{stat?.label}</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: stat?.color }}
+                      />
+                      <div>
+                        <span className="text-white text-sm font-semibold">{stat?.label}</span>
+                        <p className="text-gray-500 text-xs">{stat?.subtitle}</p>
+                      </div>
+                    </div>
+                    <span className="text-xl">{stat?.icon}</span>
                   </div>
-                  <div className="text-2xl font-bold text-white">{stat?.value}</div>
+                  <div className="text-3xl font-bold text-white">{stat?.value}</div>
                 </div>
               ))}
             </div>

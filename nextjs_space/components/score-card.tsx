@@ -121,6 +121,70 @@ export function ScoreCard({
           <span className="text-gray-400">vs last week</span>
         </div>
       )}
+
+      {/* Expand/Collapse indicator */}
+      {subCategories && subCategories.length > 0 && (
+        <div className="flex items-center justify-center mt-2 text-xs text-gray-400">
+          {isExpanded ? (
+            <>
+              <ChevronUp className="w-4 h-4" />
+              <span>Hide Details</span>
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-4 h-4" />
+              <span>Show Details</span>
+            </>
+          )}
+        </div>
+      )}
+      </div>
+
+      {/* Subcategories */}
+      <AnimatePresence>
+        {isExpanded && subCategories && subCategories.length > 0 && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="border-t border-gray-700/50"
+          >
+            <div className="p-4 space-y-3 bg-black/20">
+              {subCategories.map((sub, index) => {
+                const subPercentage = (sub.score / maxScore) * 100;
+                return (
+                  <div key={index} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-300">{sub.name}</span>
+                      <span className="text-white font-semibold">{sub.score}</span>
+                    </div>
+                    {sub.description && (
+                      <p className="text-xs text-gray-500">{sub.description}</p>
+                    )}
+                    <div className="w-full bg-gray-700/50 rounded-full h-1.5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${subPercentage}%` }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        className={`h-1.5 rounded-full ${
+                          subPercentage >= 80
+                            ? 'bg-green-500'
+                            : subPercentage >= 60
+                            ? 'bg-blue-500'
+                            : subPercentage >= 40
+                            ? 'bg-orange-500'
+                            : 'bg-red-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
