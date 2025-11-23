@@ -172,3 +172,126 @@ model CoachingCall {
   
   @@index([callDate])
 }
+
+// Knowledge Base Models - For migrated membership.io content
+model Course {
+  id              String    @id @default(uuid())
+  title           String
+  description     String?   @db.Text
+  thumbnail       String?   // Course image URL
+  
+  // Visibility & Access Control
+  visibility      String    @default("athlete") // "athlete" (public to users), "admin" (admin-only), "hidden"
+  contentType     String    @default("training") // "training", "marketing", "operations", "other"
+  
+  // Source tracking
+  sourceUrl       String?   // Original membership.io URL
+  sourcePlatform  String    @default("membership.io")
+  
+  // Organization
+  category        String?   // "Hitting Mechanics", "Mental Game", "Biomechanics", etc.
+  difficulty      String?   // "Beginner", "Intermediate", "Advanced"
+  order           Int       @default(0) // Display order
+  
+  // Status
+  published       Boolean   @default(true)
+  featured        Boolean   @default(false)
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  importedAt      DateTime? // When scraped from membership.io
+  
+  // Relations
+  modules         Module[]
+  tags            CourseTag[]
+  
+  @@index([visibility, published])
+  @@index([category])
+}
+
+model Module {
+  id              String    @id @default(uuid())
+  courseId        String
+  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  title           String
+  description     String?   @db.Text
+  order           Int       @default(0) // Order within course
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  lessons         Lesson[]
+  
+  @@index([courseId, order])
+}
+
+model Lesson {
+  id              String    @id @default(uuid())
+  moduleId        String
+  module          Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  title           String
+  description     String?   @db.Text
+  content         String?   @db.Text // Main text content (transcripts, notes, etc.)
+  
+  // Lesson type
+  lessonType      String    @default("text") // "text", "video", "pdf", "mixed"
+  duration        Int?      // Duration in minutes (for videos)
+  
+  // Organization
+  order           Int       @default(0)
+  
+  // Source
+  sourceUrl       String?   // Original URL from membership.io
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  assets          ContentAsset[]
+  
+  @@index([moduleId, order])
+}
+
+model ContentAsset {
+  id              String    @id @default(uuid())
+  lessonId        String?
+  lesson          Lesson?   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  title           String
+  description     String?   @db.Text
+  
+  // Asset details
+  assetType       String    // "video", "pdf", "image", "document", "link"
+  fileUrl         String?   // S3 URL or external URL
+  cloudStoragePath String? // S3 key if stored in our bucket
+  fileSize        Int?      // File size in bytes
+  mimeType        String?
+  
+  // For videos
+  duration        Int?      // Duration in seconds
+  thumbnail       String?
+  
+  // For text extraction (PDFs, documents)
+  extractedText   String?   @db.Text // Full text for search/AI
+  
+  // Source
+  originalUrl     String?   // Original membership.io URL
+  
+  createdAt       DateTime  @default(now())
+  
+  @@index([lessonId])
+  @@index([assetType])
+}
+
+model CourseTag {
+  id        String   @id @default(uuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  tag       String   // "hitting", "biomechanics", "drills", "mental-game", etc.
+  
+  @@unique([courseId, tag])
+  @@index([tag])
+}
