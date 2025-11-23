@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import { BottomNav } from '@/components/bottom-nav';
 import { format } from 'date-fns';
 import { ChartSkeleton, StatCardSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { TrendingUp } from 'lucide-react';
 
 const LineChart = dynamic(
   () => import('recharts').then((mod) => mod.LineChart),
@@ -197,12 +199,15 @@ export function ProgressClient({ progress }: any) {
             </motion.div>
           </div>
         ) : (
-          <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-12 text-center">
-            <p className="text-gray-400 mb-4">No progress data yet</p>
-            <p className="text-gray-500 text-sm">
-              Upload more swings to see your progress over time
-            </p>
-          </div>
+          <EmptyState
+            icon={TrendingUp}
+            title="No Progress Data Yet"
+            description="Upload and analyze swing videos to start tracking your improvement over time. You'll see trends in your Anchor, Engine, and Whip scores."
+            actionLabel="Upload a Swing"
+            actionHref="/video/upload"
+            secondaryActionLabel="View Training Library"
+            secondaryActionHref="/library"
+          />
         )}
       </div>
 

@@ -6,6 +6,7 @@ import { BottomNav } from '@/components/bottom-nav';
 import { Target, Search } from 'lucide-react';
 import Link from 'next/link';
 import { DrillCardSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export function DrillsClient({ drills }: any) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -143,10 +144,18 @@ export function DrillsClient({ drills }: any) {
         </div>
 
         {filteredDrills?.length === 0 && (
-          <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-12 text-center">
-            <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">No drills found</p>
-          </div>
+          <EmptyState
+            icon={Search}
+            title="No Drills Found"
+            description={`No drills match your current filters${searchTerm ? ` for "${searchTerm}"` : ''}${categoryFilter !== 'All' ? ` in the ${categoryFilter} category` : ''}. Try adjusting your search or browsing all drills.`}
+            actionLabel="Clear Filters"
+            onAction={() => {
+              setSearchTerm('');
+              setCategoryFilter('All');
+            }}
+            secondaryActionLabel="View Training Library"
+            secondaryActionHref="/library"
+          />
         )}
       </div>
 

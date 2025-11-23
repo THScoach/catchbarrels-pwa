@@ -8,10 +8,10 @@ function Skeleton({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-md bg-muted/50',
+        'relative overflow-hidden rounded-md bg-gray-500',
         'before:absolute before:inset-0',
         'before:-translate-x-full before:animate-[shimmer_2s_infinite]',
-        'before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent',
+        'before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent',
         className
       )}
       {...props}
@@ -22,7 +22,7 @@ function Skeleton({
 // Specific skeleton layouts for different components
 function VideoCardSkeleton() {
   return (
-    <div className="bg-[#1e2837] rounded-lg overflow-hidden">
+    <div className="bg-gray-600 border border-gray-500 rounded-lg overflow-hidden">
       <Skeleton className="w-full aspect-video" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-5 w-3/4" />
@@ -41,7 +41,7 @@ function VideoCardSkeleton() {
 
 function DrillCardSkeleton() {
   return (
-    <div className="bg-[#1e2837] rounded-lg p-6 space-y-4">
+    <div className="bg-gray-600 border border-gray-500 rounded-lg p-6 space-y-4">
       <div className="flex justify-between items-start">
         <Skeleton className="h-6 w-2/3" />
         <Skeleton className="h-6 w-20 rounded-full" />
@@ -58,7 +58,7 @@ function DrillCardSkeleton() {
 
 function StatCardSkeleton() {
   return (
-    <div className="bg-gradient-to-br from-[#1e2837] to-[#2a3648] rounded-lg p-6 space-y-4">
+    <div className="bg-gray-600 border border-gray-500 rounded-lg p-6 space-y-4">
       <div className="flex items-center justify-between">
         <Skeleton className="h-5 w-24" />
         <Skeleton className="h-10 w-10 rounded-full" />
@@ -71,7 +71,7 @@ function StatCardSkeleton() {
 
 function CourseCardSkeleton() {
   return (
-    <div className="bg-[#1e2837] rounded-lg overflow-hidden">
+    <div className="bg-gray-600 border border-gray-500 rounded-lg overflow-hidden">
       <Skeleton className="w-full h-32" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-5 w-4/5" />
@@ -88,7 +88,7 @@ function CourseCardSkeleton() {
 
 function ChartSkeleton() {
   return (
-    <div className="bg-[#1e2837] rounded-lg p-6 space-y-4">
+    <div className="bg-gray-600 border border-gray-500 rounded-lg p-6 space-y-4">
       <div className="flex justify-between items-center">
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-8 w-24" />
@@ -106,7 +106,7 @@ function ChartSkeleton() {
 
 function ListItemSkeleton() {
   return (
-    <div className="flex items-center gap-4 p-4 bg-[#1e2837] rounded-lg">
+    <div className="flex items-center gap-4 p-4 bg-gray-600 border border-gray-500 rounded-lg">
       <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
       <div className="flex-1 space-y-2">
         <Skeleton className="h-4 w-2/3" />

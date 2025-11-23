@@ -4,10 +4,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { BookOpen, Play, FileText, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { BookOpen, Play, FileText, Search, ChevronDown, ChevronRight, Library } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
 import CoachRickChat from '@/components/coach-rick-chat';
 import { CourseCardSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface Course {
   id: string;
@@ -159,15 +160,30 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
             className="max-w-4xl mx-auto px-4 pb-4"
           >
             {filteredCourses.length === 0 ? (
-              <div className="text-center py-12">
-                <BookOpen className="w-16 h-16 text-[#4a5568] mx-auto mb-4" />
-                <p className="text-[#8b949e] text-lg">
-                  {searchQuery ? 'No courses found' : 'No training content available yet'}
-                </p>
-                <p className="text-[#6a7280] text-sm mt-2">
-                  Check back soon for new content!
-                </p>
-              </div>
+              searchQuery ? (
+                <div className="text-center py-12">
+                  <Search className="w-16 h-16 text-[#4a5568] mx-auto mb-4" />
+                  <p className="text-[#8b949e] text-lg mb-2">
+                    No courses found for "{searchQuery}"
+                  </p>
+                  <p className="text-[#6a7280] text-sm">
+                    Try adjusting your search or browse all available courses
+                  </p>
+                </div>
+              ) : (
+                <EmptyState
+                  icon={Library}
+                  title="Training Library"
+                  description="Explore our comprehensive collection of hitting mechanics lessons, cognitive training programs, and expert coaching content designed to elevate your game."
+                  actionLabel="Upload a Swing"
+                  actionHref="/video/upload"
+                  secondaryActionLabel="Ask Coach Rick"
+                  onSecondaryAction={() => {
+                    const chatButton = document.querySelector('[aria-label="Open chat"]') as HTMLButtonElement;
+                    chatButton?.click();
+                  }}
+                />
+              )
             ) : (
               <div className="space-y-4">
                 {filteredCourses.map((course) => (

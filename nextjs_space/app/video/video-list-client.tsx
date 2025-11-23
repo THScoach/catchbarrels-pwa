@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BottomNav } from '@/components/bottom-nav';
-import { Video, Upload } from 'lucide-react';
+import { Video, Upload, VideoIcon } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export function VideoListClient({ videos }: any) {
   const [isLoading, setIsLoading] = useState(true);
@@ -80,7 +81,7 @@ export function VideoListClient({ videos }: any) {
             >
               <Link
                 href={`/video/${video.id}`}
-                className="block bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/70 transition-colors"
+                className="block bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-700 transition-colors"
               >
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
@@ -115,17 +116,15 @@ export function VideoListClient({ videos }: any) {
             </motion.div>
           ))}
           {videos?.length === 0 && (
-            <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-12 text-center">
-              <Video className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 mb-4">No videos yet</p>
-              <Link
-                href="/video/upload"
-                className="inline-flex items-center space-x-2 bg-[#2196F3] hover:bg-[#1976D2] text-white px-6 py-3 rounded-lg transition-colors"
-              >
-                <Upload className="w-5 h-5" />
-                <span>Upload Your First Swing</span>
-              </Link>
-            </div>
+            <EmptyState
+              icon={VideoIcon}
+              title="No Swings Yet"
+              description="Upload your first swing video to start analyzing your technique and tracking your progress with BARRELS."
+              actionLabel="Upload Your First Swing"
+              actionHref="/video/upload"
+              secondaryActionLabel="Learn About Analysis"
+              secondaryActionHref="/library"
+            />
           )}
         </div>
       </div>
