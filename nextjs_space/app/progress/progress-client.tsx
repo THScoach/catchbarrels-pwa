@@ -1,8 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { BottomNav } from '@/components/bottom-nav';
 import { format } from 'date-fns';
+import { ChartSkeleton, StatCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 const LineChart = dynamic(
   () => import('recharts').then((mod) => mod.LineChart),
@@ -38,6 +41,15 @@ const Legend = dynamic(
 );
 
 export function ProgressClient({ progress }: any) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 700);
+    return () => clearTimeout(timer);
+  }, []);
+
   const chartData = progress?.map((entry: any) => ({
     date: format(new Date(entry?.date), 'MMM d'),
     'Anchor (Lower Body)': entry?.avgAnchor,
@@ -46,14 +58,50 @@ export function ProgressClient({ progress }: any) {
     'Overall': entry?.avgOverall,
   }));
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#1a2332] pb-20">
+        <div className="p-6 max-w-7xl mx-auto">
+          <Skeleton className="h-8 w-48 mb-6" />
+
+          <div className="space-y-6">
+            {/* Chart Skeleton */}
+            <ChartSkeleton />
+
+            {/* Stats Summary Skeleton */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <StatCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <BottomNav />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#1a2332] pb-20">
       <div className="p-6 max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-6">Progress Tracking</h1>
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-2xl font-bold text-white mb-6"
+        >
+          Progress Tracking
+        </motion.h1>
 
         {chartData?.length > 0 ? (
           <div className="space-y-6">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-gray-800/50 border border-gray-700 rounded-lg p-6"
+            >
               <h2 className="text-white font-semibold mb-4">Body Metrics Score Trends</h2>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -114,10 +162,15 @@ export function ProgressClient({ progress }: any) {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+            </motion.div>
 
             {/* Stats Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            >
               {[
                 { label: 'Anchor', subtitle: 'Lower Body', value: chartData[chartData.length - 1]?.['Anchor (Lower Body)'], color: '#2196F3', icon: '⚓' },
                 { label: 'Engine', subtitle: 'Trunk/Core', value: chartData[chartData.length - 1]?.['Engine (Trunk/Core)'], color: '#4CAF50', icon: '🔄' },
@@ -141,7 +194,7 @@ export function ProgressClient({ progress }: any) {
                   <div className="text-3xl font-bold text-white">{stat?.value}</div>
                 </div>
               ))}
-            </div>
+            </motion.div>
           </div>
         ) : (
           <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-12 text-center">

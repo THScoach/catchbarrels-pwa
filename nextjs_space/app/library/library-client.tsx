@@ -1,11 +1,13 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { BookOpen, Play, FileText, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
 import CoachRickChat from '@/components/coach-rick-chat';
+import { CourseCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 interface Course {
   id: string;
@@ -48,6 +50,14 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Filter courses by search
   const filteredCourses = courses.filter((course) => {
@@ -69,11 +79,47 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
     setExpandedModules(newExpanded);
   };
 
+  if (isLoading) {
+    return (
+      <>
+        <div className="min-h-screen bg-[#0a0f1a] pb-24">
+          {/* Header Skeleton */}
+          <div className="bg-gradient-to-r from-[#1a2332] to-[#0f1621] border-b border-[#2a3f5f] sticky top-0 z-10">
+            <div className="max-w-4xl mx-auto px-4 py-4">
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </div>
+
+          {/* Search Skeleton */}
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <Skeleton className="h-12 w-full rounded-lg" />
+          </div>
+
+          {/* Course List Skeleton */}
+          <div className="max-w-4xl mx-auto px-4 pb-4">
+            <div className="space-y-4">
+              {[...Array(6)].map((_, i) => (
+                <CourseCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
+        <BottomNav />
+      </>
+    );
+  }
+
   return (
     <>
       <div className="min-h-screen bg-[#0a0f1a] pb-24">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#1a2332] to-[#0f1621] border-b border-[#2a3f5f] sticky top-0 z-10">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-gradient-to-r from-[#1a2332] to-[#0f1621] border-b border-[#2a3f5f] sticky top-0 z-10"
+        >
           <div className="max-w-4xl mx-auto px-4 py-4">
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-[#2196F3]" />
@@ -83,10 +129,15 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
               Access your complete training content
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Search Bar */}
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="max-w-4xl mx-auto px-4 py-4"
+        >
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6a7280]" />
             <input
@@ -97,11 +148,16 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
               className="w-full pl-10 pr-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Course List View */}
         {!selectedCourse && (
-          <div className="max-w-4xl mx-auto px-4 pb-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="max-w-4xl mx-auto px-4 pb-4"
+          >
             {filteredCourses.length === 0 ? (
               <div className="text-center py-12">
                 <BookOpen className="w-16 h-16 text-[#4a5568] mx-auto mb-4" />
@@ -166,7 +222,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Course Detail View */}
