@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { BookOpen, Play, FileText, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
 import CoachRickChat from '@/components/coach-rick-chat';
@@ -241,9 +242,9 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
                   {expandedModules.has(module.id) && (
                     <div className="border-t border-[#2a3f5f]">
                       {module.lessons.map((lesson) => (
-                        <button
+                        <Link
                           key={lesson.id}
-                          onClick={() => setSelectedLesson(lesson)}
+                          href={`/library/lessons/${lesson.id}`}
                           className="w-full p-4 flex items-start gap-3 hover:bg-[#1f2937] transition-colors border-b border-[#2a3f5f] last:border-b-0"
                         >
                           {lesson.lessonType === 'video' ? (
@@ -266,7 +267,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
                               {lesson.duration} min
                             </span>
                           )}
-                        </button>
+                        </Link>
                       ))}
                     </div>
                   )}
