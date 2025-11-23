@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BottomNav } from '@/components/bottom-nav';
 import { ScoreCard } from '@/components/score-card';
 import { ChevronLeft, Video, Loader2, Sparkles } from 'lucide-react';
@@ -11,6 +11,29 @@ export function VideoDetailClient({ video }: any) {
   const [activeTab, setActiveTab] = useState<'analysis' | 'coach'>('analysis');
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [coachFeedback, setCoachFeedback] = useState(video?.coachFeedback || '');
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [loadingUrl, setLoadingUrl] = useState(true);
+
+  // Fetch signed URL for video playback
+  useEffect(() => {
+    const fetchVideoUrl = async () => {
+      try {
+        const response = await fetch(`/api/videos/${video.id}/url`);
+        if (response.ok) {
+          const data = await response.json();
+          setVideoUrl(data.url);
+        }
+      } catch (error) {
+        console.error('Error fetching video URL:', error);
+      } finally {
+        setLoadingUrl(false);
+      }
+    };
+
+    if (video?.id) {
+      fetchVideoUrl();
+    }
+  }, [video?.id]);
 
   const getAIFeedback = async () => {
     setLoadingFeedback(true);
@@ -58,9 +81,28 @@ export function VideoDetailClient({ video }: any) {
           {formatDistanceToNow(new Date(video?.uploadDate), { addSuffix: true })}
         </p>
 
-        {/* Video Player Placeholder */}
-        <div className="bg-gray-900 border border-gray-700 rounded-lg aspect-video flex items-center justify-center mb-6">
-          <Video className="w-16 h-16 text-gray-600" />
+        {/* Video Player */}
+        <div className="bg-gray-900 border border-gray-700 rounded-lg aspect-video flex items-center justify-center mb-6 overflow-hidden">
+          {loadingUrl ? (
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-12 h-12 text-[#2196F3] animate-spin" />
+              <p className="text-gray-400 text-sm">Loading video...</p>
+            </div>
+          ) : videoUrl ? (
+            <video
+              src={videoUrl}
+              controls
+              className="w-full h-full object-contain"
+              preload="metadata"
+            >
+              Your browser does not support video playback.
+            </video>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <Video className="w-16 h-16 text-gray-600" />
+              <p className="text-gray-400 text-sm">Unable to load video</p>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
