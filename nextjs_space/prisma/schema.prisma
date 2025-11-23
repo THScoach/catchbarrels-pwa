@@ -158,3 +158,16 @@ model ProgressEntry {
   
   @@index([userId, date])
 }
+
+model CoachingCall {
+  id          String   @id @default(uuid())
+  title       String   // "Monday Night Coaching - Nov 23"
+  zoomLink    String   // Zoom recording URL
+  description String?  @db.Text
+  callDate    DateTime // Date of the coaching call
+  duration    Int?     // Duration in minutes (optional)
+  topics      String[] @default([]) // ["Hip Rotation", "Weight Shift"]
+  createdAt   DateTime @default(now())
+  
+  @@index([callDate])
+}

@@ -1,0 +1,226 @@
+
+'use client';
+
+import { useState } from 'react';
+import { Video, Calendar, Clock, Tag, Search, Play } from 'lucide-react';
+import { BottomNav } from '@/components/bottom-nav';
+import { format } from 'date-fns';
+
+interface CoachingCall {
+  id: string;
+  title: string;
+  zoomLink: string;
+  description: string | null;
+  callDate: Date;
+  duration: number | null;
+  topics: string[];
+  createdAt: Date;
+}
+
+export default function CoachingClient({ sessions }: { sessions: CoachingCall[] }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSession, setSelectedSession] = useState<CoachingCall | null>(null);
+
+  // Filter sessions based on search query
+  const filteredSessions = sessions.filter((session) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      session.title.toLowerCase().includes(query) ||
+      session.description?.toLowerCase().includes(query) ||
+      session.topics.some((topic) => topic.toLowerCase().includes(query))
+    );
+  });
+
+  return (
+    <>
+      <div className="min-h-screen bg-[#0a0f1a] pb-24">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#1a2332] to-[#0f1621] border-b border-[#2a3f5f] sticky top-0 z-10">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Video className="w-6 h-6 text-[#2196F3]" />
+              Coaching Sessions
+            </h1>
+            <p className="text-sm text-[#8b949e] mt-1">
+              Watch recorded Monday night coaching calls
+            </p>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6a7280]" />
+            <input
+              type="text"
+              placeholder="Search by title, topic, or keyword..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Sessions List */}
+        <div className="max-w-4xl mx-auto px-4 pb-4">
+          {filteredSessions.length === 0 ? (
+            <div className="text-center py-12">
+              <Video className="w-16 h-16 text-[#4a5568] mx-auto mb-4" />
+              <p className="text-[#8b949e] text-lg">
+                {searchQuery ? 'No sessions found' : 'No coaching sessions yet'}
+              </p>
+              {!searchQuery && (
+                <p className="text-[#6a7280] text-sm mt-2">
+                  Check back after the next Monday night call!
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className="bg-[#1a2332] border border-[#2a3f5f] rounded-lg p-4 hover:border-[#2196F3] transition-colors cursor-pointer"
+                  onClick={() => setSelectedSession(session)}
+                >
+                  {/* Session Header */}
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white mb-1">
+                        {session.title}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-[#8b949e]">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {format(new Date(session.callDate), 'MMM dd, yyyy')}
+                        </span>
+                        {session.duration && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {session.duration} min
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button className="p-3 bg-[#2196F3] rounded-full hover:bg-[#1976D2] transition-colors">
+                      <Play className="w-5 h-5 text-white" fill="white" />
+                    </button>
+                  </div>
+
+                  {/* Description */}
+                  {session.description && (
+                    <p className="text-sm text-[#8b949e] mb-3 line-clamp-2">
+                      {session.description}
+                    </p>
+                  )}
+
+                  {/* Topics */}
+                  {session.topics.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Tag className="w-4 h-4 text-[#6a7280]" />
+                      {session.topics.map((topic, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-[#2a3f5f] text-[#8b949e] text-xs rounded-full"
+                        >
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Video Player Modal */}
+        {selectedSession && (
+          <div
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedSession(null)}
+          >
+            <div
+              className="bg-[#1a2332] rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-4 border-b border-[#2a3f5f] sticky top-0 bg-[#1a2332] z-10">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-white mb-1">
+                      {selectedSession.title}
+                    </h2>
+                    <div className="flex items-center gap-3 text-sm text-[#8b949e]">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {format(new Date(selectedSession.callDate), 'MMM dd, yyyy')}
+                      </span>
+                      {selectedSession.duration && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {selectedSession.duration} min
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedSession(null)}
+                    className="text-[#8b949e] hover:text-white transition-colors text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              {/* Video Player */}
+              <div className="p-4">
+                <div className="aspect-video bg-black rounded-lg mb-4">
+                  <iframe
+                    src={selectedSession.zoomLink}
+                    className="w-full h-full rounded-lg"
+                    allow="autoplay; fullscreen"
+                    allowFullScreen
+                  />
+                </div>
+
+                {/* Description */}
+                {selectedSession.description && (
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-white mb-2">
+                      Session Description
+                    </h3>
+                    <p className="text-sm text-[#8b949e]">
+                      {selectedSession.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Topics */}
+                {selectedSession.topics.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-white mb-2">
+                      Topics Covered
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSession.topics.map((topic, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-[#2a3f5f] text-[#8b949e] text-sm rounded-full"
+                        >
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <BottomNav />
+    </>
+  );
+}

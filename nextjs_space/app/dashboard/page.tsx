@@ -58,5 +58,10 @@ export default async function DashboardPage() {
     },
   };
 
-  return <DashboardClient user={user} scores={scores} videos={user?.videos || []} />;
+  // Fetch latest coaching call
+  const latestCoachingCall = await prisma.coachingCall.findFirst({
+    orderBy: { callDate: 'desc' },
+  });
+
+  return <DashboardClient user={user} scores={scores} videos={user?.videos || []} latestCoachingCall={latestCoachingCall} />;
 }

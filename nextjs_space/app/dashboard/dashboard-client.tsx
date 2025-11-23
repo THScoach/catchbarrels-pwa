@@ -1,13 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Video as VideoIcon, TrendingUp, Target, Upload } from 'lucide-react';
+import { Video as VideoIcon, TrendingUp, Target, Upload, Play, Calendar, Clock } from 'lucide-react';
 import { ScoreCard } from '@/components/score-card';
 import { BottomNav } from '@/components/bottom-nav';
 import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 
-export function DashboardClient({ user, scores, videos }: any) {
+export function DashboardClient({ user, scores, videos, latestCoachingCall }: any) {
   return (
     <div className="min-h-screen bg-[#1a2332] pb-20">
       {/* Header */}
@@ -22,20 +22,27 @@ export function DashboardClient({ user, scores, videos }: any) {
 
       <div className="p-6 space-y-6 max-w-7xl mx-auto">
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <Link
             href="/video/upload"
-            className="bg-gradient-to-r from-[#2196F3] to-[#1976D2] p-4 rounded-lg flex items-center justify-center space-x-2 hover:shadow-lg transition-shadow"
+            className="bg-gradient-to-r from-[#2196F3] to-[#1976D2] p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-lg transition-shadow"
           >
-            <Upload className="w-5 h-5 text-white" />
-            <span className="text-white font-medium">Upload Swing</span>
+            <Upload className="w-5 h-5 text-white mb-1" />
+            <span className="text-white font-medium text-sm">Upload</span>
           </Link>
           <Link
             href="/drills"
-            className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg flex items-center justify-center space-x-2 hover:shadow-lg transition-shadow border border-gray-700"
+            className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-lg transition-shadow border border-gray-700"
           >
-            <Target className="w-5 h-5 text-white" />
-            <span className="text-white font-medium">View Drills</span>
+            <Target className="w-5 h-5 text-white mb-1" />
+            <span className="text-white font-medium text-sm">Drills</span>
+          </Link>
+          <Link
+            href="/progress"
+            className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-lg transition-shadow border border-gray-700"
+          >
+            <TrendingUp className="w-5 h-5 text-white mb-1" />
+            <span className="text-white font-medium text-sm">Progress</span>
           </Link>
         </div>
 
@@ -147,6 +154,56 @@ export function DashboardClient({ user, scores, videos }: any) {
                 <p className="text-3xl font-bold text-white">{scores.exitVelocity} mph</p>
               </div>
               <div className="text-4xl">🚀</div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Latest Coaching Call */}
+        {latestCoachingCall && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-[#2196F3]/10 to-[#1976D2]/10 rounded-xl p-6 border border-[#2196F3]/20"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-1">📹 Latest Coaching Call</h2>
+                <p className="text-sm text-gray-400">Watch Monday night recording</p>
+              </div>
+              <Link
+                href="/coaching"
+                className="flex items-center gap-2 bg-[#2196F3] hover:bg-[#1976D2] text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+              >
+                <Play className="w-4 h-4" fill="white" />
+                Watch Now
+              </Link>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-white font-medium">{latestCoachingCall.title}</h3>
+              <div className="flex items-center gap-4 text-sm text-gray-400">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  {format(new Date(latestCoachingCall.callDate), 'MMM dd, yyyy')}
+                </span>
+                {latestCoachingCall.duration && (
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {latestCoachingCall.duration} min
+                  </span>
+                )}
+              </div>
+              {latestCoachingCall.topics?.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {latestCoachingCall.topics.slice(0, 3).map((topic: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-[#2196F3]/20 text-[#2196F3] text-xs rounded-full"
+                    >
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
         )}
