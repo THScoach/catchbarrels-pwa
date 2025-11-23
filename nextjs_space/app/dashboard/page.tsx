@@ -21,6 +21,13 @@ export default async function DashboardPage() {
     },
   });
 
+  // Extract membership info
+  const membershipInfo = {
+    tier: user?.membershipTier || 'free',
+    status: user?.membershipStatus || 'inactive',
+    expiresAt: user?.membershipExpiresAt,
+  };
+
   if (!user?.profileComplete) {
     redirect('/onboarding');
   }
@@ -63,5 +70,13 @@ export default async function DashboardPage() {
     orderBy: { callDate: 'desc' },
   });
 
-  return <DashboardClient user={user} scores={scores} videos={user?.videos || []} latestCoachingCall={latestCoachingCall} />;
+  return (
+    <DashboardClient 
+      user={user} 
+      scores={scores} 
+      videos={user?.videos || []} 
+      latestCoachingCall={latestCoachingCall}
+      membershipInfo={membershipInfo}
+    />
+  );
 }

@@ -12,10 +12,17 @@ datasource db {
 model User {
   id              String    @id @default(uuid())
   username        String    @unique
-  password        String?   // Optional - Phase 5 will use Whop OAuth instead
+  password        String?   // Optional - Phase 6 will use Whop OAuth instead
   email           String?
   name            String?
-  whopUserId      String?   @unique  // For Phase 5 Whop integration
+  whopUserId      String?   @unique  // For Phase 6 Whop integration
+  
+  // Whop Membership Tracking (Phase 6)
+  whopMembershipId    String?   // Current Whop membership ID
+  membershipTier      String    @default("free") // "free", "athlete", "pro", "elite"
+  membershipStatus    String    @default("inactive") // "active", "inactive", "cancelled", "expired"
+  membershipExpiresAt DateTime? // For subscription tracking
+  lastWhopSync        DateTime? // Last time we synced with Whop
   
   // Profile data from onboarding
   dateOfBirth     DateTime?
@@ -42,6 +49,7 @@ model User {
   
   videos          Video[]
   drillProgress   DrillProgress[]
+  assessments     Assessment[]
 }
 
 model Video {
@@ -295,4 +303,69 @@ model CourseTag {
   
   @@unique([courseId, tag])
   @@index([tag])
+}
+
+// Assessment Products ($299 Neuro + Swing, $399 S2 Cognition)
+model Assessment {
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Assessment Details
+  assessmentType    String    // "neuro_swing" ($299) or "s2_cognition" ($399)
+  status            String    @default("pending") // "pending", "scheduled", "completed", "cancelled"
+  
+  // Whop Purchase Tracking
+  whopPaymentId     String?   @unique // Whop payment ID
+  purchaseDate      DateTime  @default(now())
+  amountPaid        Int       // Amount in cents (29900 or 39900)
+  
+  // Scheduling
+  scheduledDate     DateTime?
+  location          String?   // In-person location
+  
+  // Report Generation
+  reportGenerated   Boolean   @default(false)
+  reportUrl         String?   // S3 URL for generated PDF report
+  reportData        Json?     // Structured assessment data for report generation
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  completedAt       DateTime?
+  
+  @@index([userId, status])
+  @@index([assessmentType])
+}
+
+// Whop Product Mapping (Maps Whop product IDs to app tiers/features)
+model WhopProduct {
+  id                String    @id @default(uuid())
+  
+  // Whop Product Details
+  whopProductId     String    @unique // Whop product ID from dashboard
+  whopPlanId        String?   // Whop plan ID (for subscriptions)
+  productName       String    // "BARRELS Athlete", "BARRELS Pro", etc.
+  
+  // Product Type
+  productType       String    // "subscription", "one_time", "assessment"
+  
+  // Membership Tier (for subscriptions)
+  membershipTier    String?   // "athlete", "pro", "elite" (null for assessments/other)
+  
+  // Assessment Type (for assessment products)
+  assessmentType    String?   // "neuro_swing", "s2_cognition" (null for subscriptions)
+  
+  // Pricing
+  price             Int       // Price in cents
+  billingInterval   String?   // "monthly", "yearly" (null for one-time)
+  
+  // Status
+  isActive          Boolean   @default(true)
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([productType, isActive])
 }

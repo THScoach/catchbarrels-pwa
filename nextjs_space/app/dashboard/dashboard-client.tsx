@@ -10,7 +10,13 @@ import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { StatCardSkeleton, VideoCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 
-export function DashboardClient({ user, scores, videos, latestCoachingCall }: any) {
+export function DashboardClient({ 
+  user, 
+  scores, 
+  videos, 
+  latestCoachingCall,
+  membershipInfo = { tier: 'free', status: 'inactive' }
+}: any) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
