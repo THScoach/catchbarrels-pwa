@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
+import { prisma } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,84 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { message, context } = await request.json();
+    const { message, context, coachingCallId } = await request.json();
+
+    // If user is asking about a specific coaching call, fetch its transcript
+    let coachingCallContext = '';
+    if (coachingCallId) {
+      const coachingCall = await prisma.coachingCall.findUnique({
+        where: { id: coachingCallId },
+        select: {
+          title: true,
+          callDate: true,
+          transcript: true,
+          topics: true,
+        },
+      });
+
+      if (coachingCall) {
+        coachingCallContext = `\n\nCOACHING CALL CONTEXT:
+Call: "${coachingCall.title}" (${new Date(coachingCall.callDate).toLocaleDateString()})
+Topics: ${coachingCall.topics.join(', ')}
+Full Transcript:
+${coachingCall.transcript || 'No transcript available'}`;
+      }
+    } else {
+      // Auto-detect if user is asking about coaching calls and search transcripts
+      const coachingKeywords = ['coaching call', 'monday night', 'call about', 'discussed', 'said', 'mentioned', 'talked about'];
+      const messageContainsCoachingReference = coachingKeywords.some(keyword => 
+        message.toLowerCase().includes(keyword)
+      );
+
+      if (messageContainsCoachingReference) {
+        // Search transcripts for relevant content
+        const searchResults = await prisma.coachingCall.findMany({
+          where: {
+            transcript: {
+              not: null,
+            },
+          },
+          orderBy: {
+            callDate: 'desc',
+          },
+          take: 2, // Get 2 most recent calls
+          select: {
+            id: true,
+            title: true,
+            callDate: true,
+            transcript: true,
+            topics: true,
+          },
+        });
+
+        if (searchResults.length > 0) {
+          coachingCallContext = `\n\nRECENT COACHING CALLS (for reference):`;
+          searchResults.forEach((call, idx) => {
+            // Extract relevant excerpt based on user's question
+            const transcript = call.transcript || '';
+            let excerpt = transcript;
+            
+            // Try to find relevant section (simple keyword matching)
+            const words = message.toLowerCase().split(' ').filter((w: string) => w.length > 3);
+            for (const word of words) {
+              const index = transcript.toLowerCase().indexOf(word);
+              if (index !== -1) {
+                const start = Math.max(0, index - 200);
+                const end = Math.min(transcript.length, index + 300);
+                excerpt = transcript.substring(start, end);
+                if (start > 0) excerpt = '...' + excerpt;
+                if (end < transcript.length) excerpt = excerpt + '...';
+                break;
+              }
+            }
+
+            coachingCallContext += `\n\n${idx + 1}. "${call.title}" (${new Date(call.callDate).toLocaleDateString()})
+Topics: ${call.topics.join(', ')}
+Relevant excerpt: ${excerpt.substring(0, 500)}...`;
+          });
+        }
+      }
+    }
 
     // Build system prompt for Coach Rick
     const systemPrompt = `You are Coach Rick, a friendly and knowledgeable baseball hitting coach who helps players improve their swing. 
@@ -24,6 +102,7 @@ IMPORTANT GUIDELINES:
 - Keep responses SHORT (2-3 sentences max unless asked for more detail)
 - Use emojis occasionally to be friendly ⚾ 💪 🎯
 - If asked about the 4Bs system, explain it simply
+- When you have coaching call transcript context, reference it naturally in your answers
 
 THE 4Bs SYSTEM (What We Track):
 1. ANCHOR (Lower Body) - How your legs and hips work
@@ -48,8 +127,9 @@ THE 4Bs SYSTEM (What We Track):
 
 CONTEXT YOU HAVE:
 ${context ? JSON.stringify(context, null, 2) : 'No specific context'}
+${coachingCallContext}
 
-Your job is to help players understand their scores, explain what to work on, and answer questions about hitting mechanics in SIMPLE terms.`;
+Your job is to help players understand their scores, explain what to work on, and answer questions about hitting mechanics in SIMPLE terms.${coachingCallContext ? '\n\nWhen answering questions, you can reference what was discussed in the coaching calls above. Quote specific advice or drills that were mentioned!' : ''}`;
 
     // Call Abacus.AI LLM API
     const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {

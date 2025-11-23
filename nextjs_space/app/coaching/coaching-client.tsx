@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Video, Calendar, Clock, Tag, Search, Play } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
+import CoachRickChat from '@/components/coach-rick-chat';
 import { format } from 'date-fns';
 
 interface CoachingCall {
@@ -244,9 +245,14 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
                       <h3 className="text-sm font-semibold text-white">
                         📝 Session Transcript
                       </h3>
-                      <span className="text-xs text-[#6a7280]">
-                        Search within transcript
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-blue-400 px-2 py-1 bg-blue-500/10 rounded-full border border-blue-500/30 flex items-center gap-1">
+                          💬 Ask Coach Rick about this call!
+                        </span>
+                        <span className="text-xs text-[#6a7280]">
+                          Search within transcript →
+                        </span>
+                      </div>
                     </div>
                     
                     {/* Transcript Search */}
@@ -301,6 +307,14 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
       </div>
 
       <BottomNav />
+      
+      {/* Coach Rick Integration - Show when viewing a session with transcript */}
+      {selectedSession?.transcript && (
+        <CoachRickChat 
+          coachingCallId={selectedSession.id}
+          coachingCallTitle={selectedSession.title}
+        />
+      )}
     </>
   );
 }

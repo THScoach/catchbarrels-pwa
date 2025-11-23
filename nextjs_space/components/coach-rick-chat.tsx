@@ -21,14 +21,22 @@ interface CoachRickChatProps {
     exitVelocity?: number;
     overallScore?: number;
   };
+  coachingCallId?: string;
+  coachingCallTitle?: string;
 }
 
-export default function CoachRickChat({ userScores }: CoachRickChatProps) {
+export default function CoachRickChat({ userScores, coachingCallId, coachingCallTitle }: CoachRickChatProps) {
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Initial message changes based on context
+  const initialMessage = coachingCallId 
+    ? `Hey! I'm Coach Rick! 👋 I've got the transcript from "${coachingCallTitle}" ready. Ask me anything about what we discussed! ⚾`
+    : "Hey! I'm Coach Rick! 👋 Ask me anything about your swing, the 4Bs system, or how to improve! ⚾";
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hey! I'm Coach Rick! 👋 Ask me anything about your swing, the 4Bs system, or how to improve! ⚾",
+      content: initialMessage,
       timestamp: new Date().toISOString(),
     },
   ]);
@@ -84,6 +92,7 @@ export default function CoachRickChat({ userScores }: CoachRickChatProps) {
         body: JSON.stringify({
           message: inputMessage,
           context: getContext(),
+          coachingCallId: coachingCallId || null,
         }),
       });
 
@@ -116,13 +125,20 @@ export default function CoachRickChat({ userScores }: CoachRickChatProps) {
     }
   };
 
-  // Quick question suggestions
-  const quickQuestions = [
-    "What's the 4Bs system?",
-    "How do I improve my Anchor score?",
-    "What does Exit Velocity mean?",
-    "Which drills should I do?",
-  ];
+  // Quick question suggestions (context-aware)
+  const quickQuestions = coachingCallId 
+    ? [
+        "What were the main topics covered?",
+        "What drills were recommended?",
+        "Can you summarize the key advice?",
+        "What should I focus on from this call?",
+      ]
+    : [
+        "What's the 4Bs system?",
+        "How do I improve my Anchor score?",
+        "What does Exit Velocity mean?",
+        "Which drills should I do?",
+      ];
 
   return (
     <>
