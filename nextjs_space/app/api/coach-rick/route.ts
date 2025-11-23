@@ -17,28 +17,44 @@ export async function POST(request: NextRequest) {
 
     // Search knowledge base for relevant content
     let knowledgeBaseContext = '';
-    const knowledgeKeywords = ['drill', 'biomechanics', 'mechanics', 'technique', 'course', 'lesson', 'training'];
+    const knowledgeKeywords = ['drill', 'biomechanics', 'mechanics', 'technique', 'course', 'lesson', 'training', 'swing', 'analysis', 'assessment', 'video', 'exercise', 'movement', 'power', 'rotation'];
     const messageContainsKnowledgeReference = knowledgeKeywords.some(keyword => 
       message.toLowerCase().includes(keyword)
     );
 
     if (messageContainsKnowledgeReference) {
-      // Search courses and lessons for relevant content
-      const words = message.toLowerCase().split(' ').filter((w: string) => w.length > 3);
+      // Extract meaningful keywords from the message (filter out common words)
+      const stopWords = ['what', 'how', 'can', 'you', 'tell', 'me', 'about', 'the', 'is', 'are', 'do', 'does', 'should', 'i', 'my'];
+      const keywords = message.toLowerCase()
+        .split(' ')
+        .filter((w: string) => w.length > 3 && !stopWords.includes(w))
+        .map((w: string) => w.replace(/[^a-z0-9]/g, '')); // Remove punctuation
+
+      console.log('Knowledge base search keywords:', keywords);
       
+      // Build search query with OR conditions for each keyword
+      const searchConditions = keywords.flatMap((keyword: string) => [
+        { title: { contains: keyword, mode: 'insensitive' as const } },
+        { content: { contains: keyword, mode: 'insensitive' as const } },
+        { description: { contains: keyword, mode: 'insensitive' as const } },
+      ]);
+
       // Search in course titles, descriptions, and lesson content
       const relevantLessons = await prisma.lesson.findMany({
         where: {
-          OR: [
-            { title: { contains: message, mode: 'insensitive' } },
-            { content: { contains: message, mode: 'insensitive' } },
-          ],
-          module: {
-            course: {
-              visibility: 'athlete',
-              published: true,
+          AND: [
+            {
+              OR: searchConditions.length > 0 ? searchConditions : [{ id: { not: '' } }],
             },
-          },
+            {
+              module: {
+                course: {
+                  visibility: 'athlete',
+                  published: true,
+                },
+              },
+            },
+          ],
         },
         include: {
           module: {
@@ -52,7 +68,7 @@ export async function POST(request: NextRequest) {
             },
           },
         },
-        take: 2,
+        take: 3, // Get top 3 most relevant lessons
       });
 
       if (relevantLessons.length > 0) {
@@ -180,7 +196,7 @@ ${context ? JSON.stringify(context, null, 2) : 'No specific context'}
 ${coachingCallContext}
 ${knowledgeBaseContext}
 
-Your job is to help players understand their scores, explain what to work on, and answer questions about hitting mechanics in SIMPLE terms.${coachingCallContext ? '\n\nWhen answering questions, you can reference what was discussed in the coaching calls above. Quote specific advice or drills that were mentioned!' : ''}${knowledgeBaseContext ? '\n\nYou also have access to training library content above. Reference specific courses and lessons when relevant!' : ''}`;
+Your job is to help players understand their scores, explain what to work on, and answer questions about hitting mechanics in SIMPLE terms.${coachingCallContext ? '\n\n⚠️ IMPORTANT: When answering questions, DIRECTLY REFERENCE what was discussed in the coaching calls above. Quote specific advice, drills, or recommendations that were mentioned!' : ''}${knowledgeBaseContext ? '\n\n⚠️ IMPORTANT: You have access to training library content above. When answering questions, DIRECTLY REFERENCE the specific courses, lessons, and drills from the training library. Quote the content and tell users where to find more details!' : ''}`;
 
     // Call Abacus.AI LLM API
     const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
