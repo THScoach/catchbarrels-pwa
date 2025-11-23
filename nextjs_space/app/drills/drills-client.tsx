@@ -9,7 +9,7 @@ export function DrillsClient({ drills }: any) {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
 
-  const categories = ['All', 'Balance', 'Anchor', 'Rotation', 'Rear Elbow', 'Launch', 'Sequence'];
+  const categories = ['All', 'Anchor', 'Engine', 'Whip', 'Tempo', 'General'];
 
   const filteredDrills = drills?.filter((drill: any) => {
     const matchesSearch = drill?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase() || '');
