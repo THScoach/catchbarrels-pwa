@@ -89,9 +89,9 @@ export function VideoListClient({ videos }: any) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-white font-medium truncate">{video.title}</h3>
+                    <h3 className="text-white font-semibold truncate">{video.title}</h3>
                     {video.videoType && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#2196F3]/20 text-[#2196F3] border border-[#2196F3]/30 flex-shrink-0">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#2196F3]/30 text-[#60A5FA] border border-[#2196F3]/50 flex-shrink-0">
                         {video.videoType}
                       </span>
                     )}
@@ -101,14 +101,14 @@ export function VideoListClient({ videos }: any) {
                   </p>
                   {video.analyzed ? (
                     <div className="flex flex-wrap gap-3 mt-2">
-                      <span className="text-sm text-[#2196F3]">Score: {video.overallScore}</span>
-                      <span className="text-sm text-gray-500">{video.tier}</span>
+                      <span className="text-sm text-[#2196F3] font-semibold">Score: {video.overallScore}</span>
+                      <span className="text-sm text-white font-medium">{video.tier}</span>
                       {video.exitVelocity && (
-                        <span className="text-sm text-gray-500">{video.exitVelocity} mph</span>
+                        <span className="text-sm text-white font-medium">{video.exitVelocity} mph</span>
                       )}
                     </div>
                   ) : (
-                    <span className="text-sm text-yellow-500">Analyzing...</span>
+                    <span className="text-sm text-yellow-300 font-semibold">Analyzing...</span>
                   )}
                 </div>
               </div>

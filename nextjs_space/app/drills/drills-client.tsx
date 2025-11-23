@@ -126,13 +126,13 @@ export function DrillsClient({ drills }: any) {
                   <Target className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-medium mb-1">{drill?.name}</h3>
-                  <p className="text-gray-400 text-sm mb-2 line-clamp-2">{drill?.primaryPurpose}</p>
+                  <h3 className="text-white font-semibold mb-1">{drill?.name}</h3>
+                  <p className="text-white/80 text-sm mb-2 line-clamp-2">{drill?.primaryPurpose}</p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-[#2196F3]/20 text-[#2196F3] text-xs rounded">
+                    <span className="px-2 py-1 bg-[#2196F3]/30 text-white text-xs font-medium rounded border border-[#2196F3]/50">
                       {drill?.category}
                     </span>
-                    <span className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded">
+                    <span className="px-2 py-1 bg-gray-700/50 text-white text-xs font-medium rounded border border-gray-600">
                       {drill?.difficulty}
                     </span>
                   </div>

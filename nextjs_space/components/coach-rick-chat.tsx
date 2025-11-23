@@ -86,6 +86,10 @@ export default function CoachRickChat({ userScores, coachingCallId, coachingCall
     setIsLoading(true);
 
     try {
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch('/api/coach-rick', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,7 +98,14 @@ export default function CoachRickChat({ userScores, coachingCallId, coachingCall
           context: getContext(),
           coachingCallId: coachingCallId || null,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
 
       const data = await response.json();
 
@@ -107,9 +118,23 @@ export default function CoachRickChat({ userScores, coachingCallId, coachingCall
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Failed to send message:', error);
+      
+      // Determine error type and show appropriate message
+      let errorContent = "Sorry, I'm having trouble connecting right now. Please check your internet and try again! 🔧";
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        errorContent = "That took too long to process. Try asking something simpler or try again! ⏱️";
+      } else if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorContent = "Can't reach the server right now. Check your connection and try again! 📡";
+      } else if (error instanceof Error && error.message.includes('Server error: 5')) {
+        errorContent = "The AI is temporarily unavailable. Please try again in a moment! 🤖";
+      } else if (error instanceof Error && error.message.includes('Server error: 429')) {
+        errorContent = "Too many requests! Please wait a moment before asking again. ⏸️";
+      }
+      
       const errorMessage: Message = {
         role: 'assistant',
-        content: "Sorry, I'm having trouble connecting right now. Try again! 🔧",
+        content: errorContent,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);

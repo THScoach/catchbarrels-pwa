@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { BottomNav } from '@/components/bottom-nav';
+import { UploadErrorState } from '@/components/ui/error-state';
+import { toast } from 'sonner';
 import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info } from 'lucide-react';
 
 export function VideoUploadClient() {
@@ -10,6 +12,7 @@ export function VideoUploadClient() {
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [catastrophicError, setCatastrophicError] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoType, setVideoType] = useState<string>('');
   const [progress, setProgress] = useState(0);
@@ -70,31 +73,86 @@ export function VideoUploadClient() {
       xhr.addEventListener('load', () => {
         if (xhr.status === 200) {
           setSuccess(true);
+          toast.success('Upload successful!', {
+            description: 'Your swing is being analyzed. This may take a few moments.',
+          });
           setTimeout(() => {
             router.push('/video');
             router.refresh();
           }, 1500);
-        } else {
-          setError('Upload failed. Please try again.');
+        } else if (xhr.status >= 500) {
+          // Server error - catastrophic failure
+          setCatastrophicError(true);
           setUploading(false);
           setProgress(0);
+          toast.error('Server error', {
+            description: 'Something went wrong on our end. Please try again later.',
+          });
+        } else if (xhr.status === 413) {
+          setError('Video file is too large. Please try a smaller file.');
+          setUploading(false);
+          setProgress(0);
+          toast.error('File too large', {
+            description: 'Maximum file size is 500MB. Please compress your video.',
+          });
+        } else {
+          setError('Upload failed. Please check your file and try again.');
+          setUploading(false);
+          setProgress(0);
+          toast.error('Upload failed', {
+            description: 'Please check your file and try again.',
+          });
         }
       });
 
       xhr.addEventListener('error', () => {
-        setError('Upload failed. Please check your connection.');
+        setError('Upload failed. Please check your internet connection and try again.');
         setUploading(false);
         setProgress(0);
+        toast.error('Network error', {
+          description: 'Please check your internet connection and try again.',
+        });
+      });
+
+      xhr.addEventListener('timeout', () => {
+        setError('Upload timed out. Please try again with a better connection.');
+        setUploading(false);
+        setProgress(0);
+        toast.error('Upload timed out', {
+          description: 'The upload took too long. Try with a better connection.',
+        });
       });
 
       xhr.open('POST', '/api/videos/upload');
+      xhr.timeout = 300000; // 5 minute timeout for large video uploads
       xhr.send(formData);
     } catch (err) {
-      setError('Upload failed. Please try again.');
+      console.error('Upload error:', err);
+      setCatastrophicError(true);
       setUploading(false);
       setProgress(0);
     }
   };
+
+  const handleRetry = () => {
+    setCatastrophicError(false);
+    setError(null);
+    setProgress(0);
+    // Reset to allow new upload
+  };
+
+  // Show catastrophic error state
+  if (catastrophicError) {
+    return (
+      <div className="min-h-screen bg-[#1a2332] pb-20">
+        <div className="p-6 max-w-2xl mx-auto">
+          <h1 className="text-2xl font-bold text-white mb-6">Upload Swing Video</h1>
+          <UploadErrorState onRetry={handleRetry} />
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#1a2332] pb-20">

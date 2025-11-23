@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { BottomNav } from '@/components/bottom-nav';
 import { ScoreCard } from '@/components/score-card';
-import { ChevronLeft, Video, Loader2, Sparkles } from 'lucide-react';
+import { VideoLoadErrorState } from '@/components/ui/error-state';
+import { toast } from 'sonner';
+import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -13,18 +15,25 @@ export function VideoDetailClient({ video }: any) {
   const [coachFeedback, setCoachFeedback] = useState(video?.coachFeedback || '');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loadingUrl, setLoadingUrl] = useState(true);
+  const [videoError, setVideoError] = useState(false);
 
   // Fetch signed URL for video playback
   useEffect(() => {
     const fetchVideoUrl = async () => {
       try {
+        setVideoError(false);
+        setLoadingUrl(true);
+        
         const response = await fetch(`/api/videos/${video.id}/signed-url`);
-        if (response.ok) {
-          const data = await response.json();
-          setVideoUrl(data.signedUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to load video: ${response.status}`);
         }
+        
+        const data = await response.json();
+        setVideoUrl(data.signedUrl);
       } catch (error) {
         console.error('Error fetching video URL:', error);
+        setVideoError(true);
       } finally {
         setLoadingUrl(false);
       }
@@ -34,6 +43,39 @@ export function VideoDetailClient({ video }: any) {
       fetchVideoUrl();
     }
   }, [video?.id]);
+
+  const handleRetryVideo = () => {
+    setVideoError(false);
+    setLoadingUrl(true);
+    toast.info('Retrying...', {
+      description: 'Attempting to load your video again.',
+    });
+    
+    // Trigger re-fetch by updating a dependency
+    const fetchVideoUrl = async () => {
+      try {
+        const response = await fetch(`/api/videos/${video.id}/signed-url`);
+        if (!response.ok) {
+          throw new Error(`Failed to load video: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setVideoUrl(data.signedUrl);
+        toast.success('Video loaded!', {
+          description: 'Your video is ready to play.',
+        });
+      } catch (error) {
+        console.error('Error fetching video URL:', error);
+        setVideoError(true);
+        toast.error('Still unavailable', {
+          description: 'Please try again in a moment or contact support.',
+        });
+      } finally {
+        setLoadingUrl(false);
+      }
+    };
+    fetchVideoUrl();
+  };
 
   const getAIFeedback = async () => {
     setLoadingFeedback(true);
@@ -88,7 +130,26 @@ export function VideoDetailClient({ video }: any) {
 
         {/* Video Player */}
         <div className="bg-gray-900 border border-gray-700 rounded-lg aspect-video flex items-center justify-center mb-6 overflow-hidden">
-          {loadingUrl ? (
+          {videoError ? (
+            <div className="flex flex-col items-center gap-4 p-8">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <Video className="w-8 h-8 text-red-400" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-white font-semibold mb-2">Video Unavailable</h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  We couldn't load this video. It might be processing or temporarily unavailable.
+                </p>
+              </div>
+              <button
+                onClick={handleRetryVideo}
+                className="bg-[#2196F3] hover:bg-[#1976D2] text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Try Again
+              </button>
+            </div>
+          ) : loadingUrl ? (
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-12 h-12 text-[#2196F3] animate-spin" />
               <p className="text-gray-400 text-sm">Loading video...</p>
