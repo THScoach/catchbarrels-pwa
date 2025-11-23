@@ -33,18 +33,27 @@ export async function POST(request: NextRequest) {
       console.log('Knowledge base search keywords:', keywords);
       
       // Build search query with OR conditions for each keyword
+      // Handle null content fields by splitting into separate conditions
       const searchConditions = keywords.flatMap((keyword: string) => [
         { title: { contains: keyword, mode: 'insensitive' as const } },
-        { content: { contains: keyword, mode: 'insensitive' as const } },
+        { 
+          AND: [
+            { content: { not: null } },
+            { content: { contains: keyword, mode: 'insensitive' as const } }
+          ]
+        },
         { description: { contains: keyword, mode: 'insensitive' as const } },
       ]);
 
       // Search in course titles, descriptions, and lesson content
-      const relevantLessons = await prisma.lesson.findMany({
+      // First try to find exact title matches
+      let relevantLessons = await prisma.lesson.findMany({
         where: {
           AND: [
             {
-              OR: searchConditions.length > 0 ? searchConditions : [{ id: { not: '' } }],
+              OR: keywords.map((keyword: string) => ({
+                title: { contains: keyword, mode: 'insensitive' as const }
+              })),
             },
             {
               module: {
@@ -68,15 +77,54 @@ export async function POST(request: NextRequest) {
             },
           },
         },
-        take: 3, // Get top 3 most relevant lessons
+        take: 3,
       });
+      
+      // If no title matches, search in all fields
+      if (relevantLessons.length === 0) {
+        relevantLessons = await prisma.lesson.findMany({
+          where: {
+            AND: [
+              {
+                OR: searchConditions.length > 0 ? searchConditions : [{ id: { not: '' } }],
+              },
+              {
+                module: {
+                  course: {
+                    visibility: 'athlete',
+                    published: true,
+                  },
+                },
+              },
+            ],
+          },
+          include: {
+            module: {
+              include: {
+                course: {
+                  select: {
+                    title: true,
+                    category: true,
+                  },
+                },
+              },
+            },
+          },
+          take: 3,
+        });
+      }
+      
+      console.log(`Knowledge base search found ${relevantLessons.length} lessons:`, 
+        relevantLessons.map(l => ({ title: l.title, course: l.module.course.title })));
 
       if (relevantLessons.length > 0) {
         knowledgeBaseContext = `\n\nTRAINING LIBRARY CONTENT:`;
         relevantLessons.forEach((lesson, idx) => {
-          const excerpt = lesson.content ? lesson.content.substring(0, 500) : '';
+          // Use content if available, otherwise use description
+          const text = lesson.content || lesson.description || '';
+          const excerpt = text.substring(0, 500);
           knowledgeBaseContext += `\n\n${idx + 1}. From "${lesson.module.course.title}" - ${lesson.title}:
-Content: ${excerpt}${excerpt.length === 500 ? '...' : ''}`;
+Description: ${excerpt}${excerpt.length === 500 ? '...' : ''}`;
         });
       }
     }
