@@ -44,13 +44,11 @@ export function VideoDetailClient({ video }: any) {
         body: JSON.stringify({
           videoId: video?.id,
           scores: {
-            balanceScore: video?.balanceScore,
-            anchorScore: video?.anchorScore,
-            rotationScore: video?.rotationScore,
-            rearElbowScore: video?.rearElbowScore,
-            launchScore: video?.launchScore,
-            sequenceScore: video?.sequenceScore,
+            anchor: video?.anchor,
+            engine: video?.engine,
+            whip: video?.whip,
             overallScore: video?.overallScore,
+            exitVelocity: video?.exitVelocity,
           },
         }),
       });
@@ -151,14 +149,11 @@ export function VideoDetailClient({ video }: any) {
                 </div>
 
                 <div>
-                  <h2 className="text-lg font-semibold text-white mb-4">Score Breakdown</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <ScoreCard title="Balance" score={video.balanceScore} icon="⚖️" />
-                    <ScoreCard title="Anchor" score={video.anchorScore} icon="⚓" />
-                    <ScoreCard title="Rotation" score={video.rotationScore} icon="🔄" />
-                    <ScoreCard title="Rear Elbow" score={video.rearElbowScore} icon="💪" />
-                    <ScoreCard title="Launch" score={video.launchScore} icon="🚀" />
-                    <ScoreCard title="Sequence" score={video.sequenceScore} icon="⚡" />
+                  <h2 className="text-lg font-semibold text-white mb-4">Body Metrics Breakdown</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <ScoreCard title="Anchor" score={video.anchor} icon="⚓" description="Lower Body" />
+                    <ScoreCard title="Engine" score={video.engine} icon="🔄" description="Trunk/Core" />
+                    <ScoreCard title="Whip" score={video.whip} icon="⚡" description="Arms & Bat" />
                   </div>
                 </div>
               </div>

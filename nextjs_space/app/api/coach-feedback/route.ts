@@ -29,11 +29,11 @@ export async function POST(request: NextRequest) {
           {
             role: 'system',
             content:
-              'You are Coach Rick, an expert baseball hitting coach. Provide personalized, actionable feedback based on BARRELS scores. Use simple language that athletes can understand. Be encouraging but specific about what to improve.',
+              'You are Coach Rick, an expert baseball hitting coach. Provide personalized, actionable feedback based on the 4Bs swing analysis (Body metrics: Anchor, Engine, Whip). Use simple language that athletes can understand. Be encouraging but specific about what to improve.',
           },
           {
             role: 'user',
-            content: `Analyze this swing with BARRELS scores: Balance: ${scores?.balanceScore || 0}, Anchor: ${scores?.anchorScore || 0}, Rotation: ${scores?.rotationScore || 0}, Rear Elbow: ${scores?.rearElbowScore || 0}, Launch: ${scores?.launchScore || 0}, Sequence: ${scores?.sequenceScore || 0}. Overall: ${scores?.overallScore || 0}. Provide 2-3 specific coaching points.`,
+            content: `Analyze this swing with the following scores: Anchor (Lower Body): ${scores?.anchor || 0}, Engine (Trunk/Core): ${scores?.engine || 0}, Whip (Arms & Bat): ${scores?.whip || 0}. Overall: ${scores?.overallScore || 0}. Exit Velocity: ${scores?.exitVelocity || 0} mph. Provide 2-3 specific coaching points focusing on the weakest area.`,
           },
         ],
         max_tokens: 250,

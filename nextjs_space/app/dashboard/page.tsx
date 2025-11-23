@@ -29,14 +29,12 @@ export default async function DashboardPage() {
   const latestVideo = user?.videos?.find(v => v.analyzed);
   
   const scores = {
-    balance: latestVideo?.balanceScore || 0,
-    anchor: latestVideo?.anchorScore || 0,
-    rotation: latestVideo?.rotationScore || 0,
-    rearElbow: latestVideo?.rearElbowScore || 0,
-    launch: latestVideo?.launchScore || 0,
-    sequence: latestVideo?.sequenceScore || 0,
+    anchor: latestVideo?.anchor || 0,      // Lower Body
+    engine: latestVideo?.engine || 0,      // Trunk/Core
+    whip: latestVideo?.whip || 0,          // Arms & Bat
     overall: latestVideo?.overallScore || 0,
-    tier: latestVideo?.tier || 'Beginner',
+    tier: latestVideo?.tier || 'Developing',
+    exitVelocity: latestVideo?.exitVelocity || 0,
   };
 
   return <DashboardClient user={user} scores={scores} videos={user?.videos || []} />;

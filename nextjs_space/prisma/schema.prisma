@@ -53,16 +53,33 @@ model Video {
   videoUrl        String    // Mock URL for prototype
   thumbnailUrl    String?   // Mock thumbnail
   
-  // Analysis data (mock for prototype)
+  // Analysis data - 4Bs Body Metrics (mock for prototype)
   analyzed        Boolean   @default(false)
-  anchorScore     Int?      // 0-100
-  rotationScore   Int?      // 0-100
-  rearElbowScore  Int?      // 0-100
-  launchScore     Int?      // 0-100
-  sequenceScore   Int?      // 0-100
-  balanceScore    Int?      // 0-100
-  overallScore    Int?      // 0-100
-  tier            String?   // "Beginner", "JV", "Varsity", "College", "Pro"
+  
+  // Main Metrics (0-100)
+  anchor          Int?      // 0-100 (Lower Body)
+  engine          Int?      // 0-100 (Trunk/Core)
+  whip            Int?      // 0-100 (Arms & Bat)
+  overallScore    Int?      // 0-100 (Average of 3 metrics)
+  tier            String?   // "Elite", "Advanced", "Intermediate", "Developing"
+  
+  // Anchor (Lower Body) Subcategories (0-100)
+  anchorStance              Int?  // Stance/Setup quality
+  anchorWeightShift         Int?  // Weight transfer efficiency
+  anchorGroundConnection    Int?  // Ground force connection
+  anchorLowerBodyMechanics  Int?  // Overall lower body movement
+  
+  // Engine (Trunk/Core) Subcategories (0-100)
+  engineHipRotation    Int?  // Hip rotation power
+  engineSeparation     Int?  // Upper/lower body separation
+  engineCorePower      Int?  // Core engagement
+  engineTorsoMechanics Int?  // Torso rotation quality
+  
+  // Whip (Arms & Bat) Subcategories (0-100)
+  whipArmPath      Int?  // Arm path efficiency
+  whipBatSpeed     Int?  // Bat speed generation
+  whipBatPath      Int?  // Bat path quality
+  whipConnection   Int?  // Arms-body connection
   
   exitVelocity    Int?      // mph
   
@@ -78,7 +95,7 @@ model Drill {
   id              String    @id @default(uuid())
   name            String    @unique
   source          String
-  category        String    // "Balance", "Anchor", "Rotation", etc.
+  category        String    // "Anchor", "Engine", "Whip", "General"
   primaryPurpose  String
   setup           String    @db.Text
   execution       String    @db.Text
@@ -115,14 +132,29 @@ model ProgressEntry {
   userId          String
   date            DateTime  @default(now())
   
-  // Weekly averages (mock data for prototype)
-  avgBalance      Int
-  avgAnchor       Int
-  avgRotation     Int
-  avgRearElbow    Int
-  avgLaunch       Int
-  avgSequence     Int
-  avgOverall      Int
+  // Weekly averages - Main Metrics
+  avgAnchor       Int       // Lower Body (0-100)
+  avgEngine       Int       // Trunk/Core (0-100)
+  avgWhip         Int       // Arms & Bat (0-100)
+  avgOverall      Int       // Average of 3 metrics (0-100)
+  
+  // Anchor Subcategories Averages
+  avgAnchorStance              Int?
+  avgAnchorWeightShift         Int?
+  avgAnchorGroundConnection    Int?
+  avgAnchorLowerBodyMechanics  Int?
+  
+  // Engine Subcategories Averages
+  avgEngineHipRotation    Int?
+  avgEngineSeparation     Int?
+  avgEngineCorePower      Int?
+  avgEngineTorsoMechanics Int?
+  
+  // Whip Subcategories Averages
+  avgWhipArmPath      Int?
+  avgWhipBatSpeed     Int?
+  avgWhipBatPath      Int?
+  avgWhipConnection   Int?
   
   @@index([userId, date])
 }

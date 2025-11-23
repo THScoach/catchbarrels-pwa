@@ -1,8 +1,15 @@
 
 'use client';
 
-import { motion } from 'framer-motion';
-import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowUp, ArrowDown, Minus, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
+
+interface SubCategory {
+  name: string;
+  score: number;
+  description?: string;
+}
 
 interface ScoreCardProps {
   title: string;
@@ -13,6 +20,7 @@ interface ScoreCardProps {
   description?: string;
   color?: string;
   onClick?: () => void;
+  subCategories?: SubCategory[];
 }
 
 export function ScoreCard({
@@ -24,7 +32,9 @@ export function ScoreCard({
   description,
   color = 'blue',
   onClick,
+  subCategories,
 }: ScoreCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const percentage = (score / maxScore) * 100;
 
   const colorClasses = {
@@ -38,14 +48,26 @@ export function ScoreCard({
 
   const bgClass = colorClasses[color as keyof typeof colorClasses] || colorClasses.blue;
 
+  const handleClick = () => {
+    if (subCategories && subCategories.length > 0) {
+      setIsExpanded(!isExpanded);
+    }
+    if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      onClick={onClick}
-      className={`relative bg-gradient-to-br ${bgClass} border rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow`}
+      className={`relative bg-gradient-to-br ${bgClass} border rounded-lg overflow-hidden`}
     >
+      <div 
+        onClick={handleClick}
+        className="p-4 cursor-pointer hover:shadow-lg transition-shadow"
+      >
       <div className="flex items-start justify-between mb-2">
         <div>
           <h3 className="text-sm font-medium text-gray-400 uppercase">{title}</h3>

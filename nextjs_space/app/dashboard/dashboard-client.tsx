@@ -46,19 +46,19 @@ export function DashboardClient({ user, scores, videos }: any) {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg p-6"
           >
-            <h2 className="text-lg font-semibold text-white mb-4">Your BARRELS Score</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Overall Score</h2>
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-5xl font-bold text-white">{scores.overall}</div>
                 <div className="text-2xl font-semibold text-[#2196F3] mt-1">{scores.tier}</div>
                 <p className="text-gray-400 text-sm mt-2">
                   {scores.overall >= 85
-                    ? 'Elite level mechanics!'
+                    ? 'Elite level! All three areas working together.'
                     : scores.overall >= 75
-                    ? 'Strong fundamentals!'
+                    ? 'Advanced mechanics! Strong foundation.'
                     : scores.overall >= 65
-                    ? 'Good progress, keep improving!'
-                    : 'Great start! Focus on the basics.'}
+                    ? 'Intermediate - Keep building consistency.'
+                    : 'Developing - Focus on fundamentals.'}
                 </p>
               </div>
               <div className="w-32 h-32 relative">
@@ -88,54 +88,50 @@ export function DashboardClient({ user, scores, videos }: any) {
           </motion.div>
         )}
 
-        {/* BARRELS Breakdown */}
+        {/* 4Bs Body Metrics Breakdown */}
         <div>
-          <h2 className="text-lg font-semibold text-white mb-4">BARRELS Breakdown</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <ScoreCard
-              title="Balance"
-              score={scores.balance}
-              icon="⚖️"
-              description="Stance stability"
-              color="blue"
-            />
+          <h2 className="text-lg font-semibold text-white mb-4">Body Metrics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ScoreCard
               title="Anchor"
               score={scores.anchor}
               icon="⚓"
-              description="Foundation"
+              description="Lower Body"
+              color="blue"
+            />
+            <ScoreCard
+              title="Engine"
+              score={scores.engine}
+              icon="🔄"
+              description="Trunk/Core"
               color="green"
             />
             <ScoreCard
-              title="Rotation"
-              score={scores.rotation}
-              icon="🔄"
-              description="Hip turn"
-              color="purple"
-            />
-            <ScoreCard
-              title="Rear Elbow"
-              score={scores.rearElbow}
-              icon="💪"
-              description="Connection"
-              color="orange"
-            />
-            <ScoreCard
-              title="Launch"
-              score={scores.launch}
-              icon="🚀"
-              description="Bat path"
-              color="red"
-            />
-            <ScoreCard
-              title="Sequence"
-              score={scores.sequence}
+              title="Whip"
+              score={scores.whip}
               icon="⚡"
-              description="Timing"
-              color="yellow"
+              description="Arms & Bat"
+              color="purple"
             />
           </div>
         </div>
+
+        {/* Exit Velocity */}
+        {scores.exitVelocity > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl p-6 border border-orange-500/20"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-400 mb-1">Exit Velocity</h3>
+                <p className="text-3xl font-bold text-white">{scores.exitVelocity} mph</p>
+              </div>
+              <div className="text-4xl">🚀</div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Recent Activity */}
         <div>
