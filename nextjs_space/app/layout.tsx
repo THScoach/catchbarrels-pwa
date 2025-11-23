@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
+import CoachRickChat from '@/components/coach-rick-chat';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -49,7 +50,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="BARRELS" />
       </head>
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <CoachRickChat />
+        </Providers>
       </body>
     </html>
   );
