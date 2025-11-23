@@ -50,6 +50,7 @@ model Video {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   title           String    @default("My Swing")
+  videoType       String?   // "Tee Work", "Front Toss", "Live BP", "Game Swings", "Cage Work", "Other"
   videoUrl        String    // Mock URL for prototype
   thumbnailUrl    String?   // Mock thumbnail
   

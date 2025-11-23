@@ -17,9 +17,14 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const videoFile = formData.get('video') as File;
+    const videoType = formData.get('videoType') as string;
 
     if (!videoFile) {
       return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
+    }
+
+    if (!videoType) {
+      return NextResponse.json({ error: 'Video type is required' }, { status: 400 });
     }
 
     // Convert file to buffer
@@ -39,6 +44,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: (session.user as any).id,
         title: videoFile.name.replace(/\.[^/.]+$/, ''), // Remove file extension
+        videoType: videoType,
         videoUrl: cloudStoragePath, // Store S3 key
         thumbnailUrl: '', // Will be generated later
         analyzed: false,

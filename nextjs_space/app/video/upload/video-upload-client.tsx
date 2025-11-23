@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { BottomNav } from '@/components/bottom-nav';
-import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon } from 'lucide-react';
+import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info } from 'lucide-react';
 
 export function VideoUploadClient() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export function VideoUploadClient() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [videoType, setVideoType] = useState<string>('');
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,14 +42,20 @@ export function VideoUploadClient() {
       return;
     }
 
+    if (!videoType) {
+      setError('Please select a video type before uploading');
+      return;
+    }
+
     setUploading(true);
     setProgress(0);
     setError(null);
 
     try {
-      // Create FormData and append video file
+      // Create FormData and append video file and type
       const formData = new FormData();
       formData.append('video', selectedFile);
+      formData.append('videoType', videoType);
 
       // Upload with progress tracking
       const xhr = new XMLHttpRequest();
@@ -92,13 +99,49 @@ export function VideoUploadClient() {
   return (
     <div className="min-h-screen bg-[#1a2332] pb-20">
       <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-6">Upload Swing Video</h1>
+        <h1 className="text-2xl font-bold text-white mb-4">Upload Swing Video</h1>
+
+        {/* Baseball Hitting Only Notice */}
+        <div className="mb-6 bg-[#2196F3]/10 border border-[#2196F3] rounded-lg p-4 flex items-start gap-3">
+          <Info className="w-5 h-5 text-[#2196F3] flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-white font-medium">Baseball Hitting Videos Only</p>
+            <p className="text-gray-300 text-sm mt-1">
+              This tool is designed specifically for baseball swing analysis. Please upload videos of batting practice, cage work, tee work, or game swings only.
+            </p>
+          </div>
+        </div>
 
         {/* Error Message */}
         {error && (
           <div className="mb-4 bg-red-900/20 border border-red-500 rounded-lg p-4 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
             <p className="text-red-200">{error}</p>
+          </div>
+        )}
+
+        {/* Video Type Selector */}
+        {!success && !uploading && (
+          <div className="mb-6">
+            <label className="block text-white font-medium mb-2">
+              Video Type <span className="text-red-400">*</span>
+            </label>
+            <select
+              value={videoType}
+              onChange={(e) => setVideoType(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-[#2196F3] focus:outline-none focus:ring-2 focus:ring-[#2196F3]/20"
+            >
+              <option value="">Select video type...</option>
+              <option value="Tee Work">Tee Work</option>
+              <option value="Front Toss">Front Toss</option>
+              <option value="Cage Work">Cage Work</option>
+              <option value="Live BP">Live BP</option>
+              <option value="Game Swings">Game Swings</option>
+              <option value="Other">Other Hitting Drills</option>
+            </select>
+            <p className="text-gray-400 text-sm mt-2">
+              This helps categorize your swings and provides better analysis context.
+            </p>
           </div>
         )}
 
@@ -175,13 +218,28 @@ export function VideoUploadClient() {
 
         {/* Tips Section */}
         <div className="mt-6 bg-gray-800/30 border border-gray-700 rounded-lg p-4">
-          <h3 className="text-white font-medium mb-2">Tips for best results:</h3>
-          <ul className="text-gray-400 text-sm space-y-1">
-            <li>• Record from the side (perpendicular to your stance)</li>
-            <li>• Keep camera steady or use a tripod</li>
-            <li>• Make sure full body is visible</li>
-            <li>• Good lighting helps improve analysis</li>
-            <li>• Take 3-5 swings for best comparison</li>
+          <h3 className="text-white font-medium mb-3">📹 Hitting Video Recording Tips:</h3>
+          <ul className="text-gray-400 text-sm space-y-2">
+            <li className="flex items-start gap-2">
+              <span className="text-[#2196F3] font-bold">•</span>
+              <span><strong className="text-gray-300">Camera angle:</strong> Record from the side (perpendicular to your stance) for best swing mechanics analysis</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-[#2196F3] font-bold">•</span>
+              <span><strong className="text-gray-300">Full body visible:</strong> Ensure entire swing path is captured from stance to follow-through</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-[#2196F3] font-bold">•</span>
+              <span><strong className="text-gray-300">Steady camera:</strong> Use a tripod or stable surface to avoid camera shake</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-[#2196F3] font-bold">•</span>
+              <span><strong className="text-gray-300">Good lighting:</strong> Clear visibility improves AI analysis accuracy</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-[#2196F3] font-bold">•</span>
+              <span><strong className="text-gray-300">Multiple swings:</strong> Upload 3-5 swings for better trend analysis and progress tracking</span>
+            </li>
           </ul>
         </div>
       </div>

@@ -74,7 +74,14 @@ export function VideoDetailClient({ video }: any) {
           Back to Videos
         </Link>
 
-        <h1 className="text-2xl font-bold text-white mb-2">{video?.title}</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-2xl font-bold text-white">{video?.title}</h1>
+          {video?.videoType && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#2196F3]/20 text-[#2196F3] border border-[#2196F3]/30">
+              {video.videoType}
+            </span>
+          )}
+        </div>
         <p className="text-gray-400 text-sm mb-6">
           {formatDistanceToNow(new Date(video?.uploadDate), { addSuffix: true })}
         </p>

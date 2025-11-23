@@ -32,7 +32,14 @@ export function VideoListClient({ videos }: any) {
                   <Video className="w-10 h-10 text-gray-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-medium truncate">{video.title}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-white font-medium truncate">{video.title}</h3>
+                    {video.videoType && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#2196F3]/20 text-[#2196F3] border border-[#2196F3]/30 flex-shrink-0">
+                        {video.videoType}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-gray-400 text-sm">
                     {formatDistanceToNow(new Date(video.uploadDate), { addSuffix: true })}
                   </p>
