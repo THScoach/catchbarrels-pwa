@@ -10,6 +10,7 @@ export default function AdminCoachingClient() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [transcriptStatus, setTranscriptStatus] = useState<string>('');
   const [formData, setFormData] = useState({
     title: '',
     zoomLink: '',
@@ -23,6 +24,7 @@ export default function AdminCoachingClient() {
     e.preventDefault();
     setLoading(true);
     setSuccess(false);
+    setTranscriptStatus('');
 
     try {
       // Convert topics string to array
@@ -44,6 +46,15 @@ export default function AdminCoachingClient() {
         throw new Error('Failed to add coaching session');
       }
 
+      const data = await response.json();
+      
+      // Check if transcript was fetched
+      if (data.transcript) {
+        setTranscriptStatus('✅ Transcript fetched successfully!');
+      } else {
+        setTranscriptStatus('⚠️ Session added, but no transcript available (make sure Zoom transcription is enabled)');
+      }
+
       setSuccess(true);
       setFormData({
         title: '',
@@ -54,10 +65,10 @@ export default function AdminCoachingClient() {
         topics: ''
       });
 
-      // Redirect to coaching page after 1.5 seconds
+      // Redirect to coaching page after 2.5 seconds
       setTimeout(() => {
         router.push('/coaching');
-      }, 1500);
+      }, 2500);
     } catch (error) {
       console.error('Error adding coaching session:', error);
       alert('Failed to add coaching session. Please try again.');
@@ -88,8 +99,19 @@ export default function AdminCoachingClient() {
       {/* Form */}
       <div className="max-w-4xl mx-auto px-4 py-6">
         {success && (
-          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-            <p className="text-green-400 text-center">✅ Coaching session added successfully! Redirecting...</p>
+          <div className="mb-6 space-y-2">
+            <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+              <p className="text-green-400 text-center">✅ Coaching session added successfully! Redirecting...</p>
+            </div>
+            {transcriptStatus && (
+              <div className={`p-4 rounded-lg text-center ${
+                transcriptStatus.includes('✅') 
+                  ? 'bg-blue-500/10 border border-blue-500/30 text-blue-400'
+                  : 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400'
+              }`}>
+                <p>{transcriptStatus}</p>
+              </div>
+            )}
           </div>
         )}
 

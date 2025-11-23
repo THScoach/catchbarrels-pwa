@@ -14,22 +14,37 @@ interface CoachingCall {
   callDate: Date;
   duration: number | null;
   topics: string[];
+  transcript: string | null;
   createdAt: Date;
 }
 
 export default function CoachingClient({ sessions }: { sessions: CoachingCall[] }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<CoachingCall | null>(null);
+  const [transcriptSearchQuery, setTranscriptSearchQuery] = useState('');
 
-  // Filter sessions based on search query
+  // Filter sessions based on search query (includes transcript search)
   const filteredSessions = sessions.filter((session) => {
     const query = searchQuery.toLowerCase();
     return (
       session.title.toLowerCase().includes(query) ||
       session.description?.toLowerCase().includes(query) ||
-      session.topics.some((topic) => topic.toLowerCase().includes(query))
+      session.topics.some((topic) => topic.toLowerCase().includes(query)) ||
+      session.transcript?.toLowerCase().includes(query)
     );
   });
+
+  // Highlight search terms in transcript
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return parts.map((part, index) => 
+      part.toLowerCase() === query.toLowerCase() 
+        ? `<mark class="bg-yellow-500/30 text-yellow-200">${part}</mark>`
+        : part
+    ).join('');
+  };
 
   return (
     <>
@@ -86,9 +101,16 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
                   {/* Session Header */}
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white mb-1">
-                        {session.title}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-semibold text-white">
+                          {session.title}
+                        </h3>
+                        {session.transcript && (
+                          <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">
+                            📝 Transcript
+                          </span>
+                        )}
+                      </div>
                       <div className="flex flex-wrap items-center gap-3 text-sm text-[#8b949e]">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
@@ -198,7 +220,7 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
 
                 {/* Topics */}
                 {selectedSession.topics.length > 0 && (
-                  <div>
+                  <div className="mb-4">
                     <h3 className="text-sm font-semibold text-white mb-2">
                       Topics Covered
                     </h3>
@@ -211,6 +233,64 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
                           {topic}
                         </span>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Transcript */}
+                {selectedSession.transcript && (
+                  <div className="mt-6 border-t border-[#2a3f5f] pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-white">
+                        📝 Session Transcript
+                      </h3>
+                      <span className="text-xs text-[#6a7280]">
+                        Search within transcript
+                      </span>
+                    </div>
+                    
+                    {/* Transcript Search */}
+                    <div className="relative mb-3">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#6a7280]" />
+                      <input
+                        type="text"
+                        placeholder="Search for keywords..."
+                        value={transcriptSearchQuery}
+                        onChange={(e) => setTranscriptSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-[#0a0f1a] border border-[#2a3f5f] rounded-lg text-white text-sm placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
+                      />
+                    </div>
+
+                    {/* Transcript Content */}
+                    <div className="bg-[#0a0f1a] border border-[#2a3f5f] rounded-lg p-4 max-h-96 overflow-y-auto">
+                      <pre className="text-sm text-[#8b949e] whitespace-pre-wrap font-sans leading-relaxed">
+                        {transcriptSearchQuery ? (
+                          <span 
+                            dangerouslySetInnerHTML={{ 
+                              __html: highlightText(selectedSession.transcript, transcriptSearchQuery) 
+                            }}
+                          />
+                        ) : (
+                          selectedSession.transcript
+                        )}
+                      </pre>
+                    </div>
+
+                    <p className="text-xs text-[#6a7280] mt-2 italic">
+                      💡 Tip: Use the search box above to quickly find specific topics or drills discussed in this session
+                    </p>
+                  </div>
+                )}
+
+                {!selectedSession.transcript && (
+                  <div className="mt-6 border-t border-[#2a3f5f] pt-4">
+                    <div className="bg-[#2a3f5f]/30 border border-[#2a3f5f] rounded-lg p-4 text-center">
+                      <p className="text-sm text-[#8b949e]">
+                        ⚠️ No transcript available for this session
+                      </p>
+                      <p className="text-xs text-[#6a7280] mt-1">
+                        Make sure Zoom transcription is enabled for future recordings
+                      </p>
                     </div>
                   </div>
                 )}

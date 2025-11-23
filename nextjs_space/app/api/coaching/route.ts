@@ -6,6 +6,123 @@ import { prisma } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+// Helper function to get Zoom credentials from environment variables
+function getZoomCredentials() {
+  return {
+    accountId: process.env.ZOOM_ACCOUNT_ID,
+    clientId: process.env.ZOOM_CLIENT_ID,
+    clientSecret: process.env.ZOOM_CLIENT_SECRET
+  };
+}
+
+// Helper function to get Zoom OAuth access token
+async function getZoomAccessToken() {
+  try {
+    const { accountId, clientId, clientSecret } = getZoomCredentials();
+    
+    if (!accountId || !clientId || !clientSecret) {
+      console.log('Zoom credentials not configured');
+      return null;
+    }
+    
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    
+    const response = await fetch(`https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${accountId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get Zoom access token: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data.access_token;
+  } catch (error) {
+    console.error('Error getting Zoom access token:', error);
+    return null;
+  }
+}
+
+// Helper function to extract meeting UUID from Zoom link
+function extractMeetingUuid(zoomLink: string): string | null {
+  try {
+    // Try to extract from share link format: https://zoom.us/rec/share/...
+    if (zoomLink.includes('/rec/share/')) {
+      const parts = zoomLink.split('/rec/share/');
+      if (parts[1]) {
+        return parts[1].split('?')[0].split('/')[0];
+      }
+    }
+    
+    // Try to extract from play link format: https://zoom.us/rec/play/...
+    if (zoomLink.includes('/rec/play/')) {
+      const parts = zoomLink.split('/rec/play/');
+      if (parts[1]) {
+        return parts[1].split('?')[0].split('/')[0];
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error extracting meeting UUID:', error);
+    return null;
+  }
+}
+
+// Helper function to fetch transcript from Zoom
+async function fetchZoomTranscript(meetingUuid: string, accessToken: string): Promise<string | null> {
+  try {
+    // URL encode the UUID (double encoding for UUIDs with slashes)
+    const encodedUuid = encodeURIComponent(encodeURIComponent(meetingUuid));
+    
+    // First, get the list of recordings for this meeting
+    const recordingsResponse = await fetch(`https://api.zoom.us/v2/meetings/${encodedUuid}/recordings`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    
+    if (!recordingsResponse.ok) {
+      console.error('Failed to fetch recordings:', recordingsResponse.statusText);
+      return null;
+    }
+    
+    const recordingsData = await recordingsResponse.json();
+    
+    // Find the transcript file in the recording files
+    const transcriptFile = recordingsData.recording_files?.find((file: any) => 
+      file.file_type === 'TRANSCRIPT' || file.recording_type === 'audio_transcript'
+    );
+    
+    if (!transcriptFile || !transcriptFile.download_url) {
+      console.log('No transcript found for this recording');
+      return null;
+    }
+    
+    // Download the transcript
+    const transcriptResponse = await fetch(transcriptFile.download_url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    
+    if (!transcriptResponse.ok) {
+      console.error('Failed to download transcript:', transcriptResponse.statusText);
+      return null;
+    }
+    
+    const transcriptText = await transcriptResponse.text();
+    return transcriptText;
+  } catch (error) {
+    console.error('Error fetching Zoom transcript:', error);
+    return null;
+  }
+}
+
 // GET - Fetch all coaching sessions (public, for all users)
 export async function GET() {
   try {
@@ -25,7 +142,7 @@ export async function GET() {
   }
 }
 
-// POST - Create a new coaching session (admin only)
+// POST - Create a new coaching session (admin only) with transcript fetching
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -48,7 +165,31 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Create the coaching session
+    let transcript = null;
+    
+    // Try to fetch transcript from Zoom
+    try {
+      const accessToken = await getZoomAccessToken();
+      if (accessToken) {
+        const meetingUuid = extractMeetingUuid(zoomLink);
+        if (meetingUuid) {
+          console.log('Fetching transcript for meeting:', meetingUuid);
+          transcript = await fetchZoomTranscript(meetingUuid, accessToken);
+          if (transcript) {
+            console.log('Successfully fetched transcript');
+          } else {
+            console.log('No transcript available for this meeting');
+          }
+        } else {
+          console.log('Could not extract meeting UUID from link');
+        }
+      }
+    } catch (error) {
+      console.error('Error during transcript fetch (non-blocking):', error);
+      // Continue without transcript - don't fail the whole operation
+    }
+    
+    // Create the coaching session with transcript
     const coachingCall = await prisma.coachingCall.create({
       data: {
         title,
@@ -56,7 +197,8 @@ export async function POST(request: NextRequest) {
         description: description || null,
         callDate: new Date(callDate),
         duration: duration ? parseInt(duration) : null,
-        topics: topics || []
+        topics: topics || [],
+        transcript: transcript
       }
     });
     
