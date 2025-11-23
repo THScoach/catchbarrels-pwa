@@ -18,10 +18,10 @@ export function VideoDetailClient({ video }: any) {
   useEffect(() => {
     const fetchVideoUrl = async () => {
       try {
-        const response = await fetch(`/api/videos/${video.id}/url`);
+        const response = await fetch(`/api/videos/${video.id}/signed-url`);
         if (response.ok) {
           const data = await response.json();
-          setVideoUrl(data.url);
+          setVideoUrl(data.signedUrl);
         }
       } catch (error) {
         console.error('Error fetching video URL:', error);

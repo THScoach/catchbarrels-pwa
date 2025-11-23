@@ -7,18 +7,14 @@ import { uploadFile } from '@/lib/s3';
 
 export const dynamic = 'force-dynamic';
 
-// Maximum file size: 500MB
-const MAX_FILE_SIZE = 500 * 1024 * 1024;
-
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Parse FormData
     const formData = await request.formData();
     const videoFile = formData.get('video') as File;
 
@@ -26,102 +22,106 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
     }
 
-    // Validate file size
-    if (videoFile.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'File size exceeds 500MB limit' },
-        { status: 400 }
-      );
-    }
+    // Convert file to buffer
+    const bytes = await videoFile.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-    // Validate file type
-    if (!videoFile.type.startsWith('video/')) {
-      return NextResponse.json({ error: 'File must be a video' }, { status: 400 });
-    }
-
-    // Convert File to Buffer
-    const arrayBuffer = await videoFile.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Generate unique filename with timestamp
+    // Generate unique filename
     const timestamp = Date.now();
-    const fileExtension = videoFile.name.split('.').pop() || 'mp4';
-    const fileName = `videos/${timestamp}-${videoFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const sanitizedName = videoFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = `videos/${timestamp}-${sanitizedName}`;
 
     // Upload to S3
-    const cloud_storage_path = await uploadFile(buffer, fileName, videoFile.type);
+    const cloudStoragePath = await uploadFile(buffer, fileName);
 
-    // Create database record with cloud_storage_path
+    // Create video record in database
     const video = await prisma.video.create({
       data: {
         userId: (session.user as any).id,
-        title: `Swing Analysis ${new Date().toLocaleDateString()}`,
-        videoUrl: cloud_storage_path, // Store S3 key as videoUrl
+        title: videoFile.name.replace(/\.[^/.]+$/, ''), // Remove file extension
+        videoUrl: cloudStoragePath, // Store S3 key
         thumbnailUrl: '', // Will be generated later
         analyzed: false,
-        uploadDate: new Date(),
       },
     });
 
-    // Trigger background analysis (simulated for Phase 2)
-    // In Phase 3, this will call the actual video analysis pipeline
+    // Simulate async AI analysis - in production, this would be a background job
     setTimeout(async () => {
       try {
-        // Generate mock scores for now
-        const mockScores = {
-          balance: Math.floor(Math.random() * 30) + 70,
-          anchor: Math.floor(Math.random() * 30) + 70,
-          rotation: Math.floor(Math.random() * 30) + 70,
-          rearElbow: Math.floor(Math.random() * 30) + 70,
-          launch: Math.floor(Math.random() * 30) + 70,
-          sequence: Math.floor(Math.random() * 30) + 70,
-        };
-
-        const overallScore = Math.round(
-          (mockScores.balance +
-            mockScores.anchor +
-            mockScores.rotation +
-            mockScores.rearElbow +
-            mockScores.launch +
-            mockScores.sequence) /
-            6
-        );
+        // Generate main metric scores
+        const anchor = 68 + Math.floor(Math.random() * 25);  // Lower Body
+        const engine = 75 + Math.floor(Math.random() * 20);  // Trunk/Core
+        const whip = 70 + Math.floor(Math.random() * 25);    // Arms & Bat
+        
+        const overall = Math.round((anchor + engine + whip) / 3);
 
         const tier =
-          overallScore >= 90
+          overall >= 85
             ? 'Elite'
-            : overallScore >= 80
+            : overall >= 75
             ? 'Advanced'
-            : overallScore >= 70
+            : overall >= 65
             ? 'Intermediate'
             : 'Developing';
+
+        // Generate subcategory scores (variations around main scores)
+        const generateSubScores = (mainScore: number) => ({
+          sub1: Math.max(0, Math.min(100, mainScore + Math.floor(Math.random() * 7) - 3)),
+          sub2: Math.max(0, Math.min(100, mainScore + Math.floor(Math.random() * 7) - 3)),
+          sub3: Math.max(0, Math.min(100, mainScore + Math.floor(Math.random() * 7) - 3)),
+          sub4: Math.max(0, Math.min(100, mainScore + Math.floor(Math.random() * 7) - 3)),
+        });
+
+        const anchorSubs = generateSubScores(anchor);
+        const engineSubs = generateSubScores(engine);
+        const whipSubs = generateSubScores(whip);
+
+        const strongestMetric = [
+          { name: 'anchor', score: anchor },
+          { name: 'engine', score: engine },
+          { name: 'whip', score: whip }
+        ].sort((a, b) => b.score - a.score)[0].name;
+        
+        const metricNames: Record<string, string> = {
+          anchor: 'lower body',
+          engine: 'trunk rotation',
+          whip: 'arms and bat path'
+        };
 
         await prisma.video.update({
           where: { id: video.id },
           data: {
-            analyzed: true,
-            ...mockScores,
-            overallScore,
+            anchor,
+            engine,
+            whip,
+            overallScore: overall,
             tier,
-            exitVelocity: Math.floor(Math.random() * 20) + 75,
-            coachFeedback: `Great work! Your ${
-              Object.entries(mockScores).sort((a, b) => b[1] - a[1])[0][0]
-            } looks strong.`,
+            // Anchor subcategories
+            anchorStance: anchorSubs.sub1,
+            anchorWeightShift: anchorSubs.sub2,
+            anchorGroundConnection: anchorSubs.sub3,
+            anchorLowerBodyMechanics: anchorSubs.sub4,
+            // Engine subcategories
+            engineHipRotation: engineSubs.sub1,
+            engineSeparation: engineSubs.sub2,
+            engineCorePower: engineSubs.sub3,
+            engineTorsoMechanics: engineSubs.sub4,
+            // Whip subcategories
+            whipArmPath: whipSubs.sub1,
+            whipBatSpeed: whipSubs.sub2,
+            whipBatPath: whipSubs.sub3,
+            whipConnection: whipSubs.sub4,
+            exitVelocity: 80 + Math.floor(Math.random() * 20),
+            analyzed: true,
+            coachFeedback: `Nice swing! Your ${metricNames[strongestMetric]} is your strongest component. Keep working on consistency across all three areas.`,
           },
         });
       } catch (error) {
         console.error('Error updating video analysis:', error);
       }
-    }, 5000);
+    }, 5000); // 5 seconds to simulate processing time
 
-    return NextResponse.json({
-      success: true,
-      video: {
-        id: video.id,
-        title: video.title,
-        uploadDate: video.uploadDate,
-      },
-    });
+    return NextResponse.json({ video, message: 'Video uploaded successfully' }, { status: 200 });
   } catch (error) {
     console.error('Video upload error:', error);
     return NextResponse.json(
