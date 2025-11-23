@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { staggerContainer, fadeInUp, cardHover } from '@/lib/animations';
 import { BottomNav } from '@/components/bottom-nav';
 import { Video, Upload, VideoIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -71,17 +72,25 @@ export function VideoListClient({ videos }: any) {
           </Link>
         </motion.div>
 
-        <div className="grid gap-4">
+        <motion.div 
+          className="grid gap-4"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           {videos?.map((video: any, index: number) => (
             <motion.div
               key={video.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
+              variants={fadeInUp}
+              whileHover="hover"
+              whileTap="tap"
+              initial="rest"
+              animate="rest"
+              {...cardHover}
             >
               <Link
                 href={`/video/${video.id}`}
-                className="block bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-700 transition-colors"
+                className="block bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-700 hover:border-gray-600 hover:shadow-lg transition-all duration-200"
               >
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
@@ -126,7 +135,7 @@ export function VideoListClient({ videos }: any) {
               secondaryActionHref="/library"
             />
           )}
-        </div>
+        </motion.div>
       </div>
 
       <BottomNav />

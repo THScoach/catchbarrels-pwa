@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { buttonVariants } from '@/lib/animations';
 import { Video as VideoIcon, TrendingUp, Target, Upload, Play, Calendar, Clock } from 'lucide-react';
 import { ScoreCard } from '@/components/score-card';
 import { BottomNav } from '@/components/bottom-nav';
@@ -102,27 +103,33 @@ export function DashboardClient({ user, scores, videos, latestCoachingCall }: an
           transition={{ duration: 0.5, delay: 0.1 }}
           className="grid grid-cols-3 gap-4"
         >
-          <Link
-            href="/video/upload"
-            className="bg-gradient-to-r from-[#2196F3] to-[#1976D2] p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-lg transition-shadow"
-          >
-            <Upload className="w-5 h-5 text-white mb-1" />
-            <span className="text-white font-medium text-sm">Upload</span>
-          </Link>
-          <Link
-            href="/drills"
-            className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-lg transition-shadow border border-gray-700"
-          >
-            <Target className="w-5 h-5 text-white mb-1" />
-            <span className="text-white font-medium text-sm">Drills</span>
-          </Link>
-          <Link
-            href="/progress"
-            className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-lg transition-shadow border border-gray-700"
-          >
-            <TrendingUp className="w-5 h-5 text-white mb-1" />
-            <span className="text-white font-medium text-sm">Progress</span>
-          </Link>
+          <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
+            <Link
+              href="/video/upload"
+              className="block bg-gradient-to-r from-[#2196F3] to-[#1976D2] p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-xl transition-all duration-200"
+            >
+              <Upload className="w-5 h-5 text-white mb-1" />
+              <span className="text-white font-medium text-sm">Upload</span>
+            </Link>
+          </motion.div>
+          <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
+            <Link
+              href="/drills"
+              className="block bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-xl transition-all duration-200 border border-gray-700"
+            >
+              <Target className="w-5 h-5 text-white mb-1" />
+              <span className="text-white font-medium text-sm">Drills</span>
+            </Link>
+          </motion.div>
+          <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
+            <Link
+              href="/progress"
+              className="block bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-xl transition-all duration-200 border border-gray-700"
+            >
+              <TrendingUp className="w-5 h-5 text-white mb-1" />
+              <span className="text-white font-medium text-sm">Progress</span>
+            </Link>
+          </motion.div>
         </motion.div>
 
         {/* Overall Score */}

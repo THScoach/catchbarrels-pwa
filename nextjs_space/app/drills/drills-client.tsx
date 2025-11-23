@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { staggerContainer, fadeInUp, cardHover, buttonVariants } from '@/lib/animations';
 import { BottomNav } from '@/components/bottom-nav';
 import { Target, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -94,32 +95,43 @@ export function DrillsClient({ drills }: any) {
           className="flex overflow-x-auto space-x-2 mb-6 pb-2 scrollbar-hide"
         >
           {categories.map((category) => (
-            <button
+            <motion.button
               key={category}
               onClick={() => setCategoryFilter(category)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+              whileHover="hover"
+              whileTap="tap"
+              variants={buttonVariants}
+              className={`px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 ${
                 categoryFilter === category
-                  ? 'bg-[#2196F3] text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  ? 'bg-[#2196F3] text-white shadow-lg'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
               }`}
             >
               {category}
-            </button>
+            </motion.button>
           ))}
         </motion.div>
 
         {/* Drills Grid */}
-        <div className="grid gap-4">
+        <motion.div 
+          className="grid gap-4"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           {filteredDrills?.map((drill: any, index: number) => (
             <motion.div
               key={drill?.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 + index * 0.05 }}
+              variants={fadeInUp}
+              whileHover="hover"
+              whileTap="tap"
+              initial="rest"
+              animate="rest"
+              {...cardHover}
             >
               <Link
                 href={`/drills/${drill?.id}`}
-                className="block bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/70 transition-colors"
+                className="block bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/80 hover:border-gray-600 hover:shadow-lg transition-all duration-200"
               >
               <div className="flex items-start space-x-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-[#2196F3] to-[#1976D2] rounded-lg flex items-center justify-center flex-shrink-0">
@@ -141,7 +153,7 @@ export function DrillsClient({ drills }: any) {
               </Link>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {filteredDrills?.length === 0 && (
           <EmptyState
