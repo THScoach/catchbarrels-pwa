@@ -77,11 +77,16 @@ export default function OnboardingPage() {
       });
 
       if (response.ok) {
-        router.push('/dashboard');
-        router.refresh();
+        // Use replace instead of push to avoid back button issues
+        router.replace('/dashboard');
+      } else {
+        // Show error if response is not ok
+        console.error('Profile update failed with status:', response.status);
+        alert('Failed to save profile. Please try again.');
       }
     } catch (error) {
       console.error('Profile update error:', error);
+      alert('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
