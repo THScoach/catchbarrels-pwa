@@ -117,18 +117,19 @@ export async function getWhopUserMemberships(
  * Map Whop product ID to BARRELS membership tier
  */
 export function getWhopProductTier(productId: string): string {
-  // This will be dynamically configurable via WhopProduct model in Phase 6
-  // For now, using a simple mapping
-  // In production, this should query the WhopProduct table
-
+  // Product IDs from Whop dashboard (configured Nov 2024)
   const productMapping: Record<string, string> = {
-    // These will be replaced with actual Whop product IDs from dashboard
-    athlete_monthly: "athlete",
-    athlete_yearly: "athlete",
-    pro_monthly: "pro",
-    pro_yearly: "pro",
-    elite_monthly: "elite",
-    elite_yearly: "elite",
+    // BARRELS Athlete - $49/mo or $417/yr
+    "prod_kNyobCww4tc2p": "athlete",
+    
+    // BARRELS Pro - $99/mo or $839/yr
+    "prod_O4CB6y0IzNJLe": "pro",
+    
+    // BARRELS Elite (The Inner Circle) - $199/mo or $1,699/yr
+    "prod_vCV6UQH3K18QZ": "elite",
+    
+    // The 90-Day Transformation - $997 one-time
+    "prod_zH1wnZs0JKKfd": "elite", // Transformation grants elite access
   };
 
   return productMapping[productId] || "free";

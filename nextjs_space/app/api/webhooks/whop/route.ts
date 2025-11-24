@@ -52,7 +52,27 @@ async function getMembershipTierFromProduct(
   productId: string
 ): Promise<string> {
   try {
-    // Check if product is mapped in database
+    // Product IDs from Whop dashboard (configured Nov 2024)
+    const productMapping: Record<string, string> = {
+      // BARRELS Athlete - $49/mo or $417/yr
+      "prod_kNyobCww4tc2p": "athlete",
+      
+      // BARRELS Pro - $99/mo or $839/yr
+      "prod_O4CB6y0IzNJLe": "pro",
+      
+      // BARRELS Elite (The Inner Circle) - $199/mo or $1,699/yr
+      "prod_vCV6UQH3K18QZ": "elite",
+      
+      // The 90-Day Transformation - $997 one-time
+      "prod_zH1wnZs0JKKfd": "elite", // Transformation grants elite access
+    };
+
+    // Check hardcoded mapping first
+    if (productMapping[productId]) {
+      return productMapping[productId];
+    }
+
+    // Check if product is mapped in database (for future use)
     const product = await prisma.whopProduct.findUnique({
       where: { whopProductId: productId },
     });
@@ -60,12 +80,6 @@ async function getMembershipTierFromProduct(
     if (product && product.membershipTier) {
       return product.membershipTier;
     }
-
-    // Default mapping (fallback)
-    // You'll need to update this with actual Whop product IDs
-    if (productId.includes("athlete")) return "athlete";
-    if (productId.includes("pro")) return "pro";
-    if (productId.includes("elite")) return "elite";
 
     return "free";
   } catch (error) {
