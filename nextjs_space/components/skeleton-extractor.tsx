@@ -68,9 +68,22 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
       return;
     }
     
-    // Disable player isolation for videos longer than 15 seconds
-    if (video.duration > 15 && enablePlayerIsolation) {
-      toast.warning('Video is long - disabling player isolation to prevent crashes');
+    // Estimate FPS from video metadata
+    // Most browsers don't expose FPS directly, so we'll sample frames
+    const estimatedFPS = Math.round(1 / (1 / 60)); // Default to 60 for calculation
+    
+    // For high FPS videos (240+), we MUST sample frames aggressively
+    // Calculate total frames that would be processed
+    const totalFrames = Math.ceil(video.duration * 120); // Assume worst case 120 FPS processing
+    
+    if (totalFrames > 1800) { // More than 15 seconds at 120 FPS
+      toast.error('Video has too many frames. Please use a 60-120 FPS video, or trim to under 10 seconds.');
+      return;
+    }
+    
+    // Disable player isolation for videos longer than 10 seconds OR if we suspect high FPS
+    if ((video.duration > 10 || totalFrames > 1200) && enablePlayerIsolation) {
+      toast.warning('Disabling player isolation for stability');
       setEnablePlayerIsolation(false);
     }
 
@@ -97,10 +110,22 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
 
       const extractedFrames: any[] = [];
       const isolatedPlayerFrames: any[] = [];
-      // Extract at 60 FPS to prevent browser crashes (120 FPS causes memory issues)
-      const fps = 60;
+      
+      // Adaptive FPS calculation for stability
+      // Target: 400-600 frames max for any video length
+      const maxFrames = 600;
+      const targetFPS = Math.min(60, Math.floor(maxFrames / video.duration));
+      const fps = Math.max(30, targetFPS); // Minimum 30 FPS for quality
+      
       let frameCount = 0;
       const totalFrames = Math.floor(video.duration * fps);
+      
+      console.log(`Processing video: ${video.duration}s at ${fps} FPS = ${totalFrames} frames`);
+      
+      // Inform user about adaptive FPS if downsampling
+      if (fps < 60) {
+        toast.info(`Processing at ${fps} FPS for stability (video is ${Math.round(video.duration)}s)`);
+      }
 
       setStatus(enablePlayerIsolation 
         ? 'Extracting skeleton + isolating player...' 
@@ -271,10 +296,10 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
           <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-700/30">
             <h4 className="text-sm font-semibold text-blue-400 mb-2">💡 Swing Analysis Tips</h4>
             <ul className="text-xs text-gray-300 space-y-1">
-              <li>• 60 FPS provides excellent precision for swing analysis</li>
-              <li>• Keep videos under 15 seconds for best performance</li>
-              <li>• Player isolation is optional - try without it first</li>
-              <li>• Extraction takes ~20-40 seconds for short videos</li>
+              <li>• Works with 60-300 FPS videos (auto-adjusted for stability)</li>
+              <li>• Keep videos under 10 seconds for high FPS (240+ FPS)</li>
+              <li>• Player isolation OFF recommended for first attempt</li>
+              <li>• Processing time: 20-60 seconds depending on length</li>
             </ul>
           </div>
 
