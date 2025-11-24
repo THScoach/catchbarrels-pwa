@@ -15,8 +15,9 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
+    icon: '/barrels-logo-512.png',
+    shortcut: '/favicon.png',
+    apple: '/barrels-logo-512.png',
   },
   openGraph: {
     title: 'BARRELS - Baseball Swing Analysis',
