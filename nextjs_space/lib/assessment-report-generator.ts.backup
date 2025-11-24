@@ -105,160 +105,43 @@ function calculateAggregatedMetrics(swings: any[]) {
     return Math.sqrt(avg(squareDiffs));
   };
 
-  const consistencyScore = (values: number[]) => {
-    // Lower std dev = higher consistency (0-100)
-    return Math.max(0, 100 - stdDev(values) * 2);
-  };
+  // Extract metrics
+  const batSpeeds = validSwings
+    .map((s) => s.metrics.batSpeedMph)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const pelvisVelocities = validSwings
+    .map((s) => s.metrics.pelvisMaxVelocity)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const torsoVelocities = validSwings
+    .map((s) => s.metrics.torsoMaxVelocity)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const armVelocities = validSwings
+    .map((s) => s.metrics.armMaxVelocity)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const sequenceScores = validSwings
+    .map((s) => s.metrics.sequenceScore)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const xFactors = validSwings
+    .map((s) => s.metrics.hipShoulderSeparation)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const frontKneeAngles = validSwings
+    .map((s) => s.metrics.frontKneeAngle)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const swingTimes = validSwings
+    .map((s) => s.metrics.totalSwingTimeMs)
+    .filter((v): v is number => v !== null && v !== undefined);
 
-  // ===== MOTION METRICS =====
-  const avgBatSpeeds = validSwings.map((s) => s.metrics.avgBatSpeedMph).filter((v): v is number => v !== null && v !== undefined);
-  const maxBatSpeeds = validSwings.map((s) => s.metrics.maxBatSpeedMph).filter((v): v is number => v !== null && v !== undefined);
-  const avgHandSpeeds = validSwings.map((s) => s.metrics.avgHandSpeedMph).filter((v): v is number => v !== null && v !== undefined);
-  const maxHandSpeeds = validSwings.map((s) => s.metrics.maxHandSpeedMph).filter((v): v is number => v !== null && v !== undefined);
-  const loadToLaunches = validSwings.map((s) => s.metrics.loadToLaunchMs).filter((v): v is number => v !== null && v !== undefined);
-  const launchToImpacts = validSwings.map((s) => s.metrics.launchToImpactMs).filter((v): v is number => v !== null && v !== undefined);
-  const swingDurations = validSwings.map((s) => s.metrics.swingDurationMs).filter((v): v is number => v !== null && v !== undefined);
-  const pelvisVelocities = validSwings.map((s) => s.metrics.pelvisMaxAngularVelocity).filter((v): v is number => v !== null && v !== undefined);
-  const torsoVelocities = validSwings.map((s) => s.metrics.torsoMaxAngularVelocity).filter((v): v is number => v !== null && v !== undefined);
-  const armVelocities = validSwings.map((s) => s.metrics.armMaxAngularVelocity).filter((v): v is number => v !== null && v !== undefined);
-  const batVelocities = validSwings.map((s) => s.metrics.batMaxAngularVelocity).filter((v): v is number => v !== null && v !== undefined);
-
-  // ===== STABILITY METRICS =====
-  const spineTiltsAtLaunch = validSwings.map((s) => s.metrics.spineTiltAtLaunchDeg).filter((v): v is number => v !== null && v !== undefined);
-  const pelvisAnglesAtLaunch = validSwings.map((s) => s.metrics.pelvisAngleAtLaunchDeg).filter((v): v is number => v !== null && v !== undefined);
-  const shoulderTiltsAtLaunch = validSwings.map((s) => s.metrics.shoulderTiltAtLaunchDeg).filter((v): v is number => v !== null && v !== undefined);
-  const spineTiltsAtImpact = validSwings.map((s) => s.metrics.spineTiltAtImpactDeg).filter((v): v is number => v !== null && v !== undefined);
-  const pelvisAnglesAtImpact = validSwings.map((s) => s.metrics.pelvisAngleAtImpactDeg).filter((v): v is number => v !== null && v !== undefined);
-  const shoulderTiltsAtImpact = validSwings.map((s) => s.metrics.shoulderTiltAtImpactDeg).filter((v): v is number => v !== null && v !== undefined);
-  const frontKneeAngles = validSwings.map((s) => s.metrics.frontKneeFlexionAtImpactDeg).filter((v): v is number => v !== null && v !== undefined);
-  const xFactors = validSwings.map((s) => s.metrics.hipShoulderSeparation).filter((v): v is number => v !== null && v !== undefined);
-  const headDisplacements = validSwings.map((s) => s.metrics.headDisplacementFromStanceCm).filter((v): v is number => v !== null && v !== undefined);
-  const strideLengthFactors = validSwings.map((s) => s.metrics.strideLengthFactor).filter((v): v is number => v !== null && v !== undefined);
-
-  // ===== SEQUENCING METRICS =====
-  const pelvisPeakTimings = validSwings.map((s) => s.metrics.pelvisPeakTimingMs).filter((v): v is number => v !== null && v !== undefined);
-  const torsoPeakTimings = validSwings.map((s) => s.metrics.torsoPeakTimingMs).filter((v): v is number => v !== null && v !== undefined);
-  const armPeakTimings = validSwings.map((s) => s.metrics.armPeakTimingMs).filter((v): v is number => v !== null && v !== undefined);
-  const batPeakTimings = validSwings.map((s) => s.metrics.batPeakTimingMs).filter((v): v is number => v !== null && v !== undefined);
-  const pelvisToTorsoGaps = validSwings.map((s) => s.metrics.pelvisToTorsoGapMs).filter((v): v is number => v !== null && v !== undefined);
-  const torsoToArmGaps = validSwings.map((s) => s.metrics.torsoToArmGapMs).filter((v): v is number => v !== null && v !== undefined);
-  const armToBatGaps = validSwings.map((s) => s.metrics.armToBatGapMs).filter((v): v is number => v !== null && v !== undefined);
-  const sequenceOrderScores = validSwings.map((s) => s.metrics.sequenceOrderScore).filter((v): v is number => v !== null && v !== undefined);
-  const sequenceTimingScores = validSwings.map((s) => s.metrics.sequenceTimingScore).filter((v): v is number => v !== null && v !== undefined);
-  const sequenceScores = validSwings.map((s) => s.metrics.sequenceScore).filter((v): v is number => v !== null && v !== undefined);
-
-  // ===== CALCULATE ANCHOR/ENGINE/WHIP SCORES =====
-  // Anchor/Engine: 40% Motion, 40% Stability, 20% Sequencing (pelvis/torso metrics)
-  const anchorEngineMotion = avg([
-    avg(pelvisVelocities) / 10, // Normalize ~600-800 → 60-80
-    avg(torsoVelocities) / 12, // Normalize ~800-1000 → 66-83
-    Math.max(0, 100 - Math.abs(avg(loadToLaunches) - 150) / 2), // Ideal ~150ms
-  ]);
-  
-  const anchorEngineStability = avg([
-    consistencyScore(spineTiltsAtLaunch),
-    consistencyScore(pelvisAnglesAtLaunch),
-    consistencyScore(headDisplacements),
-    Math.max(0, 100 - stdDev(strideLengthFactors) * 200), // Stride consistency
-  ]);
-  
-  const anchorEngineSequencing = avg([
-    avg(sequenceOrderScores),
-    avg(sequenceTimingScores),
-    Math.max(0, 100 - Math.abs(avg(pelvisToTorsoGaps) - 40) * 2), // Ideal ~30-50ms
-  ]);
-  
-  const anchorEngineScore = (
-    anchorEngineMotion * 0.4 +
-    anchorEngineStability * 0.4 +
-    anchorEngineSequencing * 0.2
-  );
-
-  // Whip: 40% Motion, 30% Stability, 30% Sequencing (arm/bat metrics)
-  const whipMotion = avg([
-    normalizeBatSpeed(avg(avgBatSpeeds)),
-    normalizeBatSpeed(avg(avgHandSpeeds)),
-    avg(armVelocities) / 15, // Normalize ~1000-1200 → 66-80
-    avg(batVelocities) / 30, // Normalize ~2000-3000 → 66-100
-  ]);
-  
-  const whipStability = avg([
-    Math.max(0, 100 - Math.abs(avg(xFactors) - 50) * 2), // Ideal X-Factor ~50 degrees
-    consistencyScore(frontKneeAngles),
-    consistencyScore(shoulderTiltsAtImpact),
-  ]);
-  
-  const whipSequencing = avg([
-    Math.max(0, 100 - Math.abs(avg(torsoToArmGaps) - 40) * 2), // Ideal ~30-50ms
-    Math.max(0, 100 - Math.abs(avg(armToBatGaps) - 40) * 2),
-    avg(sequenceTimingScores),
-  ]);
-  
-  const whipScore = (
-    whipMotion * 0.4 +
-    whipStability * 0.3 +
-    whipSequencing * 0.3
-  );
-
-  // ===== COMPILE ALL METRICS =====
   return {
-    // Motion Summary
-    avgBatSpeed: avg(avgBatSpeeds),
-    maxBatSpeed: max(maxBatSpeeds),
-    avgHandSpeed: avg(avgHandSpeeds),
-    maxHandSpeed: max(maxHandSpeeds),
-    avgLoadToLaunch: avg(loadToLaunches),
-    avgLaunchToImpact: avg(launchToImpacts),
-    avgSwingDuration: avg(swingDurations),
+    avgBatSpeed: avg(batSpeeds),
+    maxBatSpeed: max(batSpeeds),
+    avgSwingTime: avg(swingTimes),
     avgPelvisVelocity: avg(pelvisVelocities),
     avgTorsoVelocity: avg(torsoVelocities),
     avgArmVelocity: avg(armVelocities),
-    avgBatVelocity: avg(batVelocities),
-    motionConsistencyScore: consistencyScore(avgBatSpeeds),
-    
-    // Stability Summary
-    avgSpineTiltAtLaunch: avg(spineTiltsAtLaunch),
-    avgPelvisAngleAtLaunch: avg(pelvisAnglesAtLaunch),
-    avgShoulderTiltAtLaunch: avg(shoulderTiltsAtLaunch),
-    avgSpineTiltAtImpact: avg(spineTiltsAtImpact),
-    avgPelvisAngleAtImpact: avg(pelvisAnglesAtImpact),
-    avgShoulderTiltAtImpact: avg(shoulderTiltsAtImpact),
-    avgFrontKneeAngle: avg(frontKneeAngles),
-    avgXFactor: avg(xFactors),
-    avgHeadDisplacement: avg(headDisplacements),
-    avgStrideLengthFactor: avg(strideLengthFactors),
-    spineTiltConsistencyScore: consistencyScore(spineTiltsAtLaunch),
-    pelvisAngleConsistencyScore: consistencyScore(pelvisAnglesAtLaunch),
-    headStabilityScore: consistencyScore(headDisplacements),
-    overallStabilityScore: anchorEngineStability,
-    
-    // Sequencing Summary
-    avgPelvisPeakTiming: avg(pelvisPeakTimings),
-    avgTorsoPeakTiming: avg(torsoPeakTimings),
-    avgArmPeakTiming: avg(armPeakTimings),
-    avgBatPeakTiming: avg(batPeakTimings),
-    avgPelvisToTorsoGap: avg(pelvisToTorsoGaps),
-    avgTorsoToArmGap: avg(torsoToArmGaps),
-    avgArmToBatGap: avg(armToBatGaps),
     avgSequenceScore: avg(sequenceScores),
-    avgSequenceOrderScore: avg(sequenceOrderScores),
-    avgSequenceTimingScore: avg(sequenceTimingScores),
-    sequenceConsistency: consistencyScore(sequenceScores),
-    
-    // Anchor/Engine/Whip Scores
-    anchorEngineScore,
-    anchorEngineMotion,
-    anchorEngineStability,
-    anchorEngineSequencing,
-    whipScore,
-    whipMotion,
-    whipStability,
-    whipSequencing,
-    
-    // Overall (for backwards compatibility)
-    overallSwingScore: (anchorEngineScore + whipScore) / 2,
-    biomechanicsScore: avg(sequenceScores),
-    ballContactScore: 0, // Will be filled by ball data
+    avgXFactor: avg(xFactors),
+    avgFrontKneeAngle: avg(frontKneeAngles),
+    consistencyScore: Math.max(0, 100 - stdDev(batSpeeds) * 2), // Lower std dev = higher consistency
   };
 }
 

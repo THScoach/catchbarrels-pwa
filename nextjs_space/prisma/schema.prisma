@@ -654,43 +654,65 @@ model SwingMetrics {
   swingId       String   @unique
   swing         SwingAnalysis @relation(fields: [swingId], references: [id], onDelete: Cascade)
   
-  // Timing Metrics
+  // ===== MOTION METRICS (how things move over time) =====
+  // Global Motion
+  avgBatSpeedMph      Float?   // Bat speed at impact (mph)
+  maxBatSpeedMph      Float?   // Peak bat speed
+  avgHandSpeedMph     Float?   // Hand speed at impact
+  maxHandSpeedMph     Float?   // Peak hand speed
+  
+  // Temporal Motion
   loadToLaunchMs      Float?   // Milliseconds from load to launch
   launchToImpactMs    Float?   // Milliseconds from launch to impact
-  totalSwingTimeMs    Float?   // Total swing duration
+  swingDurationMs     Float?   // Total swing duration (launch → impact)
   
-  // Speed Metrics
-  batSpeedMph         Float?   // Bat speed at impact (mph)
-  handSpeedMph        Float?   // Hand speed at impact
-  peakAngularVelocity Float?   // Peak rotational speed (deg/s)
+  // Segment Angular Velocities (Dr. Kwon)
+  pelvisMaxAngularVelocity   Float?   // deg/s
+  torsoMaxAngularVelocity    Float?   // deg/s
+  armMaxAngularVelocity      Float?   // deg/s
+  batMaxAngularVelocity      Float?   // deg/s
   
-  // Kinematic Sequence Metrics (Dr. Kwon)
-  pelvisMaxVelocity   Float?   // deg/s
-  torsoMaxVelocity    Float?   // deg/s
-  armMaxVelocity      Float?   // deg/s
-  batMaxVelocity      Float?   // deg/s
+  // ===== STABILITY METRICS (positions at key events + control) =====
+  // At Launch
+  spineTiltAtLaunchDeg     Float?   // Spine tilt angle at launch
+  pelvisAngleAtLaunchDeg   Float?   // Pelvis rotation at launch
+  shoulderTiltAtLaunchDeg  Float?   // Shoulder tilt at launch
+  backKneeFlexionAtLaunchDeg Float? // Back knee angle at launch
   
-  pelvisPeakTimingMs  Float?   // When pelvis peaks (ms before impact)
+  // At Impact
+  spineTiltAtImpactDeg     Float?   // Spine tilt angle at impact
+  pelvisAngleAtImpactDeg   Float?   // Pelvis rotation at impact
+  shoulderTiltAtImpactDeg  Float?   // Shoulder tilt at impact
+  frontKneeFlexionAtImpactDeg Float? // Front knee angle at impact
+  hipShoulderSeparation    Float?   // X-Factor (degrees)
+  leadElbowAngle           Float?   // Lead elbow at impact
+  rearElbowAngle           Float?   // Rear elbow at impact
+  
+  // Base/Ground
+  headDisplacementFromStanceCm Float? // Head movement from setup
+  strideLengthFactor           Float? // Stride length as % of height (0-1)
+  
+  // ===== SEQUENCING METRICS (when and in what order segments move) =====
+  // Peak Timings (ms before impact)
+  pelvisPeakTimingMs  Float?   // When pelvis peaks
   torsoPeakTimingMs   Float?   // When torso peaks
   armPeakTimingMs     Float?   // When arm peaks
   batPeakTimingMs     Float?   // When bat peaks (should be ~0)
   
-  sequenceScore       Float?   // 0-100 (correct order + timing gaps)
+  // Timing Gaps
+  pelvisToTorsoGapMs  Float?   // Gap between pelvis and torso peaks
+  torsoToArmGapMs     Float?   // Gap between torso and arm peaks
+  armToBatGapMs       Float?   // Gap between arm and bat peaks
+  
+  // Sequence Evaluation
   sequenceOrder       String[] @default([]) // ["pelvis", "torso", "arm", "bat"] or actual order
+  sequenceOrderScore  Float?   // 0-100 (correct order?)
+  sequenceTimingScore Float?   // 0-100 (gaps near 30-50ms?)
+  sequenceScore       Float?   // 0-100 (combined)
   
-  // Joint Angles
-  hipShoulderSeparation Float? // X-Factor (degrees)
-  frontKneeAngle        Float? // At impact (degrees)
-  leadElbowAngle        Float? // At impact
-  rearElbowAngle        Float? // At impact
-  
-  // Position Metrics
-  strideLength          Float? // Inches or % of height
-  batPathEfficiency     Float? // 0-100
-  
-  // Quality Score
-  confidence            Float?  // 0-1 (how confident is the analysis)
-  overallScore          Float?  // 0-100 composite score
+  // ===== QUALITY METRICS =====
+  confidence          Float?  // 0-1 (how confident is the analysis)
+  overallScore        Float?  // 0-100 composite score
   
   createdAt     DateTime @default(now())
 }
@@ -762,33 +784,91 @@ model AssessmentMetricsSummary {
   reportId      String   @unique
   report        AssessmentReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
   
-  // Swing Metrics (Averages)
-  avgBatSpeed         Float?
-  maxBatSpeed         Float?
-  avgSwingTime        Float?
-  consistencyScore    Float?  // 0-100 (std dev based)
+  // ===== MOTION SUMMARY (averages & quality) =====
+  // Global Motion
+  avgBatSpeed         Float?   // mph
+  maxBatSpeed         Float?   // mph
+  avgHandSpeed        Float?   // mph
+  maxHandSpeed        Float?   // mph
   
-  // Kinematic Sequence (Averages)
-  avgPelvisVelocity   Float?
-  avgTorsoVelocity    Float?
-  avgArmVelocity      Float?
-  avgSequenceScore    Float?  // 0-100
-  sequenceConsistency Float?  // How consistent is the pattern
+  // Temporal Motion
+  avgLoadToLaunch     Float?   // ms
+  avgLaunchToImpact   Float?   // ms
+  avgSwingDuration    Float?   // ms
   
-  // Joint Angles (Averages)
-  avgXFactor          Float?
-  avgFrontKneeAngle   Float?
-  avgStrideLength     Float?
+  // Segment Angular Velocities
+  avgPelvisVelocity   Float?   // deg/s
+  avgTorsoVelocity    Float?   // deg/s
+  avgArmVelocity      Float?   // deg/s
+  avgBatVelocity      Float?   // deg/s
   
-  // Ball Data (Averages)
+  // Motion Quality
+  motionConsistencyScore Float? // 0-100 (std dev of velocities)
+  
+  // ===== STABILITY SUMMARY (consistency of positions) =====
+  // At Launch
+  avgSpineTiltAtLaunch     Float?   // degrees
+  avgPelvisAngleAtLaunch   Float?   // degrees
+  avgShoulderTiltAtLaunch  Float?   // degrees
+  
+  // At Impact
+  avgSpineTiltAtImpact     Float?   // degrees
+  avgPelvisAngleAtImpact   Float?   // degrees
+  avgShoulderTiltAtImpact  Float?   // degrees
+  avgFrontKneeAngle        Float?   // degrees
+  avgXFactor               Float?   // degrees (hip-shoulder separation)
+  
+  // Base/Ground
+  avgHeadDisplacement      Float?   // cm
+  avgStrideLengthFactor    Float?   // 0-1
+  
+  // Stability Consistency Scores
+  spineTiltConsistencyScore   Float? // 0-100
+  pelvisAngleConsistencyScore Float? // 0-100
+  headStabilityScore          Float? // 0-100
+  overallStabilityScore       Float? // 0-100 (composite)
+  
+  // ===== SEQUENCING SUMMARY (timing & order) =====
+  // Average Peak Timings
+  avgPelvisPeakTiming  Float?   // ms before impact
+  avgTorsoPeakTiming   Float?   // ms before impact
+  avgArmPeakTiming     Float?   // ms before impact
+  avgBatPeakTiming     Float?   // ms before impact
+  
+  // Average Timing Gaps
+  avgPelvisToTorsoGap  Float?   // ms
+  avgTorsoToArmGap     Float?   // ms
+  avgArmToBatGap       Float?   // ms
+  
+  // Sequencing Quality
+  avgSequenceScore        Float?  // 0-100
+  avgSequenceOrderScore   Float?  // 0-100
+  avgSequenceTimingScore  Float?  // 0-100
+  sequenceConsistency     Float?  // 0-100 (pattern repeatability)
+  
+  // ===== ANCHOR/ENGINE/WHIP SCORES =====
+  // Anchor/Engine (Lower body + trunk)
+  anchorEngineScore       Float?  // 0-100 (weighted from Motion/Stability/Sequencing of pelvis/torso)
+  anchorEngineMotion      Float?  // 0-100 (pelvis/torso velocities, load→launch timing)
+  anchorEngineStability   Float?  // 0-100 (spine, pelvis, head, stride consistency)
+  anchorEngineSequencing  Float?  // 0-100 (pelvis/torso timing & order)
+  
+  // Whip (Arms + barrel)
+  whipScore               Float?  // 0-100 (weighted from Motion/Stability/Sequencing of arm/bat)
+  whipMotion              Float?  // 0-100 (bat & hand speed, arm/bat velocities)
+  whipStability           Float?  // 0-100 (impact positions, contact consistency)
+  whipSequencing          Float?  // 0-100 (arm/bat timing & gaps)
+  
+  // ===== BALL DATA (Averages) =====
   avgExitVelocity     Float?
   maxExitVelocity     Float?
   avgLaunchAngle      Float?
   avgDistance         Float?
   barrelRate          Float?  // % of barrels
+  solidContactRate    Float?  // % of solid contact
   
-  // Quality Scores
-  overallSwingScore   Float?  // 0-100
+  // ===== OVERALL QUALITY SCORES =====
+  overallSwingScore   Float?  // 0-100 (composite of all factors)
   biomechanicsScore   Float?  // 0-100
   ballContactScore    Float?  // 0-100
   
