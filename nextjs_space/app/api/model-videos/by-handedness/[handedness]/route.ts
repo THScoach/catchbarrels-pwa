@@ -30,7 +30,8 @@ export async function GET(
       );
     }
 
-    const modelVideo = await prisma.modelVideo.findFirst({
+    // Get all active models for this handedness
+    const allModels = await prisma.modelVideo.findMany({
       where: {
         handedness,
         active: true,
@@ -40,12 +41,16 @@ export async function GET(
       },
     });
 
-    if (!modelVideo) {
+    if (allModels.length === 0) {
       return NextResponse.json(
         { error: 'No active model video found for this handedness' },
         { status: 404 }
       );
     }
+
+    // Randomly select one model from available models
+    const randomIndex = Math.floor(Math.random() * allModels.length);
+    const modelVideo = allModels[randomIndex];
 
     // Generate signed URL for video playback
     const s3Client = createS3Client();
