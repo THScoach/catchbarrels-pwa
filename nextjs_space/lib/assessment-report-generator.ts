@@ -187,12 +187,17 @@ function calculateAggregatedMetrics(swings: any[]) {
   const sequenceScores = validSwings.map((s) => s.metrics.sequenceScore).filter((v): v is number => v !== null && v !== undefined);
 
   // ===== CALCULATE ANCHOR/ENGINE/WHIP SCORES (3 SEPARATE) =====
+  // MOTION = TIMING (not velocity) per user request
   
   // 1. ANCHOR SCORE (Lower Body Foundation)
-  // Motion (40%): Pelvis velocity, load-to-launch timing, stride mechanics
+  // Motion (40%): TIMING ONLY - Load-to-launch duration, pelvis initiation timing, stride timing
   const anchorMotion = avg([
-    avg(pelvisVelocities) / 10, // Normalize ~600-800 → 60-80
-    Math.max(0, 100 - Math.abs(avg(loadToLaunches) - 150) / 2), // Ideal ~150ms load→launch
+    // Load-to-launch duration (broad band around 150-220ms)
+    Math.max(0, 100 - Math.abs(avg(loadToLaunches) - 185) / 1.5), // Ideal ~150-220ms, center at 185ms
+    // Pelvis initiation timing (is it starting the motion at the right time?)
+    Math.max(0, 100 - Math.abs(avg(pelvisPeakTimings) + 100) / 2), // Pelvis peaks ~100-120ms before impact
+    // Stride timing consistency (foot plant timing)
+    consistencyScore(loadToLaunches), // Consistent load-to-launch timing
   ].filter(v => !isNaN(v) && v > 0));
   
   // Stability (40%): Knee angles, head displacement, stride consistency
@@ -204,10 +209,10 @@ function calculateAggregatedMetrics(swings: any[]) {
     Math.max(0, 100 - stdDev(strideLengthFactors) * 200), // Stride length consistency
   ].filter(v => !isNaN(v) && v > 0));
   
-  // Sequencing (20%): Pelvis timing (first mover)
+  // Sequencing (20%): Pelvis is first in sequence order
   const anchorSequencing = avg([
     avg(sequenceOrderScores) * 1.2, // Pelvis should be first
-    Math.max(0, 100 - Math.abs(avg(pelvisPeakTimings) - 100) / 2), // Pelvis peaks ~100ms before impact
+    Math.max(0, 100 - Math.abs(avg(pelvisPeakTimings) + 100) / 2), // Pelvis peaks ~100ms before impact
   ].filter(v => !isNaN(v) && v > 0));
   
   const anchorScore = (
@@ -217,10 +222,14 @@ function calculateAggregatedMetrics(swings: any[]) {
   );
 
   // 2. ENGINE SCORE (Core Rotational Power)
-  // Motion (40%): Torso velocity, pelvis-torso coordination
+  // Motion (40%): TIMING ONLY - Pelvis-to-torso gap, torso peak timing, rotation initiation
   const engineMotion = avg([
-    avg(torsoVelocities) / 12, // Normalize ~800-1000 → 66-83
-    avg(pelvisVelocities) / 10, // Pelvis drives torso
+    // Pelvis-to-torso gap timing (ideal 30-50ms)
+    Math.max(0, 100 - Math.abs(avg(pelvisToTorsoGaps) - 40) / 1.5), // Ideal ~30-50ms gap, center at 40ms
+    // Torso peak timing relative to impact (should be ~60-80ms before impact)
+    Math.max(0, 100 - Math.abs(avg(torsoPeakTimings) + 70) / 2), // Ideal ~60-80ms before impact
+    // Rotation initiation timing (pelvis timing consistency)
+    consistencyScore(pelvisPeakTimings), // Consistent pelvis initiation
   ].filter(v => !isNaN(v) && v > 0));
   
   // Stability (40%): Spine tilt, pelvis angle, X-factor
@@ -232,7 +241,7 @@ function calculateAggregatedMetrics(swings: any[]) {
     Math.max(0, 100 - Math.abs(avg(xFactors) - 50) * 2), // Ideal X-Factor ~50 degrees
   ].filter(v => !isNaN(v) && v > 0));
   
-  // Sequencing (20%): Pelvis-to-torso gap timing
+  // Sequencing (20%): Pelvis → Torso order + gap quality
   const engineSequencing = avg([
     avg(sequenceOrderScores),
     avg(sequenceTimingScores),
@@ -246,12 +255,16 @@ function calculateAggregatedMetrics(swings: any[]) {
   );
 
   // 3. WHIP SCORE (Upper Body / Bat)
-  // Motion (40%): Bat speed, hand speed, arm/bat velocities
+  // Motion (40%): TIMING ONLY - Torso-to-arm gap, arm-to-bat gap, bat peak timing at impact
   const whipMotion = avg([
-    normalizeBatSpeed(avg(avgBatSpeeds)),
-    normalizeBatSpeed(avg(avgHandSpeeds)),
-    avg(armVelocities) / 15, // Normalize ~1000-1200 → 66-80
-    avg(batVelocities) / 30, // Normalize ~2000-3000 → 66-100
+    // Torso-to-arm gap timing (ideal 30-50ms)
+    Math.max(0, 100 - Math.abs(avg(torsoToArmGaps) - 40) / 1.5), // Ideal ~30-50ms, center at 40ms
+    // Arm-to-bat gap timing (ideal 30-50ms)
+    Math.max(0, 100 - Math.abs(avg(armToBatGaps) - 40) / 1.5), // Ideal ~30-50ms, center at 40ms
+    // Bat peak timing at/near impact (should be close to 0ms from impact)
+    Math.max(0, 100 - Math.abs(avg(batPeakTimings)) / 2), // Bat peaks at/near impact (0ms ± 20ms)
+    // Timing gap consistency
+    consistencyScore(torsoToArmGaps),
   ].filter(v => !isNaN(v) && v > 0));
   
   // Stability (30%): Shoulder tilt, elbow angles, front knee at impact
@@ -264,7 +277,7 @@ function calculateAggregatedMetrics(swings: any[]) {
     consistencyScore(frontKneeAngles), // Bracing at impact
   ].filter(v => !isNaN(v) && v > 0));
   
-  // Sequencing (30%): Torso-to-arm, arm-to-bat gaps
+  // Sequencing (30%): Torso → Arm → Bat order + gap quality
   const whipSequencing = avg([
     Math.max(0, 100 - Math.abs(avg(torsoToArmGaps) - 40) * 2), // Ideal ~30-50ms
     Math.max(0, 100 - Math.abs(avg(armToBatGaps) - 40) * 2), // Ideal ~30-50ms
@@ -280,6 +293,8 @@ function calculateAggregatedMetrics(swings: any[]) {
   // ===== COMPILE ALL METRICS =====
   return {
     // Motion Summary
+    // NOTE: Velocities are OUTPUT METRICS ONLY (for display/reference)
+    // They are NOT used in Motion scoring - Motion scores are based on TIMING
     avgBatSpeed: avg(avgBatSpeeds),
     maxBatSpeed: max(maxBatSpeeds),
     avgHandSpeed: avg(avgHandSpeeds),

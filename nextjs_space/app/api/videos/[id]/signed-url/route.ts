@@ -34,14 +34,12 @@ export async function GET(
     // Check if this is an OnForm link import (external URL)
     if (video.source === 'onform' && (video.videoUrl.startsWith('http://') || video.videoUrl.startsWith('https://'))) {
       // For OnForm link imports, the video is hosted externally
-      // We need to extract the actual video URL from the OnForm share page
-      // For now, return an error indicating the video cannot be played inline
+      // Return 200 with a flag (not 400) to avoid console errors
       return NextResponse.json({ 
-        error: 'OnForm link videos cannot be played inline',
         isOnFormLink: true,
         onformUrl: video.videoUrl,
         message: 'This video is hosted on OnForm. Please open it in the OnForm app.'
-      }, { status: 400 });
+      }, { status: 200 });
     }
 
     // For S3-stored videos, generate signed URL for video playback

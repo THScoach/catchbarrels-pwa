@@ -68,14 +68,15 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
         const response = await fetch(`/api/videos/${video.id}/signed-url`);
         const data = await response.json();
         
+        // Check if this is an OnForm link import (now returns 200 with flag)
+        if (data.isOnFormLink) {
+          setIsOnFormLink(true);
+          setOnformUrl(data.onformUrl);
+          setLoadingUrl(false);
+          return; // Exit gracefully - OnForm videos are handled separately
+        }
+        
         if (!response.ok) {
-          // Check if this is an OnForm link import
-          if (data.isOnFormLink) {
-            setIsOnFormLink(true);
-            setOnformUrl(data.onformUrl);
-            setLoadingUrl(false);
-            return;
-          }
           throw new Error(data.error || `Failed to load video: ${response.status}`);
         }
         
