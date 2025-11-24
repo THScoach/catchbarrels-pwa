@@ -62,28 +62,27 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
 
     const video = videoRef.current;
     
-    // Check video duration - warn if too long
-    if (video.duration > 30) {
-      toast.error('Video is too long. Please trim to under 30 seconds for best results.');
+    // Log video info for debugging
+    console.log('Video info:', {
+      duration: video.duration,
+      width: video.videoWidth,
+      height: video.videoHeight
+    });
+    
+    // Check video duration - reject if absurdly long
+    if (video.duration > 60) {
+      toast.error('Video must be under 60 seconds. Please trim your video.');
       return;
     }
     
-    // Estimate FPS from video metadata
-    // Most browsers don't expose FPS directly, so we'll sample frames
-    const estimatedFPS = Math.round(1 / (1 / 60)); // Default to 60 for calculation
-    
-    // For high FPS videos (240+), we MUST sample frames aggressively
-    // Calculate total frames that would be processed
-    const totalFrames = Math.ceil(video.duration * 120); // Assume worst case 120 FPS processing
-    
-    if (totalFrames > 1800) { // More than 15 seconds at 120 FPS
-      toast.error('Video has too many frames. Please use a 60-120 FPS video, or trim to under 10 seconds.');
-      return;
+    // Warn but don't block for moderately long videos
+    if (video.duration > 20) {
+      toast.warning(`Long video detected (${Math.round(video.duration)}s). Processing may take 1-2 minutes.`);
     }
     
-    // Disable player isolation for videos longer than 10 seconds OR if we suspect high FPS
-    if ((video.duration > 10 || totalFrames > 1200) && enablePlayerIsolation) {
-      toast.warning('Disabling player isolation for stability');
+    // Auto-disable player isolation for videos over 10 seconds
+    if (video.duration > 10 && enablePlayerIsolation) {
+      toast.info('Auto-disabling player isolation for video length');
       setEnablePlayerIsolation(false);
     }
 
@@ -139,27 +138,51 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
       });
 
       pose.setOptions({
-        modelComplexity: 2, // Highest accuracy
+        modelComplexity: 1, // Reduced from 2 for better performance
         smoothLandmarks: true,
         enableSegmentation: false,
         minDetectionConfidence: 0.5,
         minTrackingConfidence: 0.5
       });
 
+      // Setup result handler once before processing
+      let currentFrameResults: any = null;
+      let processingComplete = false;
+      
+      pose.onResults((results: any) => {
+        currentFrameResults = results;
+        processingComplete = true;
+      });
+
       // Process each frame with error handling
       const processFrame = async (currentTime: number): Promise<void> => {
         return new Promise((resolve, reject) => {
+          currentFrameResults = null;
+          processingComplete = false;
+          
           video.currentTime = currentTime;
           
           const timeoutId = setTimeout(() => {
-            reject(new Error('Frame processing timeout'));
-          }, 5000); // 5 second timeout per frame
+            console.warn(`Frame ${frameCount} timeout`);
+            resolve(); // Don't reject, just skip this frame
+          }, 10000); // 10 second timeout per frame (increased for 300 FPS)
           
           video.onseeked = async () => {
             try {
               ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-              pose.onResults(async (results: any) => {
+              // Send frame to pose detection
+              await pose.send({ image: canvas });
+              
+              // Wait for results with polling
+              const startWait = Date.now();
+              while (!processingComplete && Date.now() - startWait < 5000) {
+                await new Promise(r => setTimeout(r, 10));
+              }
+              
+              const results = currentFrameResults;
+              
+              if (results) {
                 try {
                   clearTimeout(timeoutId);
                   
@@ -202,32 +225,48 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
 
                   frameCount++;
                   setProgress((frameCount / totalFrames) * 100);
-                  resolve();
+                  
                 } catch (error) {
                   clearTimeout(timeoutId);
                   console.error('Error processing pose results:', error);
-                  resolve(); // Continue with next frame
                 }
-              });
-
-              await pose.send({ image: canvas });
+              } else {
+                console.warn(`Frame ${frameCount}: No pose detected`);
+              }
+              
+              clearTimeout(timeoutId);
+              resolve();
+              
             } catch (error) {
               clearTimeout(timeoutId);
               console.error('Error in frame processing:', error);
-              reject(error);
+              resolve(); // Don't reject, continue with next frame
             }
           };
           
           video.onerror = () => {
             clearTimeout(timeoutId);
-            reject(new Error('Video seek error'));
+            console.error('Video seek error at frame', frameCount);
+            resolve(); // Don't reject, skip this frame
           };
         });
       };
 
       // Extract frames at regular intervals
+      console.log(`Starting frame extraction: ${totalFrames} frames at ${fps} FPS`);
       for (let t = 0; t < video.duration; t += 1 / fps) {
         await processFrame(t);
+      }
+
+      console.log(`Extraction complete: ${extractedFrames.length} frames extracted`);
+      
+      // Validate that we got at least some frames
+      if (extractedFrames.length === 0) {
+        throw new Error('No skeleton data extracted. The pose detector may not have found a person in the video.');
+      }
+      
+      if (extractedFrames.length < totalFrames * 0.3) {
+        toast.warning(`Only ${extractedFrames.length} of ${totalFrames} frames had detectable poses. Video may need better lighting or framing.`);
       }
 
       setStatus('Processing complete!');
@@ -245,8 +284,27 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
 
     } catch (error) {
       console.error('Skeleton extraction error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error details:', {
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+        videoDuration: video.duration,
+        canvasSize: `${canvasRef.current?.width}x${canvasRef.current?.height}`
+      });
+      
       setStatus('Extraction failed');
-      toast.error('Failed to extract skeleton data');
+      
+      // Provide more specific error messages
+      if (errorMessage.includes('memory')) {
+        toast.error('Browser ran out of memory. Try a shorter video (5-10 seconds).');
+      } else if (errorMessage.includes('MediaPipe')) {
+        toast.error('Failed to load pose detection. Check your internet connection.');
+      } else if (errorMessage.includes('timeout')) {
+        toast.error('Processing timed out. Try a shorter or lower FPS video.');
+      } else {
+        toast.error(`Extraction failed: ${errorMessage.substring(0, 50)}`);
+      }
+      
       if (onError) {
         onError(error as Error);
       }
