@@ -83,8 +83,8 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
 
       const extractedFrames: any[] = [];
       const isolatedPlayerFrames: any[] = [];
-      // Extract at 120 FPS for maximum precision during contact zone
-      const fps = 120;
+      // Extract at 60 FPS to prevent browser crashes (120 FPS causes memory issues)
+      const fps = 60;
       let frameCount = 0;
       const totalFrames = Math.floor(video.duration * fps);
 
@@ -107,53 +107,81 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
         minTrackingConfidence: 0.5
       });
 
-      // Process each frame
+      // Process each frame with error handling
       const processFrame = async (currentTime: number): Promise<void> => {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           video.currentTime = currentTime;
           
+          const timeoutId = setTimeout(() => {
+            reject(new Error('Frame processing timeout'));
+          }, 5000); // 5 second timeout per frame
+          
           video.onseeked = async () => {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            try {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            pose.onResults(async (results: any) => {
-              if (results.poseLandmarks) {
-                const keypoints: MediaPipeKeypoint[] = results.poseLandmarks.map(
-                  (landmark: any, idx: number) => ({
-                    x: landmark.x * canvas.width,
-                    y: landmark.y * canvas.height,
-                    z: landmark.z,
-                    visibility: landmark.visibility || 1.0,
-                    name: POSE_LANDMARKS[idx]
-                  })
-                );
+              pose.onResults(async (results: any) => {
+                try {
+                  clearTimeout(timeoutId);
+                  
+                  if (results.poseLandmarks) {
+                    const keypoints: MediaPipeKeypoint[] = results.poseLandmarks.map(
+                      (landmark: any, idx: number) => ({
+                        x: landmark.x * canvas.width,
+                        y: landmark.y * canvas.height,
+                        z: landmark.z,
+                        visibility: landmark.visibility || 1.0,
+                        name: POSE_LANDMARKS[idx]
+                      })
+                    );
 
-                extractedFrames.push({
-                  frame: frameCount,
-                  timestamp: currentTime,
-                  keypoints
-                });
-
-                // Player isolation (if enabled)
-                if (enablePlayerIsolation) {
-                  try {
-                    const segmentation = await segmentPlayer(canvas, keypoints);
-                    isolatedPlayerFrames.push({
+                    extractedFrames.push({
                       frame: frameCount,
-                      mask: segmentation.mask,
-                      bbox: segmentation.bbox
+                      timestamp: currentTime,
+                      keypoints
                     });
-                  } catch (error) {
-                    console.warn('Player isolation failed for frame', frameCount, error);
+
+                    // Player isolation (if enabled) - only every 3rd frame to reduce memory usage
+                    if (enablePlayerIsolation && frameCount % 3 === 0) {
+                      try {
+                        const segmentation = await segmentPlayer(canvas, keypoints);
+                        // Store compressed mask data
+                        isolatedPlayerFrames.push({
+                          frame: frameCount,
+                          mask: {
+                            width: segmentation.mask.width,
+                            height: segmentation.mask.height,
+                            data: Array.from(segmentation.mask.data) // Convert to regular array to save memory
+                          },
+                          bbox: segmentation.bbox
+                        });
+                      } catch (error) {
+                        console.warn('Player isolation failed for frame', frameCount, error);
+                      }
+                    }
                   }
+
+                  frameCount++;
+                  setProgress((frameCount / totalFrames) * 100);
+                  resolve();
+                } catch (error) {
+                  clearTimeout(timeoutId);
+                  console.error('Error processing pose results:', error);
+                  resolve(); // Continue with next frame
                 }
-              }
+              });
 
-              frameCount++;
-              setProgress((frameCount / totalFrames) * 100);
-              resolve();
-            });
-
-            await pose.send({ image: canvas });
+              await pose.send({ image: canvas });
+            } catch (error) {
+              clearTimeout(timeoutId);
+              console.error('Error in frame processing:', error);
+              reject(error);
+            }
+          };
+          
+          video.onerror = () => {
+            clearTimeout(timeoutId);
+            reject(new Error('Video seek error'));
           };
         });
       };
@@ -217,7 +245,7 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
           </div>
           <Progress value={progress} className="h-2" />
           <div className="flex items-center justify-between text-xs text-gray-500">
-            <span>Processing at 120 FPS</span>
+            <span>Processing at 60 FPS</span>
             <span>{enablePlayerIsolation ? 'With Player Isolation' : 'Skeleton Only'}</span>
           </div>
         </div>
@@ -229,8 +257,8 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
           <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-700/30">
             <h4 className="text-sm font-semibold text-blue-400 mb-2">💡 Swing Analysis Tips</h4>
             <ul className="text-xs text-gray-300 space-y-1">
-              <li>• 120 FPS provides maximum precision for contact zone analysis</li>
-              <li>• Player isolation removes background distractions</li>
+              <li>• 60 FPS provides excellent precision for swing analysis</li>
+              <li>• Player isolation removes background distractions (optional)</li>
               <li>• Extraction takes ~30-60 seconds depending on video length</li>
               <li>• After extraction, compare your swing to pro models</li>
             </ul>

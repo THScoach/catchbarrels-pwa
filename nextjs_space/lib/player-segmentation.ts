@@ -105,7 +105,7 @@ async function simplifiedSegmentation(
   
   // Dynamic color threshold based on image characteristics
   const colorThreshold = 45;
-  const maxIterations = width * height * 0.5; // Prevent runaway
+  const maxIterations = Math.min(width * height * 0.3, 50000); // Prevent runaway, cap at 50k
   let iterations = 0;
   
   seedPoints.forEach(point => {
@@ -160,7 +160,7 @@ async function simplifiedSegmentation(
   }
   
   // Morphological operations to clean up mask (reduced kernel size for performance)
-  const cleanedMask = morphologicalClose(mask, width, height, 3);
+  const cleanedMask = morphologicalClose(mask, width, height, 2);
   
   return {
     width,
