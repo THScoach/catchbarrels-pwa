@@ -894,6 +894,14 @@ model AssessmentReport {
   // Ball Data Summary (JSON)
   ballDataSummary Json?  // {avgExitVelo, maxExitVelo, barrelRate, etc.}
   
+  // Gamma Report Sections (AI-generated summaries)
+  executiveSummary  String?  @db.Text // High-level overview for Gamma deck
+  motionSummary     String?  @db.Text // Motion metrics narrative
+  stabilitySummary  String?  @db.Text // Stability metrics narrative
+  sequencingSummary String?  @db.Text // Sequencing metrics narrative
+  neuroNotes        String?  @db.Text // Cognitive/S2 analysis
+  bodyPlan          String?  @db.Text // Specific body movement plan
+  
   // Body Recommendations (Coach Input)
   movementNotes  String?  @db.Text // Freeform text field
   lowerBodyNotes String?  @db.Text
@@ -910,6 +918,10 @@ model AssessmentReport {
   
   // Drill Recommendations
   drills        Json?    // [{drillId: "...", reason: "..."}]
+  
+  // Comparison with Previous Assessment
+  previousAssessmentId String?  // Reference to previous assessment session
+  comparisonData       Json?    // Deltas and progress metrics
   
   // Report Generation
   generatedAt   DateTime?

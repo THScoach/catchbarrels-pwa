@@ -4,6 +4,7 @@
  */
 
 import { prisma } from './db';
+import { compareAssessments, formatComparisonForGamma, type ComparisonSummary } from './assessment-comparison';
 
 export async function generateAssessmentReport(
   sessionId: string
@@ -47,7 +48,25 @@ export async function generateAssessmentReport(
 
   console.log(`[Report Generator] Overall score: ${overallScore.toFixed(1)}`);
 
-  // 7. Create or update report
+  // 7. Compare with previous assessment (if exists)
+  let comparison: ComparisonSummary | null = null;
+  let previousAssessmentId: string | null = null;
+  try {
+    comparison = await compareAssessments(session.userId, sessionId);
+    if (comparison) {
+      previousAssessmentId = comparison.metrics.previousAssessmentDate ? sessionId : null;
+      console.log(`[Report Generator] Comparison with previous assessment complete. Trend: ${comparison.overallTrend}`);
+    } else {
+      console.log(`[Report Generator] No previous assessment found for comparison`);
+    }
+  } catch (error) {
+    console.error('[Report Generator] Error comparing assessments:', error);
+  }
+
+  // 8. Generate Gamma-specific summaries
+  const gammaFields = generateGammaSummaries(metrics, ballDataSummary, overallScore, strengths, weaknesses, comparison);
+
+  // 9. Create or update report
   const report = await prisma.assessmentReport.upsert({
     where: { sessionId },
     update: {
@@ -57,6 +76,16 @@ export async function generateAssessmentReport(
       ballDataSummary: ballDataSummary || undefined,
       strengths,
       weaknesses,
+      // Gamma summaries
+      executiveSummary: gammaFields.executiveSummary,
+      motionSummary: gammaFields.motionSummary,
+      stabilitySummary: gammaFields.stabilitySummary,
+      sequencingSummary: gammaFields.sequencingSummary,
+      neuroNotes: gammaFields.neuroNotes,
+      bodyPlan: gammaFields.bodyPlan,
+      // Comparison data
+      previousAssessmentId,
+      comparisonData: comparison ? (comparison as any) : undefined,
       generatedAt: new Date(),
     },
     create: {
@@ -67,6 +96,16 @@ export async function generateAssessmentReport(
       ballDataSummary: ballDataSummary || undefined,
       strengths,
       weaknesses,
+      // Gamma summaries
+      executiveSummary: gammaFields.executiveSummary,
+      motionSummary: gammaFields.motionSummary,
+      stabilitySummary: gammaFields.stabilitySummary,
+      sequencingSummary: gammaFields.sequencingSummary,
+      neuroNotes: gammaFields.neuroNotes,
+      bodyPlan: gammaFields.bodyPlan,
+      // Comparison data
+      previousAssessmentId,
+      comparisonData: comparison ? (comparison as any) : undefined,
       generatedAt: new Date(),
     },
   });
@@ -466,4 +505,176 @@ function identifyWeaknesses(metrics: any, ballDataSummary: any): any[] {
   }
 
   return weaknesses;
+}
+
+/**
+ * Generate Gamma-specific summary fields for deck generation
+ */
+function generateGammaSummaries(
+  metrics: any,
+  ballDataSummary: any,
+  overallScore: number,
+  strengths: any[],
+  weaknesses: any[],
+  comparison: ComparisonSummary | null
+): {
+  executiveSummary: string;
+  motionSummary: string;
+  stabilitySummary: string;
+  sequencingSummary: string;
+  neuroNotes: string;
+  bodyPlan: string;
+} {
+  // Executive Summary
+  const executiveSummary = `
+**Overall Performance: ${overallScore.toFixed(0)}/100** (${getScoreGrade(overallScore)})
+
+This assessment evaluated swing mechanics through ${metrics.totalSwingsAnalyzed || 'multiple'} swings, analyzing motion, stability, and kinematic sequencing patterns.
+
+**Key Scores:**
+- Anchor/Engine (Foundation): ${metrics.anchorEngineScore?.toFixed(0) || 'N/A'}/100
+- Whip (Bat Path): ${metrics.whipScore?.toFixed(0) || 'N/A'}/100
+
+${comparison ? formatComparisonForGamma(comparison) : ''}
+`.trim();
+
+  // Motion Summary
+  const motionSummary = `
+**Velocities & Power Output:**
+- Bat Speed: ${metrics.avgBatSpeed?.toFixed(1) || 'N/A'} mph (max ${metrics.maxBatSpeed?.toFixed(1) || 'N/A'} mph)
+- Hand Speed: ${metrics.avgHandSpeed?.toFixed(1) || 'N/A'} mph
+- Pelvis Angular Velocity: ${metrics.maxPelvisAngVel?.toFixed(0) || 'N/A'}°/s
+- Torso Angular Velocity: ${metrics.maxTorsoAngVel?.toFixed(0) || 'N/A'}°/s
+
+**Assessment:** ${
+    metrics.avgBatSpeed && metrics.avgBatSpeed >= 70
+      ? 'Strong rotational power and velocity generation.'
+      : metrics.avgBatSpeed && metrics.avgBatSpeed >= 60
+      ? 'Moderate velocity output with room for improvement.'
+      : 'Focus needed on explosive power development.'
+  }
+
+${metrics.avgExitVelocity ? `**Ball Flight:** Average exit velocity ${metrics.avgExitVelocity.toFixed(1)} mph` : ''}
+`.trim();
+
+  // Stability Summary
+  const stabilitySummary = `
+**Postural Control & Consistency:**
+- Head Stability: ${metrics.headStabilityScore?.toFixed(0) || 'N/A'}/100
+- Joint Angle Consistency: ${metrics.jointAngleConsistency?.toFixed(0) || 'N/A'}/100
+- Motion Stability: ${metrics.motionStabilityScore?.toFixed(0) || 'N/A'}/100
+
+**Key Positions:**
+- Hip-Shoulder Separation: ${metrics.avgHipShoulderSep?.toFixed(1) || 'N/A'}°
+- Front Knee Angle: ${metrics.avgFrontKneeAngle?.toFixed(1) || 'N/A'}°
+- Head Displacement: ${metrics.avgHeadDisplacementX?.toFixed(1) || 'N/A'}px horizontal
+
+**Assessment:** ${
+    metrics.headStabilityScore && metrics.headStabilityScore >= 80
+      ? 'Excellent postural control and repeatability.'
+      : metrics.headStabilityScore && metrics.headStabilityScore >= 60
+      ? 'Good stability with some variability in key positions.'
+      : 'Significant movement patterns need stabilization work.'
+  }
+`.trim();
+
+  // Sequencing Summary
+  const sequencingSummary = `
+**Kinematic Chain Analysis:**
+- Sequence Score: ${metrics.avgSequenceScore?.toFixed(0) || 'N/A'}/100
+- Correct Order: ${metrics.avgSequenceOrderScore?.toFixed(0) || 'N/A'}%
+- Pelvis→Torso Gap: ${metrics.avgPelvisToTorsoGap?.toFixed(0) || 'N/A'}ms (ideal: 30-50ms)
+- Torso→Arm Gap: ${metrics.avgTorsoToArmGap?.toFixed(0) || 'N/A'}ms
+- Arm→Bat Gap: ${metrics.avgArmToBatGap?.toFixed(0) || 'N/A'}ms
+
+**Assessment:** ${
+    metrics.avgSequenceScore && metrics.avgSequenceScore >= 80
+      ? 'Elite proximal-to-distal energy transfer. Minimal efficiency losses.'
+      : metrics.avgSequenceScore && metrics.avgSequenceScore >= 65
+      ? 'Good sequencing with timing gaps requiring refinement.'
+      : 'Kinematic chain shows significant timing issues. Focus on ground-up connection.'
+  }
+
+**Dr. Kwon's Principle:** ${
+    metrics.avgSequenceOrderScore && metrics.avgSequenceOrderScore >= 80
+      ? 'Athlete demonstrates proper pelvis→torso→arms→bat progression.'
+      : 'Athlete shows out-of-sequence firing patterns reducing power output.'
+  }
+`.trim();
+
+  // Neuro Notes (placeholder for future S2 integration)
+  const neuroNotes = `
+**Cognitive Performance:** (S2 assessment pending)
+
+**Observable Patterns:**
+${
+    metrics.pelvisAngleConsistencyScore && metrics.pelvisAngleConsistencyScore < 60
+      ? '- Inconsistent positioning suggests potential timing/recognition challenges'
+      : '- Consistent mechanical execution indicates strong motor control'
+  }
+${
+    metrics.avgGapVariability && metrics.avgGapVariability > 20
+      ? '- High timing variability may indicate pitch recognition or anticipation issues'
+      : '- Stable timing patterns suggest good pitch tracking'
+  }
+
+**Recommendation:** Integrate S2 Cognition assessment to evaluate pitch recognition, decision-making speed, and visual tracking.
+`.trim();
+
+  // Body Plan
+  const topWeaknesses = weaknesses.slice(0, 3);
+  const topStrengths = strengths.slice(0, 2);
+
+  const bodyPlan = `
+**Movement Priorities:**
+
+${topWeaknesses.length > 0 ? topWeaknesses.map((w, i) => `
+${i + 1}. **${w.area}** (${w.priority || 'medium'} priority)
+   ${w.description}
+`).join('') : '- Continue current training approach'}
+
+**Leverage Strengths:**
+${topStrengths.length > 0 ? topStrengths.map((s) => `
+- **${s.area}:** ${s.description}
+`).join('') : '- Build on current skill foundation'}
+
+**Drills & Training Focus:**
+${
+    metrics.avgSequenceScore && metrics.avgSequenceScore < 70
+      ? '- Kinematic sequence drills (med ball rotations, separation drills)'
+      : ''
+  }
+${
+    metrics.avgBatSpeed && metrics.avgBatSpeed < 65
+      ? '- Bat speed development (overload/underload, plyometrics)'
+      : ''
+  }
+${
+    metrics.headStabilityScore && metrics.headStabilityScore < 70
+      ? '- Head/posture stability work (vision tracking, balance drills)'
+      : ''
+  }
+${
+    ballDataSummary?.barrelRate && ballDataSummary.barrelRate < 40
+      ? '- Barrel efficiency drills (tee work, path optimization)'
+      : ''
+  }
+`.trim();
+
+  return {
+    executiveSummary,
+    motionSummary,
+    stabilitySummary,
+    sequencingSummary,
+    neuroNotes,
+    bodyPlan,
+  };
+}
+
+function getScoreGrade(score: number): string {
+  if (score >= 90) return 'Elite';
+  if (score >= 80) return 'Advanced';
+  if (score >= 70) return 'Proficient';
+  if (score >= 60) return 'Developing';
+  return 'Needs Work';
 }

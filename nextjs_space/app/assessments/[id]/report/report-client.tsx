@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, TrendingUp, Activity, Zap, Award, Target } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Activity, Zap, Award, Target, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 
 interface AssessmentReport {
   id: string;
@@ -16,6 +16,7 @@ interface AssessmentReport {
   strengths: any; // JsonValue from Prisma
   weaknesses: any; // JsonValue from Prisma
   metrics: any | null; // Simplified to avoid type mismatches
+  comparisonData: any | null; // Comparison with previous assessment
 }
 
 interface AssessmentSession {
@@ -140,10 +141,154 @@ export default function ReportClient({ session, report }: Props) {
           </CardContent>
         </Card>
 
-        {/* Anchor/Engine/Whip Scores */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <ScoreCard title="Anchor" score={metrics?.anchorScore ?? null} icon={Target} />
-          <ScoreCard title="Engine" score={metrics?.engineScore ?? null} icon={Zap} />
+        {/* Comparison with Previous Assessment */}
+        {report.comparisonData && (
+          <Card className="mb-8 bg-blue-900/20 border-blue-800/50">
+            <CardHeader>
+              <CardTitle className="text-blue-300 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Change Since Last Assessment
+              </CardTitle>
+              <CardDescription className="text-blue-200/80">
+                {report.comparisonData.metrics?.daysSincePrevious 
+                  ? `Compared to assessment ${report.comparisonData.metrics.daysSincePrevious} days ago`
+                  : 'Compared to previous assessment'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Overall Trend */}
+                <div className="flex items-center gap-3 p-4 bg-gray-900/50 rounded-lg border border-blue-700/30">
+                  <div className={`p-2 rounded-lg ${
+                    report.comparisonData.overallTrend === 'improving' ? 'bg-green-500/20' :
+                    report.comparisonData.overallTrend === 'declining' ? 'bg-red-500/20' :
+                    'bg-gray-500/20'
+                  }`}>
+                    {report.comparisonData.overallTrend === 'improving' ? (
+                      <ArrowUp className="w-5 h-5 text-green-400" />
+                    ) : report.comparisonData.overallTrend === 'declining' ? (
+                      <ArrowDown className="w-5 h-5 text-red-400" />
+                    ) : (
+                      <Minus className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">
+                      Overall Trend: {report.comparisonData.overallTrend?.toUpperCase()}
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      {report.comparisonData.improvements?.length || 0} improvements • {report.comparisonData.declines?.length || 0} declines
+                    </div>
+                  </div>
+                </div>
+
+                {/* Key Metric Changes */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Overall Score */}
+                  {report.comparisonData.metrics?.overallScore?.delta !== null && (
+                    <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-700">
+                      <div className="text-sm text-gray-400 mb-1">Overall Score</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-semibold text-white">
+                          {report.comparisonData.metrics.overallScore.current?.toFixed(1)}
+                        </span>
+                        <span className={`text-sm flex items-center gap-1 ${
+                          (report.comparisonData.metrics.overallScore.delta || 0) > 0 ? 'text-green-400' :
+                          (report.comparisonData.metrics.overallScore.delta || 0) < 0 ? 'text-red-400' :
+                          'text-gray-400'
+                        }`}>
+                          {(report.comparisonData.metrics.overallScore.delta || 0) > 0 ? <ArrowUp className="w-3 h-3" /> :
+                           (report.comparisonData.metrics.overallScore.delta || 0) < 0 ? <ArrowDown className="w-3 h-3" /> :
+                           <Minus className="w-3 h-3" />}
+                          {Math.abs(report.comparisonData.metrics.overallScore.delta || 0).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Anchor/Engine Score */}
+                  {report.comparisonData.metrics?.anchorEngineScore?.delta !== null && (
+                    <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-700">
+                      <div className="text-sm text-gray-400 mb-1">Anchor/Engine (Foundation)</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-semibold text-white">
+                          {report.comparisonData.metrics.anchorEngineScore.current?.toFixed(1)}
+                        </span>
+                        <span className={`text-sm flex items-center gap-1 ${
+                          (report.comparisonData.metrics.anchorEngineScore.delta || 0) > 0 ? 'text-green-400' :
+                          (report.comparisonData.metrics.anchorEngineScore.delta || 0) < 0 ? 'text-red-400' :
+                          'text-gray-400'
+                        }`}>
+                          {(report.comparisonData.metrics.anchorEngineScore.delta || 0) > 0 ? <ArrowUp className="w-3 h-3" /> :
+                           (report.comparisonData.metrics.anchorEngineScore.delta || 0) < 0 ? <ArrowDown className="w-3 h-3" /> :
+                           <Minus className="w-3 h-3" />}
+                          {Math.abs(report.comparisonData.metrics.anchorEngineScore.delta || 0).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Whip Score */}
+                  {report.comparisonData.metrics?.whipScore?.delta !== null && (
+                    <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-700">
+                      <div className="text-sm text-gray-400 mb-1">Whip (Bat Path)</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-semibold text-white">
+                          {report.comparisonData.metrics.whipScore.current?.toFixed(1)}
+                        </span>
+                        <span className={`text-sm flex items-center gap-1 ${
+                          (report.comparisonData.metrics.whipScore.delta || 0) > 0 ? 'text-green-400' :
+                          (report.comparisonData.metrics.whipScore.delta || 0) < 0 ? 'text-red-400' :
+                          'text-gray-400'
+                        }`}>
+                          {(report.comparisonData.metrics.whipScore.delta || 0) > 0 ? <ArrowUp className="w-3 h-3" /> :
+                           (report.comparisonData.metrics.whipScore.delta || 0) < 0 ? <ArrowDown className="w-3 h-3" /> :
+                           <Minus className="w-3 h-3" />}
+                          {Math.abs(report.comparisonData.metrics.whipScore.delta || 0).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Improvements & Declines */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  {Array.isArray(report.comparisonData.improvements) && report.comparisonData.improvements.length > 0 && (
+                    <div>
+                      <div className="text-sm font-semibold text-green-400 mb-2">Improvements:</div>
+                      <ul className="space-y-1">
+                        {report.comparisonData.improvements.map((imp: string, idx: number) => (
+                          <li key={idx} className="text-sm text-green-200/80 flex items-start gap-2">
+                            <ArrowUp className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                            <span>{imp}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {Array.isArray(report.comparisonData.declines) && report.comparisonData.declines.length > 0 && (
+                    <div>
+                      <div className="text-sm font-semibold text-orange-400 mb-2">Areas Needing Attention:</div>
+                      <ul className="space-y-1">
+                        {report.comparisonData.declines.map((dec: string, idx: number) => (
+                          <li key={idx} className="text-sm text-orange-200/80 flex items-start gap-2">
+                            <ArrowDown className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                            <span>{dec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Anchor/Engine & Whip Scores */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <ScoreCard title="Anchor/Engine" score={metrics?.anchorEngineScore ?? null} icon={Target} />
           <ScoreCard title="Whip" score={metrics?.whipScore ?? null} icon={Activity} />
         </div>
 

@@ -15,5 +15,26 @@ export default async function ProfilePage() {
     where: { id: (session.user as any).id },
   });
 
-  return <ProfileClient user={user} />;
+  // Fetch user's assessment sessions with reports
+  const assessments = await prisma.assessmentSession.findMany({
+    where: { 
+      userId: (session.user as any).id,
+      status: 'completed',
+    },
+    include: {
+      report: {
+        include: {
+          metrics: {
+            select: {
+              anchorEngineScore: true,
+              whipScore: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return <ProfileClient user={user} assessments={assessments} />;
 }
