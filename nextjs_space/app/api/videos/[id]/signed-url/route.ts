@@ -31,7 +31,20 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Generate signed URL for video playback
+    // Check if this is an OnForm link import (external URL)
+    if (video.source === 'onform' && (video.videoUrl.startsWith('http://') || video.videoUrl.startsWith('https://'))) {
+      // For OnForm link imports, the video is hosted externally
+      // We need to extract the actual video URL from the OnForm share page
+      // For now, return an error indicating the video cannot be played inline
+      return NextResponse.json({ 
+        error: 'OnForm link videos cannot be played inline',
+        isOnFormLink: true,
+        onformUrl: video.videoUrl,
+        message: 'This video is hosted on OnForm. Please open it in the OnForm app.'
+      }, { status: 400 });
+    }
+
+    // For S3-stored videos, generate signed URL for video playback
     const signedUrl = await getSignedDownloadUrl(video.videoUrl);
 
     return NextResponse.json({ signedUrl });

@@ -26,6 +26,8 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loadingUrl, setLoadingUrl] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [isOnFormLink, setIsOnFormLink] = useState(false);
+  const [onformUrl, setOnformUrl] = useState<string | null>(null);
   
   // Skeleton analysis state (v2 - joint-only comparison)
   const [skeletonExtracted, setSkeletonExtracted] = useState(video?.skeletonExtracted || false);
@@ -60,14 +62,23 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
     const fetchVideoUrl = async () => {
       try {
         setVideoError(false);
+        setIsOnFormLink(false);
         setLoadingUrl(true);
         
         const response = await fetch(`/api/videos/${video.id}/signed-url`);
+        const data = await response.json();
+        
         if (!response.ok) {
-          throw new Error(`Failed to load video: ${response.status}`);
+          // Check if this is an OnForm link import
+          if (data.isOnFormLink) {
+            setIsOnFormLink(true);
+            setOnformUrl(data.onformUrl);
+            setLoadingUrl(false);
+            return;
+          }
+          throw new Error(data.error || `Failed to load video: ${response.status}`);
         }
         
-        const data = await response.json();
         setVideoUrl(data.signedUrl);
       } catch (error) {
         console.error('Error fetching video URL:', error);
@@ -399,7 +410,39 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
 
         {/* Video Player with Enhanced Controls */}
         <div className="mb-6">
-          {videoError ? (
+          {isOnFormLink ? (
+            <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-lg aspect-video flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4 p-8 max-w-md">
+                <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
+                  <Link2 className="w-8 h-8 text-blue-400" />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-white font-semibold mb-2">OnForm Video Link</h3>
+                  <p className="text-gray-300 text-sm mb-4">
+                    This video is hosted on OnForm and cannot be played directly in BARRELS.
+                  </p>
+                  <p className="text-gray-400 text-xs mb-4">
+                    To analyze this video, please use the <span className="text-blue-400 font-medium">"Upload File"</span> tab in the OnForm import panel instead of the link option.
+                  </p>
+                </div>
+                <a
+                  href={onformUrl || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center gap-2 font-medium"
+                >
+                  <Globe className="w-5 h-5" />
+                  Open in OnForm
+                </a>
+                <Link
+                  href="/video/upload"
+                  className="text-[#F5A623] hover:text-[#E89815] text-sm font-medium flex items-center gap-1 transition-colors"
+                >
+                  Import file for analysis →
+                </Link>
+              </div>
+            </div>
+          ) : videoError ? (
             <div className="bg-gray-900 border border-gray-700 rounded-lg aspect-video flex items-center justify-center">
               <div className="flex flex-col items-center gap-4 p-8">
                 <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
