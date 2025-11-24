@@ -26,7 +26,8 @@ export default async function ProfilePage() {
         include: {
           metrics: {
             select: {
-              anchorEngineScore: true,
+              anchorScore: true,
+              engineScore: true,
               whipScore: true,
             },
           },

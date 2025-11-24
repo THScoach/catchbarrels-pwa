@@ -186,52 +186,90 @@ function calculateAggregatedMetrics(swings: any[]) {
   const sequenceTimingScores = validSwings.map((s) => s.metrics.sequenceTimingScore).filter((v): v is number => v !== null && v !== undefined);
   const sequenceScores = validSwings.map((s) => s.metrics.sequenceScore).filter((v): v is number => v !== null && v !== undefined);
 
-  // ===== CALCULATE ANCHOR/ENGINE/WHIP SCORES =====
-  // Anchor/Engine: 40% Motion, 40% Stability, 20% Sequencing (pelvis/torso metrics)
-  const anchorEngineMotion = avg([
+  // ===== CALCULATE ANCHOR/ENGINE/WHIP SCORES (3 SEPARATE) =====
+  
+  // 1. ANCHOR SCORE (Lower Body Foundation)
+  // Motion (40%): Pelvis velocity, load-to-launch timing, stride mechanics
+  const anchorMotion = avg([
     avg(pelvisVelocities) / 10, // Normalize ~600-800 → 60-80
-    avg(torsoVelocities) / 12, // Normalize ~800-1000 → 66-83
-    Math.max(0, 100 - Math.abs(avg(loadToLaunches) - 150) / 2), // Ideal ~150ms
-  ]);
+    Math.max(0, 100 - Math.abs(avg(loadToLaunches) - 150) / 2), // Ideal ~150ms load→launch
+  ].filter(v => !isNaN(v) && v > 0));
   
-  const anchorEngineStability = avg([
-    consistencyScore(spineTiltsAtLaunch),
-    consistencyScore(pelvisAnglesAtLaunch),
-    consistencyScore(headDisplacements),
-    Math.max(0, 100 - stdDev(strideLengthFactors) * 200), // Stride consistency
-  ]);
+  // Stability (40%): Knee angles, head displacement, stride consistency
+  const backKneeAngles = validSwings.map((s) => s.metrics.backKneeFlexionAtLaunchDeg).filter((v): v is number => v !== null && v !== undefined);
+  const anchorStability = avg([
+    consistencyScore(backKneeAngles), // Back knee consistency at launch
+    consistencyScore(frontKneeAngles), // Front knee consistency at impact
+    consistencyScore(headDisplacements), // Head stability
+    Math.max(0, 100 - stdDev(strideLengthFactors) * 200), // Stride length consistency
+  ].filter(v => !isNaN(v) && v > 0));
   
-  const anchorEngineSequencing = avg([
-    avg(sequenceOrderScores),
-    avg(sequenceTimingScores),
-    Math.max(0, 100 - Math.abs(avg(pelvisToTorsoGaps) - 40) * 2), // Ideal ~30-50ms
-  ]);
+  // Sequencing (20%): Pelvis timing (first mover)
+  const anchorSequencing = avg([
+    avg(sequenceOrderScores) * 1.2, // Pelvis should be first
+    Math.max(0, 100 - Math.abs(avg(pelvisPeakTimings) - 100) / 2), // Pelvis peaks ~100ms before impact
+  ].filter(v => !isNaN(v) && v > 0));
   
-  const anchorEngineScore = (
-    anchorEngineMotion * 0.4 +
-    anchorEngineStability * 0.4 +
-    anchorEngineSequencing * 0.2
+  const anchorScore = (
+    anchorMotion * 0.4 +
+    anchorStability * 0.4 +
+    anchorSequencing * 0.2
   );
 
-  // Whip: 40% Motion, 30% Stability, 30% Sequencing (arm/bat metrics)
+  // 2. ENGINE SCORE (Core Rotational Power)
+  // Motion (40%): Torso velocity, pelvis-torso coordination
+  const engineMotion = avg([
+    avg(torsoVelocities) / 12, // Normalize ~800-1000 → 66-83
+    avg(pelvisVelocities) / 10, // Pelvis drives torso
+  ].filter(v => !isNaN(v) && v > 0));
+  
+  // Stability (40%): Spine tilt, pelvis angle, X-factor
+  const engineStability = avg([
+    consistencyScore(spineTiltsAtLaunch),
+    consistencyScore(spineTiltsAtImpact),
+    consistencyScore(pelvisAnglesAtLaunch),
+    consistencyScore(pelvisAnglesAtImpact),
+    Math.max(0, 100 - Math.abs(avg(xFactors) - 50) * 2), // Ideal X-Factor ~50 degrees
+  ].filter(v => !isNaN(v) && v > 0));
+  
+  // Sequencing (20%): Pelvis-to-torso gap timing
+  const engineSequencing = avg([
+    avg(sequenceOrderScores),
+    avg(sequenceTimingScores),
+    Math.max(0, 100 - Math.abs(avg(pelvisToTorsoGaps) - 40) * 2), // Ideal ~30-50ms gap
+  ].filter(v => !isNaN(v) && v > 0));
+  
+  const engineScore = (
+    engineMotion * 0.4 +
+    engineStability * 0.4 +
+    engineSequencing * 0.2
+  );
+
+  // 3. WHIP SCORE (Upper Body / Bat)
+  // Motion (40%): Bat speed, hand speed, arm/bat velocities
   const whipMotion = avg([
     normalizeBatSpeed(avg(avgBatSpeeds)),
     normalizeBatSpeed(avg(avgHandSpeeds)),
     avg(armVelocities) / 15, // Normalize ~1000-1200 → 66-80
     avg(batVelocities) / 30, // Normalize ~2000-3000 → 66-100
-  ]);
+  ].filter(v => !isNaN(v) && v > 0));
   
+  // Stability (30%): Shoulder tilt, elbow angles, front knee at impact
+  const leadElbowAngles = validSwings.map((s) => s.metrics.leadElbowAngle).filter((v): v is number => v !== null && v !== undefined);
+  const rearElbowAngles = validSwings.map((s) => s.metrics.rearElbowAngle).filter((v): v is number => v !== null && v !== undefined);
   const whipStability = avg([
-    Math.max(0, 100 - Math.abs(avg(xFactors) - 50) * 2), // Ideal X-Factor ~50 degrees
-    consistencyScore(frontKneeAngles),
     consistencyScore(shoulderTiltsAtImpact),
-  ]);
+    consistencyScore(leadElbowAngles),
+    consistencyScore(rearElbowAngles),
+    consistencyScore(frontKneeAngles), // Bracing at impact
+  ].filter(v => !isNaN(v) && v > 0));
   
+  // Sequencing (30%): Torso-to-arm, arm-to-bat gaps
   const whipSequencing = avg([
     Math.max(0, 100 - Math.abs(avg(torsoToArmGaps) - 40) * 2), // Ideal ~30-50ms
-    Math.max(0, 100 - Math.abs(avg(armToBatGaps) - 40) * 2),
+    Math.max(0, 100 - Math.abs(avg(armToBatGaps) - 40) * 2), // Ideal ~30-50ms
     avg(sequenceTimingScores),
-  ]);
+  ].filter(v => !isNaN(v) && v > 0));
   
   const whipScore = (
     whipMotion * 0.4 +
@@ -269,7 +307,7 @@ function calculateAggregatedMetrics(swings: any[]) {
     spineTiltConsistencyScore: consistencyScore(spineTiltsAtLaunch),
     pelvisAngleConsistencyScore: consistencyScore(pelvisAnglesAtLaunch),
     headStabilityScore: consistencyScore(headDisplacements),
-    overallStabilityScore: anchorEngineStability,
+    overallStabilityScore: (anchorStability + engineStability + whipStability) / 3,
     
     // Sequencing Summary
     avgPelvisPeakTiming: avg(pelvisPeakTimings),
@@ -284,18 +322,22 @@ function calculateAggregatedMetrics(swings: any[]) {
     avgSequenceTimingScore: avg(sequenceTimingScores),
     sequenceConsistency: consistencyScore(sequenceScores),
     
-    // Anchor/Engine/Whip Scores
-    anchorEngineScore,
-    anchorEngineMotion,
-    anchorEngineStability,
-    anchorEngineSequencing,
+    // Anchor/Engine/Whip Scores (3 separate)
+    anchorScore,
+    anchorMotion,
+    anchorStability,
+    anchorSequencing,
+    engineScore,
+    engineMotion,
+    engineStability,
+    engineSequencing,
     whipScore,
     whipMotion,
     whipStability,
     whipSequencing,
     
     // Overall (for backwards compatibility)
-    overallSwingScore: (anchorEngineScore + whipScore) / 2,
+    overallSwingScore: (anchorScore + engineScore + whipScore) / 3,
     biomechanicsScore: avg(sequenceScores),
     ballContactScore: 0, // Will be filled by ball data
   };
@@ -531,9 +573,10 @@ function generateGammaSummaries(
 
 This assessment evaluated swing mechanics through ${metrics.totalSwingsAnalyzed || 'multiple'} swings, analyzing motion, stability, and kinematic sequencing patterns.
 
-**Key Scores:**
-- Anchor/Engine (Foundation): ${metrics.anchorEngineScore?.toFixed(0) || 'N/A'}/100
-- Whip (Bat Path): ${metrics.whipScore?.toFixed(0) || 'N/A'}/100
+**Key Scores (Anchor → Engine → Whip):**
+- Anchor (Lower Body Foundation): ${metrics.anchorScore?.toFixed(0) || 'N/A'}/100
+- Engine (Core Rotation): ${metrics.engineScore?.toFixed(0) || 'N/A'}/100
+- Whip (Bat Speed & Path): ${metrics.whipScore?.toFixed(0) || 'N/A'}/100
 
 ${comparison ? formatComparisonForGamma(comparison) : ''}
 `.trim();

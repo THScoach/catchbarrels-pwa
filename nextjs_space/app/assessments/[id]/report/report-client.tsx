@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, TrendingUp, Activity, Zap, Award, Target, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Activity, Zap, Award, Target, ArrowUp, ArrowDown, Minus, RotateCw } from 'lucide-react';
 
 interface AssessmentReport {
   id: string;
@@ -64,7 +64,7 @@ export default function ReportClient({ session, report }: Props) {
     </div>
   );
 
-  const ScoreCard = ({ title, score, icon: Icon }: { title: string; score: number | null; icon: any }) => (
+  const ScoreCard = ({ title, subtitle, score, icon: Icon }: { title: string; subtitle?: string; score: number | null; icon: any }) => (
     <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700">
       <CardContent className="pt-6">
         <div className="flex items-center justify-between mb-4">
@@ -74,7 +74,8 @@ export default function ReportClient({ session, report }: Props) {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white">{title}</h3>
-              <p className="text-sm text-gray-400">{score !== null ? getScoreGrade(score) : 'N/A'}</p>
+              <p className="text-xs text-gray-500">{subtitle}</p>
+              <p className="text-sm text-gray-400 mt-1">{score !== null ? getScoreGrade(score) : 'N/A'}</p>
             </div>
           </div>
           <div className={`text-4xl font-bold ${score !== null ? getScoreColor(score) : 'text-gray-500'}`}>
@@ -206,23 +207,45 @@ export default function ReportClient({ session, report }: Props) {
                     </div>
                   )}
 
-                  {/* Anchor/Engine Score */}
-                  {report.comparisonData.metrics?.anchorEngineScore?.delta !== null && (
+                  {/* Anchor Score */}
+                  {report.comparisonData.metrics?.anchorScore?.delta !== null && (
                     <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-700">
-                      <div className="text-sm text-gray-400 mb-1">Anchor/Engine (Foundation)</div>
+                      <div className="text-sm text-gray-400 mb-1">Anchor (Lower Body)</div>
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-semibold text-white">
-                          {report.comparisonData.metrics.anchorEngineScore.current?.toFixed(1)}
+                          {report.comparisonData.metrics.anchorScore.current?.toFixed(1)}
                         </span>
                         <span className={`text-sm flex items-center gap-1 ${
-                          (report.comparisonData.metrics.anchorEngineScore.delta || 0) > 0 ? 'text-green-400' :
-                          (report.comparisonData.metrics.anchorEngineScore.delta || 0) < 0 ? 'text-red-400' :
+                          (report.comparisonData.metrics.anchorScore.delta || 0) > 0 ? 'text-green-400' :
+                          (report.comparisonData.metrics.anchorScore.delta || 0) < 0 ? 'text-red-400' :
                           'text-gray-400'
                         }`}>
-                          {(report.comparisonData.metrics.anchorEngineScore.delta || 0) > 0 ? <ArrowUp className="w-3 h-3" /> :
-                           (report.comparisonData.metrics.anchorEngineScore.delta || 0) < 0 ? <ArrowDown className="w-3 h-3" /> :
+                          {(report.comparisonData.metrics.anchorScore.delta || 0) > 0 ? <ArrowUp className="w-3 h-3" /> :
+                           (report.comparisonData.metrics.anchorScore.delta || 0) < 0 ? <ArrowDown className="w-3 h-3" /> :
                            <Minus className="w-3 h-3" />}
-                          {Math.abs(report.comparisonData.metrics.anchorEngineScore.delta || 0).toFixed(1)}
+                          {Math.abs(report.comparisonData.metrics.anchorScore.delta || 0).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Engine Score */}
+                  {report.comparisonData.metrics?.engineScore?.delta !== null && (
+                    <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-700">
+                      <div className="text-sm text-gray-400 mb-1">Engine (Core Rotation)</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-semibold text-white">
+                          {report.comparisonData.metrics.engineScore.current?.toFixed(1)}
+                        </span>
+                        <span className={`text-sm flex items-center gap-1 ${
+                          (report.comparisonData.metrics.engineScore.delta || 0) > 0 ? 'text-green-400' :
+                          (report.comparisonData.metrics.engineScore.delta || 0) < 0 ? 'text-red-400' :
+                          'text-gray-400'
+                        }`}>
+                          {(report.comparisonData.metrics.engineScore.delta || 0) > 0 ? <ArrowUp className="w-3 h-3" /> :
+                           (report.comparisonData.metrics.engineScore.delta || 0) < 0 ? <ArrowDown className="w-3 h-3" /> :
+                           <Minus className="w-3 h-3" />}
+                          {Math.abs(report.comparisonData.metrics.engineScore.delta || 0).toFixed(1)}
                         </span>
                       </div>
                     </div>
@@ -231,7 +254,7 @@ export default function ReportClient({ session, report }: Props) {
                   {/* Whip Score */}
                   {report.comparisonData.metrics?.whipScore?.delta !== null && (
                     <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-700">
-                      <div className="text-sm text-gray-400 mb-1">Whip (Bat Path)</div>
+                      <div className="text-sm text-gray-400 mb-1">Whip (Bat Speed)</div>
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-semibold text-white">
                           {report.comparisonData.metrics.whipScore.current?.toFixed(1)}
@@ -286,10 +309,11 @@ export default function ReportClient({ session, report }: Props) {
           </Card>
         )}
 
-        {/* Anchor/Engine & Whip Scores */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <ScoreCard title="Anchor/Engine" score={metrics?.anchorEngineScore ?? null} icon={Target} />
-          <ScoreCard title="Whip" score={metrics?.whipScore ?? null} icon={Activity} />
+        {/* Anchor / Engine / Whip Scores */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <ScoreCard title="Anchor" subtitle="Lower Body" score={metrics?.anchorScore ?? null} icon={Target} />
+          <ScoreCard title="Engine" subtitle="Core Rotation" score={metrics?.engineScore ?? null} icon={RotateCw} />
+          <ScoreCard title="Whip" subtitle="Bat Speed" score={metrics?.whipScore ?? null} icon={Activity} />
         </div>
 
         {/* Summary */}

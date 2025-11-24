@@ -10,7 +10,8 @@ import { prisma } from './db';
 export interface ComparisonMetrics {
   // Overall scores
   overallScore: { current: number | null; previous: number | null; delta: number | null; percentChange: number | null };
-  anchorEngineScore: { current: number | null; previous: number | null; delta: number | null; percentChange: number | null };
+  anchorScore: { current: number | null; previous: number | null; delta: number | null; percentChange: number | null };
+  engineScore: { current: number | null; previous: number | null; delta: number | null; percentChange: number | null };
   whipScore: { current: number | null; previous: number | null; delta: number | null; percentChange: number | null };
   
   // Motion metrics
@@ -135,7 +136,8 @@ export async function compareAssessments(
   // Calculate all metric deltas
   const metrics: ComparisonMetrics = {
     overallScore: calculateDelta(currentSession.report.overallScore, previous.report.overallScore),
-    anchorEngineScore: calculateDelta(currentMetrics?.anchorEngineScore, previousMetrics?.anchorEngineScore),
+    anchorScore: calculateDelta(currentMetrics?.anchorScore, previousMetrics?.anchorScore),
+    engineScore: calculateDelta(currentMetrics?.engineScore, previousMetrics?.engineScore),
     whipScore: calculateDelta(currentMetrics?.whipScore, previousMetrics?.whipScore),
     avgBatSpeed: calculateDelta(currentMetrics?.avgBatSpeed, previousMetrics?.avgBatSpeed),
     headStabilityScore: calculateDelta(currentMetrics?.headStabilityScore, previousMetrics?.headStabilityScore),
@@ -155,8 +157,9 @@ export async function compareAssessments(
   
   const metricNames: { key: keyof ComparisonMetrics; label: string; threshold: number }[] = [
     { key: 'overallScore', label: 'Overall Score', threshold: 2 },
-    { key: 'anchorEngineScore', label: 'Anchor/Engine (Foundation)', threshold: 2 },
-    { key: 'whipScore', label: 'Whip (Bat Path)', threshold: 2 },
+    { key: 'anchorScore', label: 'Anchor (Lower Body)', threshold: 2 },
+    { key: 'engineScore', label: 'Engine (Core Rotation)', threshold: 2 },
+    { key: 'whipScore', label: 'Whip (Bat Speed)', threshold: 2 },
     { key: 'avgBatSpeed', label: 'Bat Speed', threshold: 1 },
     { key: 'headStabilityScore', label: 'Head Stability', threshold: 2 },
     { key: 'overallStabilityScore', label: 'Overall Stability', threshold: 2 },

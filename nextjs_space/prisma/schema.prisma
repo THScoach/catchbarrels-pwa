@@ -846,18 +846,24 @@ model AssessmentMetricsSummary {
   avgSequenceTimingScore  Float?  // 0-100
   sequenceConsistency     Float?  // 0-100 (pattern repeatability)
   
-  // ===== ANCHOR/ENGINE/WHIP SCORES =====
-  // Anchor/Engine (Lower body + trunk)
-  anchorEngineScore       Float?  // 0-100 (weighted from Motion/Stability/Sequencing of pelvis/torso)
-  anchorEngineMotion      Float?  // 0-100 (pelvis/torso velocities, load→launch timing)
-  anchorEngineStability   Float?  // 0-100 (spine, pelvis, head, stride consistency)
-  anchorEngineSequencing  Float?  // 0-100 (pelvis/torso timing & order)
+  // ===== ANCHOR/ENGINE/WHIP SCORES (3 SEPARATE) =====
+  // Anchor (Lower body foundation)
+  anchorScore             Float?  // 0-100 (weighted from Motion/Stability/Sequencing of pelvis/legs)
+  anchorMotion            Float?  // 0-100 (pelvis velocity, load→launch timing, stride)
+  anchorStability         Float?  // 0-100 (knee angles, head stability, stride consistency)
+  anchorSequencing        Float?  // 0-100 (pelvis timing as first mover)
   
-  // Whip (Arms + barrel)
+  // Engine (Core rotational power)
+  engineScore             Float?  // 0-100 (weighted from Motion/Stability/Sequencing of torso/core)
+  engineMotion            Float?  // 0-100 (torso velocity, pelvis-torso coordination)
+  engineStability         Float?  // 0-100 (spine tilt, pelvis angle, X-factor)
+  engineSequencing        Float?  // 0-100 (pelvis-torso gap timing)
+  
+  // Whip (Arms + bat)
   whipScore               Float?  // 0-100 (weighted from Motion/Stability/Sequencing of arm/bat)
   whipMotion              Float?  // 0-100 (bat & hand speed, arm/bat velocities)
-  whipStability           Float?  // 0-100 (impact positions, contact consistency)
-  whipSequencing          Float?  // 0-100 (arm/bat timing & gaps)
+  whipStability           Float?  // 0-100 (shoulder tilt, elbow angles, bracing)
+  whipSequencing          Float?  // 0-100 (torso-arm, arm-bat timing & gaps)
   
   // ===== BALL DATA (Averages) =====
   avgExitVelocity     Float?

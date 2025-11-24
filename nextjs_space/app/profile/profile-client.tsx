@@ -199,18 +199,26 @@ export function ProfileClient({ user, assessments }: any) {
                       <CardContent>
                         {/* Scores */}
                         {assessment.report?.metrics && (
-                          <div className="grid grid-cols-2 gap-3 mb-4">
-                            {assessment.report.metrics.anchorEngineScore !== null && (
-                              <div className="text-center p-3 bg-gray-900/50 rounded-lg">
-                                <div className="text-2xl font-bold text-blue-400">
-                                  {assessment.report.metrics.anchorEngineScore.toFixed(0)}
+                          <div className="grid grid-cols-3 gap-2 mb-4">
+                            {assessment.report.metrics.anchorScore !== null && (
+                              <div className="text-center p-2 bg-gray-900/50 rounded-lg">
+                                <div className="text-xl font-bold text-blue-400">
+                                  {assessment.report.metrics.anchorScore.toFixed(0)}
                                 </div>
-                                <div className="text-xs text-gray-400 mt-1">Anchor/Engine</div>
+                                <div className="text-xs text-gray-400 mt-1">Anchor</div>
+                              </div>
+                            )}
+                            {assessment.report.metrics.engineScore !== null && (
+                              <div className="text-center p-2 bg-gray-900/50 rounded-lg">
+                                <div className="text-xl font-bold text-purple-400">
+                                  {assessment.report.metrics.engineScore.toFixed(0)}
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1">Engine</div>
                               </div>
                             )}
                             {assessment.report.metrics.whipScore !== null && (
-                              <div className="text-center p-3 bg-gray-900/50 rounded-lg">
-                                <div className="text-2xl font-bold text-green-400">
+                              <div className="text-center p-2 bg-gray-900/50 rounded-lg">
+                                <div className="text-xl font-bold text-green-400">
                                   {assessment.report.metrics.whipScore.toFixed(0)}
                                 </div>
                                 <div className="text-xs text-gray-400 mt-1">Whip</div>
