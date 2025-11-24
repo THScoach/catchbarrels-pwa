@@ -53,6 +53,20 @@ export function OnFormImportPanel({
       const fileSizeInMB = file.size / (1024 * 1024);
       setTotalMB(fileSizeInMB);
       
+      // Get file extension
+      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      const supportedFormats = ['.mp4', '.mov', '.avi', '.wmv', '.webm', '.m4v', '.mpeg', '.mpg'];
+      
+      // Validate format IMMEDIATELY
+      if (!supportedFormats.includes(fileExtension)) {
+        toast.error('Unsupported video format', {
+          description: `${fileExtension} files are not supported. Please use: MP4, MOV, AVI, WMV, WEBM, M4V, or MPEG.`,
+          duration: 6000
+        });
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
       // Check file size IMMEDIATELY
       if (fileSizeInMB > 500) {
         toast.error('File too large', {
@@ -72,8 +86,11 @@ export function OnFormImportPanel({
       }
       
       setVideoFile(file);
+      
+      // Show format-specific success message
+      const formatInfo = fileExtension === '.mov' ? ' (iOS QuickTime)' : fileExtension === '.mp4' ? ' (MP4)' : '';
       toast.success('File selected', {
-        description: `${file.name} (${fileSizeInMB.toFixed(1)} MB)${fileSizeInMB > 50 ? ' - This may take a few minutes' : ''}`
+        description: `${file.name}${formatInfo} (${fileSizeInMB.toFixed(1)} MB)${fileSizeInMB > 50 ? ' - This may take a few minutes' : ''}`
       });
     }
   };

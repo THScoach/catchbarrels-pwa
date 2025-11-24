@@ -6,14 +6,42 @@ import { createS3Client, getBucketConfig } from './aws-config';
 const s3Client = createS3Client();
 const { bucketName, folderPrefix } = getBucketConfig();
 
-export async function uploadFile(buffer: Buffer, fileName: string): Promise<string> {
+/**
+ * Detect video content type from file extension
+ */
+function getVideoContentType(fileName: string): string {
+  const ext = fileName.toLowerCase().split('.').pop();
+  
+  const contentTypeMap: Record<string, string> = {
+    'mp4': 'video/mp4',
+    'mov': 'video/quicktime',
+    'avi': 'video/x-msvideo',
+    'wmv': 'video/x-ms-wmv',
+    'flv': 'video/x-flv',
+    'webm': 'video/webm',
+    'mkv': 'video/x-matroska',
+    'm4v': 'video/x-m4v',
+    'mpeg': 'video/mpeg',
+    'mpg': 'video/mpeg',
+    '3gp': 'video/3gpp',
+  };
+  
+  return contentTypeMap[ext || ''] || 'video/mp4'; // Default to mp4 if unknown
+}
+
+export async function uploadFile(buffer: Buffer, fileName: string, contentType?: string): Promise<string> {
   const key = `${folderPrefix}${fileName}`;
+  
+  // Auto-detect content type if not provided
+  const finalContentType = contentType || getVideoContentType(fileName);
+  
+  console.log(`Uploading to S3: ${fileName} (${finalContentType})`);
 
   const command = new PutObjectCommand({
     Bucket: bucketName,
     Key: key,
     Body: buffer,
-    ContentType: 'video/mp4',
+    ContentType: finalContentType,
   });
 
   await s3Client.send(command);

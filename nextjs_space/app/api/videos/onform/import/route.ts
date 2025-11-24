@@ -58,6 +58,27 @@ async function handleFileImport(request: NextRequest, userId: string) {
       return NextResponse.json({ error: 'Video type is required' }, { status: 400 });
     }
 
+    // Validate video format
+    const supportedFormats = ['.mp4', '.mov', '.avi', '.wmv', '.webm', '.m4v', '.mpeg', '.mpg'];
+    const fileExtension = videoFile.name.toLowerCase().substring(videoFile.name.lastIndexOf('.'));
+    
+    if (!supportedFormats.includes(fileExtension)) {
+      return NextResponse.json({ 
+        error: 'Unsupported video format',
+        message: `${fileExtension} files are not supported. Please use: MP4, MOV, AVI, WMV, WEBM, M4V, or MPEG.`
+      }, { status: 415 });
+    }
+
+    // Log file details for debugging
+    console.log('Processing video upload:', {
+      fileName: videoFile.name,
+      fileType: videoFile.type,
+      fileExtension,
+      fileSize: videoFile.size,
+      videoType,
+      cameraAngle
+    });
+
     // Validate file size (limit to 500MB)
     if (videoFile.size > 500 * 1024 * 1024) {
       return NextResponse.json({ 
@@ -75,9 +96,9 @@ async function handleFileImport(request: NextRequest, userId: string) {
     const sanitizedName = videoFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileName = `uploads/${userId}/onform_${timestamp}_${sanitizedName}`;
 
-    // Upload to S3
-    console.log('Uploading OnForm file to S3:', fileName);
-    const cloudStoragePath = await uploadFile(buffer, fileName);
+    // Upload to S3 with correct content type
+    console.log('Uploading OnForm file to S3:', fileName, `(${videoFile.type || 'auto-detect'})`);
+    const cloudStoragePath = await uploadFile(buffer, fileName, videoFile.type || undefined);
 
     // Create video record with OnForm source
     const video = await prisma.video.create({
@@ -124,7 +145,22 @@ async function handleFileImport(request: NextRequest, userId: string) {
 
   } catch (error) {
     console.error('Error in file import:', error);
-    throw error;
+    
+    // Provide detailed error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorDetails = {
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+      context: 'file_import'
+    };
+    
+    console.error('File import failed:', errorDetails);
+    
+    return NextResponse.json({
+      error: 'Failed to import video',
+      message: errorMessage,
+      details: errorDetails
+    }, { status: 500 });
   }
 }
 
