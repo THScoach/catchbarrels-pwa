@@ -15,6 +15,87 @@ export async function POST(request: NextRequest) {
 
     const { message, context, coachingCallId } = await request.json();
 
+    // Get user ID from session (it's added in the session callback)
+    const userId = (session.user as any).id;
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID not found' }, { status: 401 });
+    }
+
+    // Fetch user's latest video analysis scores
+    let userVideoContext = '';
+    const latestVideos = await prisma.video.findMany({
+      where: {
+        userId: userId,
+        analyzed: true,
+      },
+      orderBy: {
+        uploadDate: 'desc',
+      },
+      take: 3, // Get last 3 analyzed videos
+      select: {
+        id: true,
+        uploadDate: true,
+        videoType: true,
+        overallScore: true,
+        tier: true,
+        exitVelocity: true,
+        anchor: true,
+        engine: true,
+        whip: true,
+        anchorStance: true,
+        anchorWeightShift: true,
+        anchorGroundConnection: true,
+        anchorLowerBodyMechanics: true,
+        engineHipRotation: true,
+        engineSeparation: true,
+        engineCorePower: true,
+        engineTorsoMechanics: true,
+        whipArmPath: true,
+        whipBatSpeed: true,
+        whipBatPath: true,
+        whipConnection: true,
+        coachFeedback: true,
+      },
+    });
+
+    if (latestVideos.length > 0) {
+      const latestVideo = latestVideos[0];
+      userVideoContext = `\n\nPLAYER'S LATEST SWING ANALYSIS (${new Date(latestVideo.uploadDate).toLocaleDateString()}):
+Overall Score: ${latestVideo.overallScore}/100 (${latestVideo.tier} tier)
+Exit Velocity: ${latestVideo.exitVelocity} MPH
+
+THE 4Bs BREAKDOWN:
+1. ANCHOR (Lower Body): ${latestVideo.anchor}/100
+   - Stance/Setup: ${latestVideo.anchorStance}/100
+   - Weight Shift: ${latestVideo.anchorWeightShift}/100
+   - Ground Connection: ${latestVideo.anchorGroundConnection}/100
+   - Lower Body Mechanics: ${latestVideo.anchorLowerBodyMechanics}/100
+   
+2. ENGINE (Core/Trunk): ${latestVideo.engine}/100
+   - Hip Rotation: ${latestVideo.engineHipRotation}/100
+   - Separation: ${latestVideo.engineSeparation}/100
+   - Core Power: ${latestVideo.engineCorePower}/100
+   - Torso Mechanics: ${latestVideo.engineTorsoMechanics}/100
+   
+3. WHIP (Arms & Bat): ${latestVideo.whip}/100
+   - Arm Path: ${latestVideo.whipArmPath}/100
+   - Bat Speed: ${latestVideo.whipBatSpeed}/100
+   - Bat Path: ${latestVideo.whipBatPath}/100
+   - Connection: ${latestVideo.whipConnection}/100
+
+Previous Feedback Given: "${latestVideo.coachFeedback}"`;
+
+      // Add historical context if there are multiple videos
+      if (latestVideos.length > 1) {
+        userVideoContext += `\n\nPROGRESS TRACKING:`;
+        latestVideos.slice(1).forEach((video, idx) => {
+          userVideoContext += `\n${idx + 2}. ${new Date(video.uploadDate).toLocaleDateString()}: ${video.overallScore}/100, Exit Velo: ${video.exitVelocity} MPH`;
+        });
+      }
+    } else {
+      userVideoContext = `\n\nNOTE: This player hasn't uploaded any swing videos yet. Encourage them to upload a video so you can give personalized feedback!`;
+    }
+
     // Search knowledge base for relevant content
     let knowledgeBaseContext = '';
     const knowledgeKeywords = ['drill', 'biomechanics', 'mechanics', 'technique', 'course', 'lesson', 'training', 'swing', 'analysis', 'assessment', 'video', 'exercise', 'movement', 'power', 'rotation'];
@@ -217,6 +298,7 @@ IMPORTANT GUIDELINES:
 - Use emojis occasionally to be friendly ⚾ 💪 🎯
 - If asked about the 4Bs system, explain it simply
 - When you have coaching call transcript context, reference it naturally in your answers
+- ALWAYS reference the player's actual scores when giving advice!
 
 THE 4Bs SYSTEM (What We Track):
 1. ANCHOR (Lower Body) - How your legs and hips work
@@ -239,12 +321,11 @@ THE 4Bs SYSTEM (What We Track):
 
 4. EXIT VELOCITY - How hard you hit the ball (measured in MPH)
 
-CONTEXT YOU HAVE:
-${context ? JSON.stringify(context, null, 2) : 'No specific context'}
+${userVideoContext}
 ${coachingCallContext}
 ${knowledgeBaseContext}
 
-Your job is to help players understand their scores, explain what to work on, and answer questions about hitting mechanics in SIMPLE terms.${coachingCallContext ? '\n\n⚠️ IMPORTANT: When answering questions, DIRECTLY REFERENCE what was discussed in the coaching calls above. Quote specific advice, drills, or recommendations that were mentioned!' : ''}${knowledgeBaseContext ? '\n\n⚠️ IMPORTANT: You have access to training library content above. When answering questions, DIRECTLY REFERENCE the specific courses, lessons, and drills from the training library. Quote the content and tell users where to find more details!' : ''}`;
+Your job is to help players understand their scores, explain what to work on, and answer questions about hitting mechanics in SIMPLE terms.${latestVideos.length > 0 ? '\n\n⚠️ CRITICAL: You have the player\'s ACTUAL SWING SCORES above! When they ask about their swing, scores, or what to work on, DIRECTLY REFERENCE their specific numbers! For example: "Your Anchor score is 75/100, which is pretty good! But I see your Engine is at 62/100 - that\'s where we should focus!" Always be specific with their actual scores!' : ''}${coachingCallContext ? '\n\n⚠️ IMPORTANT: When answering questions, DIRECTLY REFERENCE what was discussed in the coaching calls above. Quote specific advice, drills, or recommendations that were mentioned!' : ''}${knowledgeBaseContext ? '\n\n⚠️ IMPORTANT: You have access to training library content above. When answering questions, DIRECTLY REFERENCE the specific courses, lessons, and drills from the training library. Quote the content and tell users where to find more details!' : ''}`;
 
     // Call Abacus.AI LLM API
     const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
