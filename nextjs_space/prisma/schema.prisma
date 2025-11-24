@@ -71,7 +71,9 @@ model Video {
   
   title           String    @default("My Swing")
   videoType       String?   // "Tee Work", "Front Toss", "Live BP", "Game Swings", "Cage Work", "Other"
-  videoUrl        String    // Mock URL for prototype
+  source          String    @default("upload") // "upload", "onform", "hudl", "other"
+  originalUrl     String?   // For imported videos (OnForm share link, Hudl link, etc.)
+  videoUrl        String    // S3 URL or mock URL
   thumbnailUrl    String?   // Mock thumbnail
   
   // Video Processing for Joint Analysis

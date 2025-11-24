@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { BottomNav } from '@/components/bottom-nav';
 import { UploadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
-import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info } from 'lucide-react';
+import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info, Link as LinkIcon } from 'lucide-react';
 
 export function VideoUploadClient() {
   const router = useRouter();
+  const [mode, setMode] = useState<'upload' | 'onform'>('upload');
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +18,10 @@ export function VideoUploadClient() {
   const [videoType, setVideoType] = useState<string>('');
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // OnForm import states
+  const [onformUrl, setOnformUrl] = useState<string>('');
+  const [importing, setImporting] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -141,6 +146,66 @@ export function VideoUploadClient() {
     // Reset to allow new upload
   };
 
+  const handleOnFormImport = async () => {
+    if (!onformUrl.trim()) {
+      setError('Please enter an OnForm share link');
+      return;
+    }
+
+    if (!videoType) {
+      setError('Please select a video type before importing');
+      return;
+    }
+
+    // Basic URL validation
+    if (!onformUrl.includes('getonform.com')) {
+      setError('Please enter a valid OnForm share link (e.g., https://link.getonform.com/view?id=...)');
+      return;
+    }
+
+    setImporting(true);
+    setError(null);
+    setProgress(0);
+
+    try {
+      const response = await fetch('/api/videos/import-onform', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          shareUrl: onformUrl,
+          videoType,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Import failed');
+      }
+
+      setSuccess(true);
+      toast.success('OnForm video imported!', {
+        description: 'Your swing is being analyzed. This may take a few moments.',
+      });
+
+      setTimeout(() => {
+        router.push('/video');
+        router.refresh();
+      }, 1500);
+
+    } catch (err) {
+      console.error('OnForm import error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to import OnForm video';
+      setError(errorMessage);
+      setImporting(false);
+      toast.error('Import failed', {
+        description: errorMessage,
+      });
+    }
+  };
+
   // Show catastrophic error state
   if (catastrophicError) {
     return (
@@ -157,7 +222,39 @@ export function VideoUploadClient() {
   return (
     <div className="min-h-screen bg-[#1a2332] pb-20">
       <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-4">Upload Swing Video</h1>
+        <h1 className="text-2xl font-bold text-white mb-6">Add Swing Video</h1>
+
+        {/* Mode Switcher Tabs */}
+        <div className="mb-6 flex gap-2 p-1 bg-gray-800/50 rounded-lg">
+          <button
+            onClick={() => {
+              setMode('upload');
+              setError(null);
+            }}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+              mode === 'upload'
+                ? 'bg-[#F5A623] text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Upload className="w-4 h-4" />
+            Upload Video
+          </button>
+          <button
+            onClick={() => {
+              setMode('onform');
+              setError(null);
+            }}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+              mode === 'onform'
+                ? 'bg-[#F5A623] text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <LinkIcon className="w-4 h-4" />
+            Import from OnForm
+          </button>
+        </div>
 
         {/* Baseball Hitting Only Notice */}
         <div className="mb-6 bg-[#F5A623]/10 border border-[#F5A623] rounded-lg p-4 flex items-start gap-3">
@@ -165,7 +262,7 @@ export function VideoUploadClient() {
           <div>
             <p className="text-white font-medium">Baseball Hitting Videos Only</p>
             <p className="text-gray-300 text-sm mt-1">
-              This tool is designed specifically for baseball swing analysis. Please upload videos of batting practice, cage work, tee work, or game swings only.
+              This tool is designed specifically for baseball swing analysis. Please {mode === 'upload' ? 'upload' : 'import'} videos of batting practice, cage work, tee work, or game swings only.
             </p>
           </div>
         </div>
@@ -179,7 +276,7 @@ export function VideoUploadClient() {
         )}
 
         {/* Video Type Selector */}
-        {!success && !uploading && (
+        {!success && !uploading && !importing && (
           <div className="mb-6">
             <label className="block text-white font-medium mb-2">
               Video Type <span className="text-red-400">*</span>
@@ -203,8 +300,9 @@ export function VideoUploadClient() {
           </div>
         )}
 
-        {/* Upload Area */}
-        <div className="bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-lg p-12 text-center">
+        {/* Upload Mode */}
+        {mode === 'upload' && (
+          <div className="bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-lg p-12 text-center">
           {success ? (
             <div className="space-y-4">
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
@@ -272,32 +370,127 @@ export function VideoUploadClient() {
               </button>
             </div>
           )}
-        </div>
+          </div>
+        )}
+
+        {/* OnForm Import Mode */}
+        {mode === 'onform' && (
+          <div className="bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-lg p-12">
+            {success ? (
+              <div className="space-y-4 text-center">
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+                <p className="text-white text-lg">Import successful!</p>
+                <p className="text-gray-400">Analyzing your swing...</p>
+              </div>
+            ) : importing ? (
+              <div className="space-y-4 text-center">
+                <Loader2 className="w-16 h-16 text-[#F5A623] mx-auto animate-spin" />
+                <p className="text-white text-lg">Importing OnForm video...</p>
+                <p className="text-gray-400 text-sm">This may take a minute</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="text-center space-y-2">
+                  <LinkIcon className="w-16 h-16 text-[#F5A623] mx-auto" />
+                  <p className="text-white text-lg font-medium">Import from OnForm</p>
+                  <p className="text-gray-400 text-sm">
+                    Paste your OnForm share link to import swing videos
+                  </p>
+                </div>
+
+                <div className="space-y-4 max-w-lg mx-auto">
+                  <div>
+                    <label className="block text-white font-medium mb-2">
+                      OnForm Share Link <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={onformUrl}
+                      onChange={(e) => setOnformUrl(e.target.value)}
+                      placeholder="https://link.getonform.com/view?id=..."
+                      className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-[#F5A623] focus:outline-none focus:ring-2 focus:ring-[#F5A623]/20"
+                    />
+                    <p className="text-gray-400 text-xs mt-2">
+                      Get the share link from your OnForm video → Share → Copy Link
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleOnFormImport}
+                    disabled={!onformUrl.trim() || !videoType}
+                    className="w-full bg-[#F5A623] hover:bg-[#E89815] disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    Import Video
+                  </button>
+                </div>
+
+                <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 max-w-lg mx-auto">
+                  <h4 className="text-blue-300 font-medium mb-2">How to get an OnForm share link:</h4>
+                  <ol className="text-gray-300 text-sm space-y-1 list-decimal list-inside">
+                    <li>Open your video in OnForm app</li>
+                    <li>Tap the Share button</li>
+                    <li>Choose "Share via Email/Link"</li>
+                    <li>Copy the link and paste it here</li>
+                  </ol>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tips Section */}
         <div className="mt-6 bg-gray-800/30 border border-gray-700 rounded-lg p-4">
-          <h3 className="text-white font-medium mb-3">📹 Hitting Video Recording Tips:</h3>
+          <h3 className="text-white font-medium mb-3">
+            {mode === 'upload' ? '📹 Hitting Video Recording Tips:' : '🎥 OnForm Capture Tips:'}
+          </h3>
           <ul className="text-gray-400 text-sm space-y-2">
-            <li className="flex items-start gap-2">
-              <span className="text-[#F5A623] font-bold">•</span>
-              <span><strong className="text-gray-300">Camera angle:</strong> Record from the side (perpendicular to your stance) for best swing mechanics analysis</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[#F5A623] font-bold">•</span>
-              <span><strong className="text-gray-300">Full body visible:</strong> Ensure entire swing path is captured from stance to follow-through</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[#F5A623] font-bold">•</span>
-              <span><strong className="text-gray-300">Steady camera:</strong> Use a tripod or stable surface to avoid camera shake</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[#F5A623] font-bold">•</span>
-              <span><strong className="text-gray-300">Good lighting:</strong> Clear visibility improves AI analysis accuracy</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[#F5A623] font-bold">•</span>
-              <span><strong className="text-gray-300">Multiple swings:</strong> Upload 3-5 swings for better trend analysis and progress tracking</span>
-            </li>
+            {mode === 'upload' ? (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Camera angle:</strong> Record from the side (perpendicular to your stance) for best swing mechanics analysis</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Full body visible:</strong> Ensure entire swing path is captured from stance to follow-through</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Steady camera:</strong> Use a tripod or stable surface to avoid camera shake</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Good lighting:</strong> Clear visibility improves AI analysis accuracy</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Multiple swings:</strong> Upload 3-5 swings for better trend analysis and progress tracking</span>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Use OnForm's high FPS:</strong> Capture at 120-240 FPS for detailed biomechanical analysis</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Auto-capture feature:</strong> OnForm can automatically detect and clip your swings</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Side angle works best:</strong> Position camera perpendicular to your stance</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Share publicly:</strong> Make sure your video is shared publicly so BARRELS can access it</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#F5A623] font-bold">•</span>
+                  <span><strong className="text-gray-300">Batch import:</strong> Import multiple swings to track your progress over time</span>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </div>
