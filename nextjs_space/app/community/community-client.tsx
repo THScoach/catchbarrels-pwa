@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, Share2, TrendingUp, Filter, Loader2, Zap, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { BottomNav } from '@/components/bottom-nav';
@@ -114,15 +113,43 @@ export default function CommunityClient() {
         </div>
 
         {/* Filters */}
-        <Tabs defaultValue="all" className="mb-6" onValueChange={(v) => setTierFilter(v === 'all' ? null : v)}>
-          <TabsList className="bg-gray-800 border-gray-700">
-            <TabsTrigger value="all">All Swings</TabsTrigger>
-            <TabsTrigger value="Elite">Elite</TabsTrigger>
-            <TabsTrigger value="Advanced">Advanced</TabsTrigger>
-            <TabsTrigger value="Intermediate">Intermediate</TabsTrigger>
-            <TabsTrigger value="Developing">Developing</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="mb-6 flex gap-2 flex-wrap">
+          <Button
+            onClick={() => setTierFilter(null)}
+            variant={tierFilter === null ? "default" : "outline"}
+            className={tierFilter === null ? "bg-[#F5A623] hover:bg-[#E89815]" : "border-gray-700 hover:border-[#F5A623]"}
+          >
+            All Swings
+          </Button>
+          <Button
+            onClick={() => setTierFilter('Elite')}
+            variant={tierFilter === 'Elite' ? "default" : "outline"}
+            className={tierFilter === 'Elite' ? "bg-purple-600 hover:bg-purple-700" : "border-gray-700 hover:border-purple-600"}
+          >
+            Elite
+          </Button>
+          <Button
+            onClick={() => setTierFilter('Advanced')}
+            variant={tierFilter === 'Advanced' ? "default" : "outline"}
+            className={tierFilter === 'Advanced' ? "bg-blue-600 hover:bg-blue-700" : "border-gray-700 hover:border-blue-600"}
+          >
+            Advanced
+          </Button>
+          <Button
+            onClick={() => setTierFilter('Intermediate')}
+            variant={tierFilter === 'Intermediate' ? "default" : "outline"}
+            className={tierFilter === 'Intermediate' ? "bg-green-600 hover:bg-green-700" : "border-gray-700 hover:border-green-600"}
+          >
+            Intermediate
+          </Button>
+          <Button
+            onClick={() => setTierFilter('Developing')}
+            variant={tierFilter === 'Developing' ? "default" : "outline"}
+            className={tierFilter === 'Developing' ? "bg-yellow-600 hover:bg-yellow-700" : "border-gray-700 hover:border-yellow-600"}
+          >
+            Developing
+          </Button>
+        </div>
 
         {/* Video Grid */}
         {videos.length === 0 ? (

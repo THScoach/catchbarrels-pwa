@@ -128,12 +128,51 @@ export function OnFormImportPanel({
       if (athleteId) formData.append('athleteId', athleteId);
       if (sessionId) formData.append('sessionId', sessionId);
 
-      // Use XMLHttpRequest for progress tracking
+      // Use XMLHttpRequest for progress tracking with stall detection
       const result = await new Promise<any>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         
-        // Set a 10-minute timeout for large files
-        xhr.timeout = 600000; // 10 minutes
+        // Detect iOS/iPad
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        
+        // Set a timeout based on file size (2 minutes for first 100MB, then 1 min per additional 100MB)
+        // Max 10 minutes, min 2 minutes
+        const timeoutMinutes = Math.min(10, Math.max(2, Math.ceil(fileSizeMB / 100) * 2));
+        xhr.timeout = timeoutMinutes * 60 * 1000;
+        
+        console.log(`[OnForm Upload] Starting upload of ${fileSizeMB.toFixed(1)}MB with ${timeoutMinutes}-minute timeout`);
+
+        // Stall detection: track last progress update
+        let lastProgressTime = Date.now();
+        let lastProgressBytes = 0;
+        let stallWarningShown = false;
+        
+        // Check for stalls every 15 seconds
+        const stallCheckInterval = setInterval(() => {
+          const timeSinceProgress = Date.now() - lastProgressTime;
+          const currentProgress = uploadProgress;
+          
+          // If no progress for 30 seconds and not complete
+          if (timeSinceProgress > 30000 && currentProgress < 100 && !stallWarningShown) {
+            stallWarningShown = true;
+            console.warn(`[OnForm Upload] Stalled for 30+ seconds at ${currentProgress}%`);
+            
+            toast.warning('Upload may be stalled', {
+              description: isIOS 
+                ? '⚠️ iPad connection unstable. Stay on this screen and keep Safari open. Consider switching to a stronger Wi-Fi network.'
+                : '⚠️ Connection unstable. Please keep this window open and wait...',
+              duration: 8000
+            });
+          }
+          
+          // If no progress for 60 seconds, abort
+          if (timeSinceProgress > 60000 && currentProgress < 100) {
+            console.error(`[OnForm Upload] No progress for 60 seconds, aborting`);
+            clearInterval(stallCheckInterval);
+            xhr.abort();
+            reject(new Error('Upload stalled. Your connection may be too slow or unstable. Please try: (1) Moving closer to your Wi-Fi router (2) Restarting your device (3) Compressing the video in OnForm first'));
+          }
+        }, 15000);
 
         // Track upload progress
         xhr.upload.addEventListener('progress', (e) => {
@@ -141,27 +180,41 @@ export function OnFormImportPanel({
             const percentComplete = (e.loaded / e.total) * 100;
             const uploadedMegabytes = e.loaded / (1024 * 1024);
             
+            // Update progress state
             setUploadProgress(Math.round(percentComplete));
             setUploadedMB(uploadedMegabytes);
             
-            console.log(`Upload progress: ${percentComplete.toFixed(1)}% (${uploadedMegabytes.toFixed(1)}/${fileSizeMB.toFixed(1)} MB)`);
+            // Track for stall detection
+            if (e.loaded > lastProgressBytes) {
+              lastProgressTime = Date.now();
+              lastProgressBytes = e.loaded;
+              stallWarningShown = false; // Reset warning flag
+            }
+            
+            console.log(`[OnForm Upload] Progress: ${percentComplete.toFixed(1)}% (${uploadedMegabytes.toFixed(1)}/${fileSizeMB.toFixed(1)} MB)`);
           }
         });
 
         // Handle completion
         xhr.addEventListener('load', () => {
+          clearInterval(stallCheckInterval);
+          
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
               const response = JSON.parse(xhr.responseText);
+              console.log(`[OnForm Upload] Success! Video ID: ${response.video?.id}`);
               resolve(response);
             } catch (e) {
+              console.error('[OnForm Upload] Invalid server response:', e);
               reject(new Error('Invalid server response'));
             }
           } else {
             try {
               const errorData = JSON.parse(xhr.responseText);
+              console.error(`[OnForm Upload] Server error ${xhr.status}:`, errorData);
               reject(new Error(errorData.error || 'Upload failed'));
             } catch (e) {
+              console.error(`[OnForm Upload] Failed with status ${xhr.status}`);
               reject(new Error(`Upload failed with status ${xhr.status}`));
             }
           }
@@ -169,18 +222,37 @@ export function OnFormImportPanel({
 
         // Handle errors
         xhr.addEventListener('error', () => {
-          reject(new Error('Network error during upload'));
+          clearInterval(stallCheckInterval);
+          console.error('[OnForm Upload] Network error occurred');
+          
+          // iOS-specific guidance
+          if (isIOS) {
+            reject(new Error('❌ iPad network error. This often happens with large files on cellular or weak Wi-Fi. Try: (1) Switch to a strong Wi-Fi network (2) Close other apps to free memory (3) Compress the video in OnForm (4) Try uploading from a computer'));
+          } else {
+            reject(new Error('Network error during upload. Please check your connection and try again.'));
+          }
         });
 
         xhr.addEventListener('abort', () => {
-          reject(new Error('Upload cancelled'));
+          clearInterval(stallCheckInterval);
+          console.log('[OnForm Upload] Upload aborted');
+          reject(new Error('Upload cancelled or stalled'));
         });
         
         xhr.addEventListener('timeout', () => {
-          reject(new Error('Upload timed out. The file may be too large or your internet connection is slow. Try compressing the video or using a faster connection.'));
+          clearInterval(stallCheckInterval);
+          console.error(`[OnForm Upload] Timeout after ${timeoutMinutes} minutes`);
+          
+          // iOS-specific timeout guidance
+          if (isIOS) {
+            reject(new Error(`⏱️ Upload timed out after ${timeoutMinutes} minutes. iPad uploads can be slower on cellular/weak Wi-Fi. Try: (1) Connect to faster Wi-Fi (2) Compress video in OnForm first (3) Upload from a computer instead`));
+          } else {
+            reject(new Error(`Upload timed out after ${timeoutMinutes} minutes. The file may be too large or your internet connection is slow. Try compressing the video or using a faster connection.`));
+          }
         });
 
         // Send request
+        console.log(`[OnForm Upload] Sending POST request to /api/videos/onform/import`);
         xhr.open('POST', '/api/videos/onform/import');
         xhr.send(formData);
       });
@@ -210,10 +282,37 @@ export function OnFormImportPanel({
       onOpenChange(false);
 
     } catch (error) {
-      console.error('Error importing OnForm video:', error);
-      toast.error('Failed to import video', {
-        description: error instanceof Error ? error.message : 'Please try again or contact support'
-      });
+      console.error('[OnForm Upload] Error importing OnForm video:', error);
+      
+      // Enhanced error message with more context
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
+      // Detect iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+      // Show different toast based on error type
+      if (errorMessage.includes('stalled') || errorMessage.includes('timeout') || errorMessage.includes('network')) {
+        toast.error('Upload Failed - Network Issue', {
+          description: errorMessage,
+          duration: 10000 // Longer duration for actionable errors
+        });
+        
+        // If iOS, show additional help
+        if (isIOS) {
+          setTimeout(() => {
+            toast.info('💡 iPad Upload Tips', {
+              description: 'Large videos (>50MB) often fail on iPad. Best option: Upload from your computer, or compress the video in OnForm first.',
+              duration: 8000
+            });
+          }, 2000);
+        }
+      } else {
+        toast.error('Failed to import video', {
+          description: errorMessage || 'Please try again or contact support',
+          duration: 6000
+        });
+      }
+      
       setUploadProgress(0);
       setUploadedMB(0);
       setTotalMB(0);
