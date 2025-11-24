@@ -6,11 +6,12 @@ import { ScoreCard } from '@/components/score-card';
 import { EnhancedVideoPlayer } from '@/components/enhanced-video-player';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
-import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw } from 'lucide-react';
+import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
 
-export function VideoDetailClient({ video }: any) {
+export function VideoDetailClient({ video, previousScores, personalBests }: any) {
   const [activeTab, setActiveTab] = useState<'analysis' | 'coach'>('analysis');
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [coachFeedback, setCoachFeedback] = useState(video?.coachFeedback || '');
@@ -224,22 +225,127 @@ export function VideoDetailClient({ video }: any) {
           <div>
             {video?.analyzed ? (
               <div className="space-y-6">
-                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-                  <h2 className="text-xl font-bold text-white mb-4">Overall Score</h2>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-5xl font-bold text-white">{video.overallScore}</div>
-                      <div className="text-2xl font-semibold text-[#F5A623] mt-1">{video.tier}</div>
-                    </div>
-                    {video?.exitVelocity && (
-                      <div className="text-right">
-                        <div className="text-gray-400 text-sm">Exit Velocity</div>
-                        <div className="text-3xl font-bold text-white">{video.exitVelocity}</div>
-                        <div className="text-gray-400 text-sm">mph</div>
+                {/* Calculate Progress Indicators */}
+                {(() => {
+                  const overallProgress = calculateProgress(
+                    video?.overallScore,
+                    previousScores?.overallScore,
+                    personalBests?.overallScore
+                  );
+                  const anchorProgress = calculateProgress(
+                    video?.anchor,
+                    previousScores?.anchor,
+                    personalBests?.anchor
+                  );
+                  const engineProgress = calculateProgress(
+                    video?.engine,
+                    previousScores?.engine,
+                    personalBests?.engine
+                  );
+                  const whipProgress = calculateProgress(
+                    video?.whip,
+                    previousScores?.whip,
+                    personalBests?.whip
+                  );
+                  const exitVelocityProgress = calculateProgress(
+                    video?.exitVelocity,
+                    previousScores?.exitVelocity,
+                    personalBests?.exitVelocity
+                  );
+
+                  return (
+                    <>
+                      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <h2 className="text-xl font-bold text-white">Overall Score</h2>
+                          {overallProgress.isPersonalBest && (
+                            <div className="flex items-center gap-2 bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full">
+                              <Award className="w-4 h-4" />
+                              <span className="text-sm font-semibold">Personal Best!</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-5xl font-bold text-white">{video.overallScore}</div>
+                              {overallProgress.change !== 0 && (
+                                <div className="flex flex-col">
+                                  <span className={`text-2xl font-bold ${getProgressColor(overallProgress.direction, overallProgress.isPersonalBest)}`}>
+                                    {getProgressIcon(overallProgress.direction)} {formatProgressChange(overallProgress.change)}
+                                  </span>
+                                  {previousScores && (
+                                    <span className="text-xs text-gray-500">vs. last swing</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-2xl font-semibold text-[#F5A623] mt-1">{video.tier}</div>
+                          </div>
+                          {video?.exitVelocity && (
+                            <div className="text-right">
+                              <div className="text-gray-400 text-sm">Exit Velocity</div>
+                              <div className="flex items-center gap-2 justify-end">
+                                <div className="text-3xl font-bold text-white">{video.exitVelocity}</div>
+                                {exitVelocityProgress.change !== 0 && (
+                                  <span className={`text-lg font-bold ${getProgressColor(exitVelocityProgress.direction, exitVelocityProgress.isPersonalBest)}`}>
+                                    {getProgressIcon(exitVelocityProgress.direction)}{formatProgressChange(exitVelocityProgress.change)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-gray-400 text-sm">mph</div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Progress Summary */}
+                        {previousScores && (
+                          <div className="mt-4 pt-4 border-t border-gray-700">
+                            <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                              <TrendingUp className="w-4 h-4" />
+                              <span>Progress vs. Previous Swing:</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="bg-gray-900/50 rounded p-2 text-center">
+                                <div className="text-xs text-gray-500 mb-1">Anchor</div>
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-white font-semibold">{video.anchor}</span>
+                                  {anchorProgress.change !== 0 && (
+                                    <span className={`text-xs ${getProgressColor(anchorProgress.direction)}`}>
+                                      {getProgressIcon(anchorProgress.direction)}{formatProgressChange(anchorProgress.change)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="bg-gray-900/50 rounded p-2 text-center">
+                                <div className="text-xs text-gray-500 mb-1">Engine</div>
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-white font-semibold">{video.engine}</span>
+                                  {engineProgress.change !== 0 && (
+                                    <span className={`text-xs ${getProgressColor(engineProgress.direction)}`}>
+                                      {getProgressIcon(engineProgress.direction)}{formatProgressChange(engineProgress.change)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="bg-gray-900/50 rounded p-2 text-center">
+                                <div className="text-xs text-gray-500 mb-1">Whip</div>
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-white font-semibold">{video.whip}</span>
+                                  {whipProgress.change !== 0 && (
+                                    <span className={`text-xs ${getProgressColor(whipProgress.direction)}`}>
+                                      {getProgressIcon(whipProgress.direction)}{formatProgressChange(whipProgress.change)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </>
+                  );
+                })()}
 
                 <div>
                   <h2 className="text-lg font-semibold text-white mb-4">Body Metrics Breakdown</h2>

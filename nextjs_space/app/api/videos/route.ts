@@ -19,7 +19,38 @@ export async function GET() {
       orderBy: { uploadDate: 'desc' },
     });
 
-    return NextResponse.json({ videos });
+    // Calculate personal bests for comparison
+    const analyzedVideos = videos.filter(v => v.analyzed && v.overallScore !== null);
+    const personalBests = {
+      overallScore: analyzedVideos.length > 0 ? Math.max(...analyzedVideos.map(v => v.overallScore || 0)) : null,
+      anchor: analyzedVideos.length > 0 ? Math.max(...analyzedVideos.map(v => v.anchor || 0)) : null,
+      engine: analyzedVideos.length > 0 ? Math.max(...analyzedVideos.map(v => v.engine || 0)) : null,
+      whip: analyzedVideos.length > 0 ? Math.max(...analyzedVideos.map(v => v.whip || 0)) : null,
+      exitVelocity: analyzedVideos.length > 0 ? Math.max(...analyzedVideos.map(v => v.exitVelocity || 0)) : null,
+    };
+
+    // Attach comparison data to each video
+    const videosWithProgress = videos.map((video, index) => {
+      // Find the previous analyzed video
+      const previousVideo = analyzedVideos.find((v, i) => {
+        const currentIndex = analyzedVideos.findIndex(av => av.id === video.id);
+        return i === currentIndex + 1;
+      });
+
+      return {
+        ...video,
+        previousScores: previousVideo ? {
+          overallScore: previousVideo.overallScore,
+          anchor: previousVideo.anchor,
+          engine: previousVideo.engine,
+          whip: previousVideo.whip,
+          exitVelocity: previousVideo.exitVelocity,
+        } : null,
+        personalBests,
+      };
+    });
+
+    return NextResponse.json({ videos: videosWithProgress });
   } catch (error) {
     console.error('Videos fetch error:', error);
     return NextResponse.json(
