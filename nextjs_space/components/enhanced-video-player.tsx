@@ -28,10 +28,11 @@ interface Drawing {
 interface EnhancedVideoPlayerProps {
   videoUrl: string;
   userHandedness?: 'right' | 'left'; // User's batting handedness
+  userHeight?: number; // User's height in inches for auto-calibration
   onError?: () => void;
 }
 
-export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onError }: EnhancedVideoPlayerProps) {
+export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', userHeight, onError }: EnhancedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const modelVideoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,6 +60,7 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onErro
   const [modelVideoUrl, setModelVideoUrl] = useState<string | null>(null);
   const [overlayOpacity, setOverlayOpacity] = useState(50); // 0-100
   const [loadingModel, setLoadingModel] = useState(false);
+  const [modelPlayerHeight, setModelPlayerHeight] = useState<number | null>(null); // Model player's height in inches
   
   // Calibration state
   const [calibrationMode, setCalibrationMode] = useState(false);
@@ -81,7 +83,10 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onErro
       }
       const data = await response.json();
       setModelVideoUrl(data.modelVideo.signedUrl);
-      toast.success(`${userHandedness === 'right' ? 'Right' : 'Left'}-handed model loaded`);
+      setModelPlayerHeight(data.modelVideo.playerHeight || null);
+      
+      const modelName = data.modelVideo.playerName || 'Pro';
+      toast.success(`${modelName} model loaded!`);
     } catch (error) {
       console.error('Error fetching model video:', error);
       toast.error('No model video available for comparison');
@@ -125,6 +130,34 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onErro
     setOverlayOffsetX(0);
     setOverlayOffsetY(0);
     toast.info('Calibration reset to defaults');
+  };
+
+  // Auto-calibrate based on user height vs model height
+  const autoCalibrate = () => {
+    if (!userHeight || !modelPlayerHeight) {
+      toast.error('Height data not available for auto-calibration');
+      return;
+    }
+    
+    // Calculate scale based on height ratio
+    const heightRatio = userHeight / modelPlayerHeight;
+    const clampedScale = Math.max(0.5, Math.min(1.5, heightRatio));
+    
+    setOverlayScale(clampedScale);
+    setOverlayOffsetX(0); // Reset offsets to center
+    setOverlayOffsetY(0);
+    
+    const userFeet = Math.floor(userHeight / 12);
+    const userInches = userHeight % 12;
+    const modelFeet = Math.floor(modelPlayerHeight / 12);
+    const modelInches = modelPlayerHeight % 12;
+    
+    toast.success(
+      `Auto-calibrated!`,
+      { 
+        description: `Your ${userFeet}'${userInches}" scaled to match ${modelFeet}'${modelInches}" model (${Math.round(clampedScale * 100)}%)`
+      }
+    );
   };
 
   // Fetch model video when overlay is toggled
@@ -980,6 +1013,17 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onErro
                       className="w-full"
                     />
                   </div>
+                  
+                  {/* Auto-Fit Button */}
+                  {userHeight && modelPlayerHeight && (
+                    <Button
+                      size="sm"
+                      onClick={autoCalibrate}
+                      className="w-full text-[10px] bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    >
+                      ⚡ Auto-Fit to My Height
+                    </Button>
+                  )}
                   
                   {/* Action Buttons */}
                   <div className="flex gap-1">

@@ -387,6 +387,7 @@ model ModelVideo {
   // Player info
   playerName       String?  // e.g., "Mike Trout", "Juan Soto"
   playerLevel      String?  // "mlb", "college", "pro"
+  playerHeight     Int?     // Height in inches for auto-calibration
   
   // Skeleton data for overlay (JSON format)
   skeletonData     Json?    // Frame-by-frame joint positions

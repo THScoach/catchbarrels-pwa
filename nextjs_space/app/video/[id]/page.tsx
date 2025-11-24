@@ -19,6 +19,15 @@ export default async function VideoDetailPage({ params }: { params: { id: string
     redirect('/video');
   }
 
+  // Fetch user profile for height (auto-calibration)
+  const user = await prisma.user.findUnique({
+    where: { id: (session.user as any).id },
+    select: {
+      height: true,
+      bats: true, // User's batting handedness
+    },
+  });
+
   // Fetch all analyzed videos for comparison
   const allVideos = await prisma.video.findMany({
     where: { 
@@ -56,5 +65,7 @@ export default async function VideoDetailPage({ params }: { params: { id: string
     video={video} 
     previousScores={previousScores}
     personalBests={personalBests}
+    userHeight={user?.height || undefined}
+    userHandedness={user?.bats?.toLowerCase() === 'left' ? 'left' : 'right'}
   />;
 }

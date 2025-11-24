@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
 
-export function VideoDetailClient({ video, previousScores, personalBests }: any) {
+export function VideoDetailClient({ video, previousScores, personalBests, userHeight, userHandedness }: any) {
   const [activeTab, setActiveTab] = useState<'analysis' | 'coach'>('analysis');
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [coachFeedback, setCoachFeedback] = useState(video?.coachFeedback || '');
@@ -163,6 +163,8 @@ export function VideoDetailClient({ video, previousScores, personalBests }: any)
           ) : videoUrl ? (
             <EnhancedVideoPlayer 
               videoUrl={videoUrl} 
+              userHandedness={userHandedness}
+              userHeight={userHeight}
               onError={() => setVideoError(true)} 
             />
           ) : (
