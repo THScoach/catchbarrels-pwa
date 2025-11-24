@@ -417,13 +417,33 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                   <Link2 className="w-8 h-8 text-blue-400" />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-white font-semibold mb-2">OnForm Video Link</h3>
+                  <h3 className="text-white font-semibold mb-2">OnForm Video Link (View-Only)</h3>
                   <p className="text-gray-300 text-sm mb-4">
-                    This video is hosted on OnForm and cannot be played directly in BARRELS.
+                    This video is hosted on OnForm and cannot be analyzed directly in BARRELS.
                   </p>
-                  <p className="text-gray-400 text-xs mb-4">
-                    To analyze this video, please use the <span className="text-blue-400 font-medium">"Upload File"</span> tab in the OnForm import panel instead of the link option.
-                  </p>
+                  <div className="text-left bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-4">
+                    <p className="text-blue-400 font-medium text-sm mb-2">
+                      To analyze this swing in BARRELS:
+                    </p>
+                    <ol className="text-gray-300 text-sm space-y-2">
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#F5A623] font-bold">1.</span>
+                        <span>Open this video in the OnForm app</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#F5A623] font-bold">2.</span>
+                        <span>Download or export the video to your phone/iPad</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#F5A623] font-bold">3.</span>
+                        <span>Return to BARRELS → OnForm Import → <span className="text-blue-400 font-medium">Upload File</span> tab</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#F5A623] font-bold">4.</span>
+                        <span>Upload the downloaded video file to run full analysis</span>
+                      </li>
+                    </ol>
+                  </div>
                 </div>
                 <a
                   href={onformUrl || '#'}

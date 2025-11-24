@@ -460,14 +460,14 @@ export function OnFormImportPanel({
                     className="data-[state=active]:bg-[#F5A623] data-[state=active]:text-white text-base"
                   >
                     <Upload className="w-5 h-5 mr-2" />
-                    Upload File
+                    Upload File (for analysis)
                   </TabsTrigger>
                   <TabsTrigger 
                     value="link"
                     className="data-[state=active]:bg-[#F5A623] data-[state=active]:text-white text-base"
                   >
                     <Link2 className="w-5 h-5 mr-2" />
-                    Paste Link
+                    OnForm Link (view-only)
                   </TabsTrigger>
                 </TabsList>
 
@@ -505,6 +505,17 @@ export function OnFormImportPanel({
                 </TabsContent>
 
                 <TabsContent value="link" className="space-y-4 mt-4">
+                  {/* Warning Alert - View-Only Limitation */}
+                  <Alert className="bg-blue-500/10 border-blue-500/30">
+                    <Info className="h-4 w-4 text-blue-400" />
+                    <AlertDescription className="text-blue-200 text-sm">
+                      <strong className="block mb-1">OnForm links are for view-only reference.</strong>
+                      <p className="text-xs text-blue-300/80">
+                        To run BARRELS analysis, export the video from OnForm and use the <strong>Upload File</strong> tab.
+                      </p>
+                    </AlertDescription>
+                  </Alert>
+                  
                   <div>
                     <Label htmlFor="onform-url" className="text-sm font-medium text-gray-300 mb-2 block">
                       OnForm Share Link
