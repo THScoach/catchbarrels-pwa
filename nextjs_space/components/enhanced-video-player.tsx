@@ -17,10 +17,11 @@ interface Point {
 
 interface Drawing {
   id: string;
-  type: 'line' | 'circle' | 'angle' | 'freehand' | 'text';
+  type: 'line' | 'circle' | 'angle' | 'freehand' | 'text' | 'skeleton' | 'batPath' | 'spineAngle' | 'hipRotation';
   points: Point[];
   color: string;
   label?: string;
+  jointType?: 'ankle' | 'knee' | 'hip' | 'shoulder' | 'elbow' | 'wrist' | 'head';
 }
 
 interface EnhancedVideoPlayerProps {
@@ -45,7 +46,15 @@ export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerPr
   const [isDrawing, setIsDrawing] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#F5A623');
   
+  // Phase 2: Skeleton & Bat Path state
+  const [skeletonMode, setSkeletonMode] = useState(false);
+  const [batPathPoints, setBatPathPoints] = useState<Point[]>([]);
+  const [skeletonJoints, setSkeletonJoints] = useState<{[key: string]: Point}>({});
+  
   const colors = ['#F5A623', '#EF4444', '#3B82F6', '#10B981', '#FFFFFF', '#F59E0B'];
+  
+  // Joint order for skeleton connections
+  const jointOrder = ['ankle', 'knee', 'hip', 'shoulder', 'elbow', 'wrist', 'head'];
 
   // Initialize canvas size to match video
   useEffect(() => {
@@ -117,8 +126,181 @@ export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerPr
       } else if (drawing.type === 'text' && drawing.points.length === 1 && drawing.label) {
         ctx.font = '20px Arial';
         ctx.fillText(drawing.label, drawing.points[0].x, drawing.points[0].y);
+      } else if (drawing.type === 'skeleton' && drawing.points.length > 1) {
+        // Draw skeleton overlay with joint markers
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = drawing.color;
+        
+        // Connect joints in order
+        ctx.beginPath();
+        ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+        for (let i = 1; i < drawing.points.length; i++) {
+          ctx.lineTo(drawing.points[i].x, drawing.points[i].y);
+        }
+        ctx.stroke();
+        
+        // Draw joint markers
+        drawing.points.forEach((point, idx) => {
+          ctx.fillStyle = drawing.color;
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          // Label joints
+          ctx.font = '12px Arial';
+          ctx.fillText(jointOrder[idx] || `J${idx}`, point.x + 10, point.y - 10);
+        });
+      } else if (drawing.type === 'batPath' && drawing.points.length > 2) {
+        // Draw bat path with smooth curve
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = drawing.color;
+        ctx.setLineDash([5, 5]);
+        
+        ctx.beginPath();
+        ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+        
+        // Draw smooth curve through points
+        for (let i = 1; i < drawing.points.length - 1; i++) {
+          const xc = (drawing.points[i].x + drawing.points[i + 1].x) / 2;
+          const yc = (drawing.points[i].y + drawing.points[i + 1].y) / 2;
+          ctx.quadraticCurveTo(drawing.points[i].x, drawing.points[i].y, xc, yc);
+        }
+        
+        // Draw to last point
+        const lastPoint = drawing.points[drawing.points.length - 1];
+        const secondLast = drawing.points[drawing.points.length - 2];
+        ctx.quadraticCurveTo(secondLast.x, secondLast.y, lastPoint.x, lastPoint.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Draw bat position markers
+        drawing.points.forEach((point, idx) => {
+          ctx.fillStyle = drawing.color;
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+        
+        // Calculate and show attack angle (if enough points)
+        if (drawing.points.length >= 3) {
+          const attackAngle = calculateAttackAngle(drawing.points);
+          ctx.font = '16px Arial';
+          ctx.fillStyle = drawing.color;
+          ctx.fillText(`Attack: ${attackAngle.toFixed(1)}°`, drawing.points[0].x + 15, drawing.points[0].y);
+        }
+      } else if (drawing.type === 'spineAngle' && drawing.points.length === 2) {
+        // Draw spine angle line with measurement
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = drawing.color;
+        ctx.beginPath();
+        ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+        ctx.lineTo(drawing.points[1].x, drawing.points[1].y);
+        ctx.stroke();
+        
+        // Calculate spine angle from vertical
+        const angleFromVertical = calculateSpineAngle(drawing.points[0], drawing.points[1]);
+        ctx.font = '18px Arial';
+        ctx.fillStyle = drawing.color;
+        ctx.fillText(`Spine: ${angleFromVertical.toFixed(1)}°`, drawing.points[0].x + 15, drawing.points[0].y - 15);
+        
+        // Draw vertical reference line
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = '#888';
+        ctx.beginPath();
+        ctx.moveTo(drawing.points[0].x, drawing.points[0].y - 50);
+        ctx.lineTo(drawing.points[0].x, drawing.points[0].y + 50);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else if (drawing.type === 'hipRotation' && drawing.points.length === 3) {
+        // Draw hip rotation arc
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = drawing.color;
+        
+        // Draw lines from center to endpoints
+        ctx.beginPath();
+        ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+        ctx.lineTo(drawing.points[1].x, drawing.points[1].y);
+        ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+        ctx.lineTo(drawing.points[2].x, drawing.points[2].y);
+        ctx.stroke();
+        
+        // Draw arc
+        const radius = Math.sqrt(
+          Math.pow(drawing.points[1].x - drawing.points[0].x, 2) +
+          Math.pow(drawing.points[1].y - drawing.points[0].y, 2)
+        );
+        const startAngle = Math.atan2(drawing.points[1].y - drawing.points[0].y, drawing.points[1].x - drawing.points[0].x);
+        const endAngle = Math.atan2(drawing.points[2].y - drawing.points[0].y, drawing.points[2].x - drawing.points[0].x);
+        
+        ctx.beginPath();
+        ctx.arc(drawing.points[0].x, drawing.points[0].y, radius, startAngle, endAngle, false);
+        ctx.stroke();
+        
+        // Calculate rotation angle
+        const rotationAngle = calculateAngle(drawing.points[1], drawing.points[0], drawing.points[2]);
+        ctx.font = '16px Arial';
+        ctx.fillStyle = drawing.color;
+        ctx.fillText(`Hip Rotation: ${rotationAngle.toFixed(1)}°`, drawing.points[0].x + 15, drawing.points[0].y);
       }
     });
+    
+    // Draw skeleton joints if in skeleton mode
+    if (skeletonMode && Object.keys(skeletonJoints).length > 0) {
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#F5A623';
+      
+      // Connect joints
+      const joints = jointOrder.filter(j => skeletonJoints[j]);
+      if (joints.length > 1) {
+        ctx.beginPath();
+        const firstJoint = skeletonJoints[joints[0]];
+        ctx.moveTo(firstJoint.x, firstJoint.y);
+        for (let i = 1; i < joints.length; i++) {
+          const joint = skeletonJoints[joints[i]];
+          ctx.lineTo(joint.x, joint.y);
+        }
+        ctx.stroke();
+      }
+      
+      // Draw joint markers
+      Object.entries(skeletonJoints).forEach(([jointName, point]) => {
+        ctx.fillStyle = '#F5A623';
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 8, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        ctx.strokeStyle = '#FFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        ctx.font = 'bold 12px Arial';
+        ctx.fillStyle = '#FFF';
+        ctx.fillText(jointName, point.x + 12, point.y - 12);
+      });
+    }
+    
+    // Draw bat path if in progress
+    if (batPathPoints.length > 0) {
+      ctx.strokeStyle = '#F5A623';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([5, 5]);
+      
+      ctx.beginPath();
+      ctx.moveTo(batPathPoints[0].x, batPathPoints[0].y);
+      batPathPoints.slice(1).forEach(point => {
+        ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Draw markers
+      batPathPoints.forEach(point => {
+        ctx.fillStyle = '#F5A623';
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
     
     // Draw current drawing in progress
     if (currentDrawing.length > 0 && activeTool) {
@@ -155,7 +337,7 @@ export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerPr
         ctx.stroke();
       }
     }
-  }, [drawings, currentDrawing, activeTool, selectedColor]);
+  }, [drawings, currentDrawing, activeTool, selectedColor, skeletonMode, skeletonJoints, batPathPoints, jointOrder]);
 
   useEffect(() => {
     redrawCanvas();
@@ -167,6 +349,30 @@ export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerPr
     let angle = Math.abs((angle1 - angle2) * (180 / Math.PI));
     if (angle > 180) angle = 360 - angle;
     return angle;
+  };
+
+  const calculateSpineAngle = (top: Point, bottom: Point): number => {
+    // Calculate angle from vertical (90° = horizontal, 0° = vertical)
+    const dx = bottom.x - top.x;
+    const dy = bottom.y - top.y;
+    const angleFromHorizontal = Math.atan2(dy, dx) * (180 / Math.PI);
+    return Math.abs(90 - angleFromHorizontal);
+  };
+
+  const calculateAttackAngle = (points: Point[]): number => {
+    // Calculate attack angle from first 3 bat positions
+    if (points.length < 3) return 0;
+    
+    // Use first and last points to determine swing plane
+    const start = points[0];
+    const end = points[points.length - 1];
+    
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    
+    // Normalize to attack angle convention (negative = downward, positive = upward)
+    return -angle; // Invert for baseball convention
   };
 
   const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement>): Point => {
@@ -225,6 +431,66 @@ export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerPr
           label,
         };
         setDrawings([...drawings, newDrawing]);
+      }
+    } else if (activeTool === 'skeleton') {
+      // Add joint to skeleton
+      const nextJoint = jointOrder.find(j => !skeletonJoints[j]);
+      if (nextJoint) {
+        setSkeletonJoints({ ...skeletonJoints, [nextJoint]: point });
+        toast.success(`${nextJoint} placed`, { description: `${Object.keys(skeletonJoints).length + 1} / ${jointOrder.length} joints` });
+        
+        // If all joints placed, save as drawing
+        if (Object.keys(skeletonJoints).length + 1 === jointOrder.length) {
+          const jointPoints = jointOrder.map(j => skeletonJoints[j] || point);
+          const newDrawing: Drawing = {
+            id: Date.now().toString(),
+            type: 'skeleton',
+            points: jointPoints,
+            color: selectedColor,
+          };
+          setDrawings([...drawings, newDrawing]);
+          setSkeletonJoints({});
+          setSkeletonMode(false);
+          setActiveTool(null);
+          toast.success('Skeleton overlay complete!');
+        }
+      }
+    } else if (activeTool === 'batPath') {
+      // Add point to bat path
+      setBatPathPoints([...batPathPoints, point]);
+      toast.info(`Bat position ${batPathPoints.length + 1} marked`);
+    } else if (activeTool === 'spineAngle') {
+      if (currentDrawing.length === 0) {
+        setCurrentDrawing([point]);
+        toast.info('Click bottom of spine');
+      } else {
+        const newDrawing: Drawing = {
+          id: Date.now().toString(),
+          type: 'spineAngle',
+          points: [...currentDrawing, point],
+          color: selectedColor,
+        };
+        setDrawings([...drawings, newDrawing]);
+        setCurrentDrawing([]);
+        toast.success('Spine angle measured!');
+      }
+    } else if (activeTool === 'hipRotation') {
+      if (currentDrawing.length === 0) {
+        setCurrentDrawing([point]);
+        toast.info('Click hip start position');
+      } else if (currentDrawing.length === 1) {
+        setCurrentDrawing([...currentDrawing, point]);
+        toast.info('Click hip end position');
+      } else {
+        const newDrawing: Drawing = {
+          id: Date.now().toString(),
+          type: 'hipRotation',
+          points: [...currentDrawing, point],
+          color: selectedColor,
+        };
+        setDrawings([...drawings, newDrawing]);
+        setCurrentDrawing([]);
+        toast.success('Hip rotation measured!');
       }
     }
   };
@@ -415,6 +681,87 @@ export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerPr
             className={activeTool === 'text' ? 'bg-[#F5A623] hover:bg-[#E89815]' : ''}
           >
             <Type className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        {/* Phase 2: Biomechanics Tools */}
+        <div className="border-t border-gray-700 pt-2 flex flex-col gap-1">
+          <div className="text-[10px] text-gray-400 px-1 mb-1">BIOMECHANICS</div>
+          <Button
+            variant={activeTool === 'skeleton' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => {
+              if (activeTool === 'skeleton') {
+                setActiveTool(null);
+                setSkeletonMode(false);
+                setSkeletonJoints({});
+              } else {
+                setActiveTool('skeleton');
+                setSkeletonMode(true);
+                toast.info('Skeleton Mode', { description: 'Click to place joints in order' });
+              }
+            }}
+            className={activeTool === 'skeleton' ? 'bg-[#F5A623] hover:bg-[#E89815]' : ''}
+            title="Skeleton Overlay"
+          >
+            <span className="text-lg">🦴</span>
+          </Button>
+          <Button
+            variant={activeTool === 'spineAngle' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => {
+              setActiveTool(activeTool === 'spineAngle' ? null : 'spineAngle');
+              if (activeTool !== 'spineAngle') {
+                toast.info('Spine Angle', { description: 'Click top, then bottom of spine' });
+              }
+            }}
+            className={activeTool === 'spineAngle' ? 'bg-[#F5A623] hover:bg-[#E89815]' : ''}
+            title="Spine Angle"
+          >
+            <span className="text-lg">📐</span>
+          </Button>
+          <Button
+            variant={activeTool === 'hipRotation' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => {
+              setActiveTool(activeTool === 'hipRotation' ? null : 'hipRotation');
+              if (activeTool !== 'hipRotation') {
+                toast.info('Hip Rotation', { description: 'Click hip center, start, then end position' });
+              }
+            }}
+            className={activeTool === 'hipRotation' ? 'bg-[#F5A623] hover:bg-[#E89815]' : ''}
+            title="Hip Rotation Arc"
+          >
+            <span className="text-lg">🔄</span>
+          </Button>
+          <Button
+            variant={activeTool === 'batPath' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => {
+              if (activeTool === 'batPath') {
+                // Finish bat path
+                if (batPathPoints.length >= 3) {
+                  const newDrawing: Drawing = {
+                    id: Date.now().toString(),
+                    type: 'batPath',
+                    points: batPathPoints,
+                    color: selectedColor,
+                  };
+                  setDrawings([...drawings, newDrawing]);
+                  setBatPathPoints([]);
+                  toast.success('Bat path saved!');
+                }
+                setActiveTool(null);
+              } else {
+                setActiveTool('batPath');
+                setBatPathPoints([]);
+                toast.info('Bat Path', { description: 'Click bat positions through the swing. Click again to finish.' });
+              }
+            }}
+            className={activeTool === 'batPath' ? 'bg-[#F5A623] hover:bg-[#E89815]' : ''}
+            title="Bat Path Trace"
+          >
+            <span className="text-lg">⚾</span>
           </Button>
         </div>
         

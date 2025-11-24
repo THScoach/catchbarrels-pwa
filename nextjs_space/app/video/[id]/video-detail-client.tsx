@@ -179,11 +179,17 @@ export function VideoDetailClient({ video }: any) {
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-white font-semibold mb-1">Pro Video Analysis Tools</h4>
-                  <p className="text-gray-300 text-sm">
-                    Use drawing tools to analyze spine angle, bat path, and body positions. 
-                    Slow-motion and frame-by-frame controls help you identify mechanical issues like the pros!
+                  <h4 className="text-white font-semibold mb-1">Pro Biomechanics Tools</h4>
+                  <p className="text-gray-300 text-sm mb-2">
+                    Use advanced drawing and biomechanics tools to analyze your swing like a pro!
                   </p>
+                  <ul className="text-gray-300 text-xs space-y-1 ml-4">
+                    <li>🦴 <strong>Skeleton Overlay</strong> - Place joint markers (ankle to head)</li>
+                    <li>📐 <strong>Spine Angle</strong> - Measure spine tilt like Kwon</li>
+                    <li>🔄 <strong>Hip Rotation</strong> - Visualize hip rotation arc</li>
+                    <li>⚾ <strong>Bat Path</strong> - Trace bat through the zone with attack angle</li>
+                    <li>⏯️ <strong>Slow Motion</strong> - 0.25x speed + frame-by-frame</li>
+                  </ul>
                 </div>
               </div>
             </div>
