@@ -53,6 +53,7 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
   const [skeletonData, setSkeletonData] = useState<any[]>([]);
   const [enablePlayerIsolation, setEnablePlayerIsolation] = useState(false); // Default OFF for stability
   const [isolatedFrames, setIsolatedFrames] = useState<any[]>([]);
+  const [showServerFallback, setShowServerFallback] = useState(false);
 
   const extractSkeleton = async () => {
     if (!videoRef.current || !canvasRef.current) {
@@ -118,6 +119,9 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
       
       let frameCount = 0;
       const totalFrames = Math.floor(video.duration * fps);
+      const startTime = Date.now();
+      let lastUpdateTime = startTime;
+      let framesProcessedSinceLastUpdate = 0;
       
       console.log(`Processing video: ${video.duration}s at ${fps} FPS = ${totalFrames} frames`);
       
@@ -224,7 +228,25 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
                   }
 
                   frameCount++;
-                  setProgress((frameCount / totalFrames) * 100);
+                  framesProcessedSinceLastUpdate++;
+                  
+                  // Update progress with detailed stats every 10 frames or every second
+                  const now = Date.now();
+                  if (frameCount % 10 === 0 || now - lastUpdateTime > 1000) {
+                    const elapsedSeconds = (now - startTime) / 1000;
+                    const framesPerSecond = frameCount / elapsedSeconds;
+                    const remainingFrames = totalFrames - frameCount;
+                    const etaSeconds = remainingFrames / framesPerSecond;
+                    
+                    setProgress((frameCount / totalFrames) * 100);
+                    setStatus(
+                      `Processing frame ${frameCount}/${totalFrames} ` +
+                      `(${framesPerSecond.toFixed(1)} fps, ETA ${Math.ceil(etaSeconds)}s)`
+                    );
+                    
+                    lastUpdateTime = now;
+                    framesProcessedSinceLastUpdate = 0;
+                  }
                   
                 } catch (error) {
                   clearTimeout(timeoutId);
@@ -260,16 +282,22 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
 
       console.log(`Extraction complete: ${extractedFrames.length} frames extracted`);
       
+      // Cleanup: Close pose estimator
+      pose.close();
+      
       // Validate that we got at least some frames
       if (extractedFrames.length === 0) {
         throw new Error('No skeleton data extracted. The pose detector may not have found a person in the video.');
       }
       
       if (extractedFrames.length < totalFrames * 0.3) {
-        toast.warning(`Only ${extractedFrames.length} of ${totalFrames} frames had detectable poses. Video may need better lighting or framing.`);
+        toast.warning(`⚠️ Partial Detection`, {
+          description: `Only ${extractedFrames.length} of ${totalFrames} frames had poses. Try better lighting or camera angle.`,
+          duration: 5000
+        });
       }
 
-      setStatus('Processing complete!');
+      setStatus('✅ Processing complete!');
       setSkeletonData(extractedFrames);
       setIsolatedFrames(isolatedPlayerFrames);
       
@@ -280,7 +308,11 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
         isolatedFrames: enablePlayerIsolation ? isolatedPlayerFrames : undefined
       });
 
-      toast.success(`Extracted ${extractedFrames.length} frames of skeleton data`);
+      const processingTime = Math.round((Date.now() - startTime) / 1000);
+      toast.success(`✅ Skeleton Extracted`, {
+        description: `${extractedFrames.length} frames in ${processingTime}s`,
+        duration: 4000
+      });
 
     } catch (error) {
       console.error('Skeleton extraction error:', error);
@@ -292,25 +324,59 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
         canvasSize: `${canvasRef.current?.width}x${canvasRef.current?.height}`
       });
       
-      setStatus('Extraction failed');
+      setStatus('❌ Extraction failed');
       
-      // Provide more specific error messages
+      // Provide more specific error messages with actionable solutions
       if (errorMessage.includes('memory')) {
-        toast.error('Browser ran out of memory. Try a shorter video (5-10 seconds).');
+        toast.error('❌ Browser Memory Full', {
+          description: 'Try: 1) Shorten video to 5-10s, 2) Close other tabs, 3) Turn off Player Isolation',
+          duration: 6000
+        });
       } else if (errorMessage.includes('MediaPipe')) {
-        toast.error('Failed to load pose detection. Check your internet connection.');
+        toast.error('❌ Failed to Load Pose Detection', {
+          description: 'Check your internet connection and try again',
+          duration: 5000
+        });
       } else if (errorMessage.includes('timeout')) {
-        toast.error('Processing timed out. Try a shorter or lower FPS video.');
+        toast.error('❌ Processing Timeout', {
+          description: 'Video too complex. Try: 1) Shorter video, 2) Lower FPS export from OnForm',
+          duration: 6000
+        });
+      } else if (errorMessage.includes('No skeleton data extracted')) {
+        toast.error('❌ No Person Detected', {
+          description: 'Ensure player is clearly visible and well-lit throughout the video',
+          duration: 5000
+        });
       } else {
-        toast.error(`Extraction failed: ${errorMessage.substring(0, 50)}`);
+        toast.error('❌ Extraction Failed', {
+          description: errorMessage.substring(0, 80) + (errorMessage.length > 80 ? '...' : ''),
+          duration: 5000
+        });
       }
       
       if (onError) {
         onError(error as Error);
       }
+      
+      // Show server fallback option for complex videos
+      if (errorMessage.includes('memory') || errorMessage.includes('timeout')) {
+        setShowServerFallback(true);
+      }
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const requestServerProcessing = async () => {
+    toast.info('🔄 Server Processing Not Yet Available', {
+      description: 'For now, try: 1) Shorter video (5-10s), 2) Lower FPS export, 3) Disable Player Isolation',
+      duration: 7000
+    });
+    
+    // TODO: Implement server-side processing request
+    // await fetch(`/api/videos/${videoId}/extract-skeleton-server`, {
+    //   method: 'POST'
+    // });
   };
 
   return (
@@ -331,19 +397,26 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
 
       {isProcessing && (
         <div className="space-y-3 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-gray-300">
-              <Loader2 className="w-4 h-4 animate-spin text-[#F5A623]" />
-              <span>{status}</span>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-[#F5A623]" />
+              <span className="text-sm font-semibold text-[#F5A623]">Processing Swing</span>
             </div>
-            <span className="text-xs font-mono text-gray-500">
+            <span className="text-lg font-mono font-bold text-white">
               {progress.toFixed(0)}%
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <span>Processing at 60 FPS</span>
-            <span>{enablePlayerIsolation ? 'With Player Isolation' : 'Skeleton Only'}</span>
+          
+          <Progress value={progress} className="h-3" />
+          
+          <div className="space-y-1.5">
+            <div className="text-xs text-gray-300 font-medium">
+              {status}
+            </div>
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>{enablePlayerIsolation ? '🎨 With Player Isolation' : '🦴 Skeleton Only'}</span>
+              <span>Please wait...</span>
+            </div>
           </div>
         </div>
       )}
@@ -352,14 +425,60 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
         <>
           {/* Tips Card */}
           <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-700/30">
-            <h4 className="text-sm font-semibold text-blue-400 mb-2">💡 Swing Analysis Tips</h4>
-            <ul className="text-xs text-gray-300 space-y-1">
-              <li>• Works with 60-300 FPS videos (auto-adjusted for stability)</li>
-              <li>• Keep videos under 10 seconds for high FPS (240+ FPS)</li>
-              <li>• Player isolation OFF recommended for first attempt</li>
-              <li>• Processing time: 20-60 seconds depending on length</li>
+            <h4 className="text-sm font-semibold text-blue-400 mb-2 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Swing Analysis Tips
+            </h4>
+            <ul className="text-xs text-gray-300 space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="text-green-400 font-bold">✓</span>
+                <span>Best results with 60-120 FPS videos, 3-10 seconds long</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-yellow-400 font-bold">⚡</span>
+                <span>High FPS videos (240-300 FPS) auto-downsampled for stability</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 font-bold">⏱️</span>
+                <span>Processing time: 30-90 seconds depending on video length</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#F5A623] font-bold">💡</span>
+                <span>Keep Player Isolation OFF for first attempt (faster)</span>
+              </li>
             </ul>
           </div>
+
+          {/* Server Fallback Option (shown after browser failure) */}
+          {showServerFallback && (
+            <div className="p-4 bg-orange-900/20 rounded-lg border border-orange-700/40">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-2">
+                  <h4 className="text-sm font-semibold text-orange-400">
+                    Browser Processing Failed
+                  </h4>
+                  <p className="text-xs text-gray-300">
+                    This video is too complex for browser processing. Server-side processing is coming soon!
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    <strong>For now, try:</strong><br/>
+                    1. Export shorter clip (5-10 seconds) from OnForm<br/>
+                    2. Use lower FPS (60-120 FPS instead of 240-300 FPS)<br/>
+                    3. Ensure player is centered and well-lit
+                  </p>
+                  <Button
+                    onClick={() => setShowServerFallback(false)}
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 text-xs"
+                  >
+                    Got It - Try Again
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Player Isolation Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg border border-gray-700">
