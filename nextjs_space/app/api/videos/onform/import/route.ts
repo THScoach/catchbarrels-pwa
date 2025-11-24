@@ -165,14 +165,26 @@ async function handleFileImport(request: NextRequest, userId: string) {
 }
 
 async function handleLinkImport(request: NextRequest, userId: string) {
+  console.log('[OnForm Link Import] Starting link import for user:', userId);
+  
   try {
+    console.log('[OnForm Link Import] Parsing request body...');
     const body = await request.json();
     const { shareUrl, onformUrl, videoType, cameraAngle = 'side', athleteId, sessionId } = body;
 
     // Support both 'shareUrl' and 'onformUrl' for backwards compatibility
     const url = shareUrl || onformUrl;
 
+    console.log('[OnForm Link Import] Request data:', {
+      hasUrl: !!url,
+      hasVideoType: !!videoType,
+      cameraAngle,
+      hasAthleteId: !!athleteId,
+      hasSessionId: !!sessionId
+    });
+
     if (!url || !videoType) {
+      console.log('[OnForm Link Import] Missing required fields');
       return NextResponse.json({ 
         error: 'Missing required fields',
         message: 'OnForm share URL and video type are required'
@@ -182,7 +194,9 @@ async function handleLinkImport(request: NextRequest, userId: string) {
     // Validate URL format
     try {
       new URL(url);
+      console.log('[OnForm Link Import] URL validation passed');
     } catch (e) {
+      console.log('[OnForm Link Import] Invalid URL format:', url);
       return NextResponse.json({ 
         error: 'Invalid URL',
         message: 'Please provide a valid OnForm share link'
@@ -193,7 +207,7 @@ async function handleLinkImport(request: NextRequest, userId: string) {
     const onformVideoIdMatch = url.match(/(?:id=|\/view\/)([a-zA-Z0-9_-]+)/);
     const onformVideoId = onformVideoIdMatch ? onformVideoIdMatch[1] : undefined;
 
-    console.log('Importing OnForm share link:', {
+    console.log('[OnForm Link Import] Preparing to create database record:', {
       url,
       videoType,
       onformVideoId,
@@ -204,6 +218,7 @@ async function handleLinkImport(request: NextRequest, userId: string) {
     // Create video record with external URL
     // Note: For true download+import, we'd use the downloadOnFormVideo function from lib/onform-import
     // For now, we're storing the external URL as a reference
+    console.log('[OnForm Link Import] Creating database record...');
     const video = await prisma.video.create({
       data: {
         userId,
@@ -220,7 +235,7 @@ async function handleLinkImport(request: NextRequest, userId: string) {
       }
     });
 
-    console.log('OnForm share link imported successfully:', {
+    console.log('[OnForm Link Import] Database record created successfully:', {
       videoId: video.id,
       onformVideoId,
       athleteId,
@@ -249,7 +264,12 @@ async function handleLinkImport(request: NextRequest, userId: string) {
     });
 
   } catch (error) {
-    console.error('Error in link import:', error);
+    console.error('[OnForm Link Import] Error in link import:', error);
+    console.error('[OnForm Link Import] Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     throw error;
   }
 }

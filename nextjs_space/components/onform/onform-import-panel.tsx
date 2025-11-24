@@ -262,6 +262,10 @@ export function OnFormImportPanel({
     });
     
     try {
+      // Create an abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch('/api/videos/onform/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -272,8 +276,9 @@ export function OnFormImportPanel({
           source: 'onform',
           athleteId,
           sessionId
-        })
-      });
+        }),
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Import failed' }));
@@ -305,9 +310,19 @@ export function OnFormImportPanel({
 
     } catch (error) {
       console.error('Error importing OnForm link:', error);
-      toast.error('Failed to import video link', {
-        description: error instanceof Error ? error.message : 'Please verify the link and try again'
-      });
+      
+      // Handle specific error types
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast.error('Request timed out', {
+          description: 'The import took too long. This might be a network issue. Please check your connection and try again.',
+          duration: 6000
+        });
+      } else {
+        toast.error('Failed to import video link', {
+          description: error instanceof Error ? error.message : 'Please verify the link and try again',
+          duration: 5000
+        });
+      }
     } finally {
       setImporting(false);
     }
