@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BottomNav } from '@/components/bottom-nav';
 import { ScoreCard } from '@/components/score-card';
+import { EnhancedVideoPlayer } from '@/components/enhanced-video-player';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
 import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw } from 'lucide-react';
@@ -128,45 +129,63 @@ export function VideoDetailClient({ video }: any) {
           {formatDistanceToNow(new Date(video?.uploadDate), { addSuffix: true })}
         </p>
 
-        {/* Video Player */}
-        <div className="bg-gray-900 border border-gray-700 rounded-lg aspect-video flex items-center justify-center mb-6 overflow-hidden">
+        {/* Video Player with Enhanced Controls */}
+        <div className="mb-6">
           {videoError ? (
-            <div className="flex flex-col items-center gap-4 p-8">
-              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                <Video className="w-8 h-8 text-red-400" />
+            <div className="bg-gray-900 border border-gray-700 rounded-lg aspect-video flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4 p-8">
+                <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <Video className="w-8 h-8 text-red-400" />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-white font-semibold mb-2">Video Unavailable</h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    We couldn't load this video. It might be processing or temporarily unavailable.
+                  </p>
+                </div>
+                <button
+                  onClick={handleRetryVideo}
+                  className="bg-[#F5A623] hover:bg-[#E89815] text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Try Again
+                </button>
               </div>
-              <div className="text-center">
-                <h3 className="text-white font-semibold mb-2">Video Unavailable</h3>
-                <p className="text-gray-400 text-sm mb-4">
-                  We couldn't load this video. It might be processing or temporarily unavailable.
-                </p>
-              </div>
-              <button
-                onClick={handleRetryVideo}
-                className="bg-[#F5A623] hover:bg-[#E89815] text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Try Again
-              </button>
             </div>
           ) : loadingUrl ? (
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-12 h-12 text-[#F5A623] animate-spin" />
-              <p className="text-gray-400 text-sm">Loading video...</p>
+            <div className="bg-gray-900 border border-gray-700 rounded-lg aspect-video flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-12 h-12 text-[#F5A623] animate-spin" />
+                <p className="text-gray-400 text-sm">Loading video...</p>
+              </div>
             </div>
           ) : videoUrl ? (
-            <video
-              src={videoUrl}
-              controls
-              className="w-full h-full object-contain"
-              preload="metadata"
-            >
-              Your browser does not support video playback.
-            </video>
+            <EnhancedVideoPlayer 
+              videoUrl={videoUrl} 
+              onError={() => setVideoError(true)} 
+            />
           ) : (
-            <div className="flex flex-col items-center gap-3">
-              <Video className="w-16 h-16 text-gray-600" />
-              <p className="text-gray-400 text-sm">Unable to load video</p>
+            <div className="bg-gray-900 border border-gray-700 rounded-lg aspect-video flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <Video className="w-16 h-16 text-gray-600" />
+                <p className="text-gray-400 text-sm">Unable to load video</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Feature Callout */}
+          {videoUrl && !videoError && !loadingUrl && (
+            <div className="mt-4 p-4 bg-[#F5A623]/10 border border-[#F5A623]/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-[#F5A623] flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-white font-semibold mb-1">Pro Video Analysis Tools</h4>
+                  <p className="text-gray-300 text-sm">
+                    Use drawing tools to analyze spine angle, bat path, and body positions. 
+                    Slow-motion and frame-by-frame controls help you identify mechanical issues like the pros!
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
