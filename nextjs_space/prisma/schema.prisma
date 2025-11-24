@@ -119,12 +119,19 @@ model Video {
   // AI Coach feedback
   coachFeedback   String?
   
+  // Community Sharing & Privacy
+  isPublic        Boolean   @default(false) // Public videos visible in community feed
+  shareableLink   String?   @unique // Unique ID for public sharing (e.g., "abc123xyz")
+  views           Int       @default(0) // Track views on shared videos
+  sharedAt        DateTime? // When video was first made public
+  
   uploadDate      DateTime  @default(now())
   
   // Relations
   assessments     Assessment[]
   
   @@index([userId, uploadDate])
+  @@index([isPublic, sharedAt]) // For community feed queries
 }
 
 model Drill {

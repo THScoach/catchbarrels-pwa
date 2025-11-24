@@ -8,10 +8,14 @@ import { SkeletonExtractor } from '@/components/skeleton-extractor';
 import { SkeletonOverlayPlayer } from '@/components/skeleton-overlay-player';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
-import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export function VideoDetailClient({ video, previousScores, personalBests, userHeight, userHandedness }: any) {
   const [activeTab, setActiveTab] = useState<'analysis' | 'coach' | 'skeleton'>('analysis');
@@ -27,6 +31,12 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
   const [modelSkeletonData, setModelSkeletonData] = useState(null);
   const [impactFrame, setImpactFrame] = useState(video?.impactFrame || null);
   const [extractingSkeleton, setExtractingSkeleton] = useState(false);
+  
+  // Sharing state
+  const [isPublic, setIsPublic] = useState(video?.isPublic || false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [sharingVideo, setSharingVideo] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
 
   // Fetch signed URL for video playback
   useEffect(() => {
@@ -86,6 +96,71 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
       }
     };
     fetchVideoUrl();
+  };
+
+  // Sharing functions
+  const toggleVideoPrivacy = async (makePublic: boolean) => {
+    setSharingVideo(true);
+    try {
+      const response = await fetch(`/api/videos/${video.id}/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublic: makePublic })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update video privacy');
+      }
+
+      const data = await response.json();
+      setIsPublic(makePublic);
+      setShareUrl(data.shareUrl);
+      
+      if (makePublic) {
+        setShowShareCard(true);
+        toast.success('🌍 Video is now public!', {
+          description: 'Your swing is now visible in the community feed.',
+          duration: 4000
+        });
+      } else {
+        setShowShareCard(false);
+        toast.success('🔒 Video is now private', {
+          description: 'Only you can see this video.',
+          duration: 3000
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling video privacy:', error);
+      toast.error('Failed to update privacy settings');
+      // Revert the toggle
+      setIsPublic(!makePublic);
+    } finally {
+      setSharingVideo(false);
+    }
+  };
+
+  const shareVideo = async () => {
+    if (!shareUrl) return;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${video.title} - BARRELS`,
+          text: `Check out my swing analysis on BARRELS! Overall Score: ${video.overallScore}/100`,
+          url: shareUrl
+        });
+        toast.success('Shared successfully!');
+      } catch (err) {
+        // User cancelled
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      navigator.clipboard.writeText(shareUrl);
+      toast.success('📋 Link copied to clipboard!', {
+        description: 'Share this link with your teammates',
+        duration: 3000
+      });
+    }
   };
 
   const getAIFeedback = async () => {
@@ -195,9 +270,91 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
             </span>
           )}
         </div>
-        <p className="text-gray-400 text-sm mb-6">
+        <p className="text-gray-400 text-sm mb-4">
           {formatDistanceToNow(new Date(video?.uploadDate), { addSuffix: true })}
         </p>
+
+        {/* Share Controls */}
+        <Card className="bg-gray-800/50 border-gray-700 p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                {isPublic ? (
+                  <Globe className="w-5 h-5 text-green-400" />
+                ) : (
+                  <Lock className="w-5 h-5 text-gray-400" />
+                )}
+                <div>
+                  <Label htmlFor="privacy-toggle" className="text-sm font-medium cursor-pointer">
+                    {isPublic ? 'Public' : 'Private'}
+                  </Label>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {isPublic ? 'Visible in community feed' : 'Only you can see this'}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="privacy-toggle"
+                checked={isPublic}
+                onCheckedChange={toggleVideoPrivacy}
+                disabled={sharingVideo}
+              />
+            </div>
+            
+            {isPublic && shareUrl && (
+              <Button
+                onClick={shareVideo}
+                className="bg-[#F5A623] hover:bg-[#E89815] text-white"
+                size="sm"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            )}
+          </div>
+          
+          {/* Share Card (shown when video is made public) */}
+          {showShareCard && shareUrl && (
+            <div className="mt-4 p-3 bg-green-900/20 border border-green-700/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Link2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-green-400 mb-1">
+                    Your swing is now public!
+                  </h4>
+                  <p className="text-xs text-gray-300 mb-2">
+                    Share this link with your teammates or on social media
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={shareUrl}
+                      readOnly
+                      className="flex-1 bg-gray-900 border border-gray-700 rounded px-3 py-1 text-xs text-gray-300 font-mono"
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
+                    />
+                    <Button
+                      onClick={shareVideo}
+                      variant="outline"
+                      size="sm"
+                      className="border-green-700 hover:bg-green-900/20"
+                    >
+                      <Share2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* View Count */}
+          {isPublic && video?.views > 0 && (
+            <div className="mt-3 pt-3 border-t border-gray-700 flex items-center gap-2 text-sm text-gray-400">
+              <Eye className="w-4 h-4" />
+              <span>{video.views} {video.views === 1 ? 'view' : 'views'}</span>
+            </div>
+          )}
+        </Card>
 
         {/* Video Player with Enhanced Controls */}
         <div className="mb-6">
