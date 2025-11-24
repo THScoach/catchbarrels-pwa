@@ -369,3 +369,31 @@ model WhopProduct {
   
   @@index([productType, isActive])
 }
+
+// Model Videos for Overlay Comparison (Pro swing references)
+model ModelVideo {
+  id               String   @id @default(cuid())
+  title            String
+  description      String?  @db.Text
+  handedness       String   // "right" or "left"
+  cloudStoragePath String   // S3 path
+  thumbnailUrl     String?
+  
+  // Player info
+  playerName       String?  // e.g., "Mike Trout", "Juan Soto"
+  playerLevel      String?  // "mlb", "college", "pro"
+  
+  // Skeleton data for overlay (JSON format)
+  skeletonData     Json?    // Frame-by-frame joint positions
+  
+  // Metadata
+  duration         Int?     // Video duration in seconds
+  fps              Int?     // Frames per second
+  
+  active           Boolean  @default(true)
+  uploadDate       DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([handedness])
+  @@index([active])
+}

@@ -4,7 +4,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Play, Pause, RotateCcw, ChevronLeft, ChevronRight,
-  Minus, Circle, Slash, Type, Undo2, Trash2, Palette
+  Minus, Circle, Slash, Type, Undo2, Trash2, Palette,
+  Users, Eye, EyeOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -26,11 +27,13 @@ interface Drawing {
 
 interface EnhancedVideoPlayerProps {
   videoUrl: string;
+  userHandedness?: 'right' | 'left'; // User's batting handedness
   onError?: () => void;
 }
 
-export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerProps) {
+export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onError }: EnhancedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const modelVideoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -51,10 +54,60 @@ export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerPr
   const [batPathPoints, setBatPathPoints] = useState<Point[]>([]);
   const [skeletonJoints, setSkeletonJoints] = useState<{[key: string]: Point}>({});
   
+  // Phase 3: Model Overlay state
+  const [showModelOverlay, setShowModelOverlay] = useState(false);
+  const [modelVideoUrl, setModelVideoUrl] = useState<string | null>(null);
+  const [overlayOpacity, setOverlayOpacity] = useState(50); // 0-100
+  const [loadingModel, setLoadingModel] = useState(false);
+  
   const colors = ['#F5A623', '#EF4444', '#3B82F6', '#10B981', '#FFFFFF', '#F59E0B'];
   
   // Joint order for skeleton connections
   const jointOrder = ['ankle', 'knee', 'hip', 'shoulder', 'elbow', 'wrist', 'head'];
+
+  const fetchModelVideo = useCallback(async () => {
+    setLoadingModel(true);
+    try {
+      const response = await fetch(`/api/model-videos/by-handedness/${userHandedness}`);
+      if (!response.ok) {
+        throw new Error('No model video found');
+      }
+      const data = await response.json();
+      setModelVideoUrl(data.modelVideo.signedUrl);
+      toast.success(`${userHandedness === 'right' ? 'Right' : 'Left'}-handed model loaded`);
+    } catch (error) {
+      console.error('Error fetching model video:', error);
+      toast.error('No model video available for comparison');
+      setShowModelOverlay(false);
+    } finally {
+      setLoadingModel(false);
+    }
+  }, [userHandedness]);
+
+  // Fetch model video when overlay is toggled
+  useEffect(() => {
+    if (showModelOverlay && !modelVideoUrl) {
+      fetchModelVideo();
+    }
+  }, [showModelOverlay, modelVideoUrl, fetchModelVideo]);
+
+  // Sync model video playback with main video
+  useEffect(() => {
+    if (modelVideoRef.current && videoRef.current && showModelOverlay) {
+      // Sync play/pause
+      if (isPlaying) {
+        modelVideoRef.current.play();
+      } else {
+        modelVideoRef.current.pause();
+      }
+      
+      // Sync time
+      modelVideoRef.current.currentTime = videoRef.current.currentTime;
+      
+      // Sync playback speed
+      modelVideoRef.current.playbackRate = playbackSpeed;
+    }
+  }, [isPlaying, currentTime, playbackSpeed, showModelOverlay]);
 
   // Initialize canvas size to match video
   useEffect(() => {
@@ -627,6 +680,21 @@ export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerPr
           onLoadedMetadata={handleLoadedMetadata}
           onError={onError}
         />
+        
+        {/* Phase 3: Model Video Overlay */}
+        {showModelOverlay && modelVideoUrl && (
+          <video
+            ref={modelVideoRef}
+            src={modelVideoUrl}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ 
+              opacity: overlayOpacity / 100,
+              mixBlendMode: 'lighten' // Blend mode for better overlay visibility
+            }}
+            muted
+          />
+        )}
+        
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full cursor-crosshair"
@@ -763,6 +831,42 @@ export function EnhancedVideoPlayer({ videoUrl, onError }: EnhancedVideoPlayerPr
           >
             <span className="text-lg">⚾</span>
           </Button>
+        </div>
+        
+        {/* Phase 3: Model Overlay Controls */}
+        <div className="border-t border-gray-700 pt-2 flex flex-col gap-1">
+          <div className="text-[10px] text-gray-400 px-1 mb-1">MODEL OVERLAY</div>
+          <Button
+            variant={showModelOverlay ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setShowModelOverlay(!showModelOverlay)}
+            className={showModelOverlay ? 'bg-[#F5A623] hover:bg-[#E89815]' : ''}
+            disabled={loadingModel}
+            title="Toggle Pro Model Overlay"
+          >
+            {loadingModel ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+            ) : showModelOverlay ? (
+              <Eye className="w-4 h-4" />
+            ) : (
+              <Users className="w-4 h-4" />
+            )}
+          </Button>
+          
+          {showModelOverlay && (
+            <div className="px-1 py-2 space-y-2">
+              <div className="text-[9px] text-gray-400">Opacity</div>
+              <Slider
+                value={[overlayOpacity]}
+                onValueChange={(value) => setOverlayOpacity(value[0])}
+                min={0}
+                max={100}
+                step={5}
+                className="w-full"
+              />
+              <div className="text-[9px] text-center text-gray-400">{overlayOpacity}%</div>
+            </div>
+          )}
         </div>
         
         <div className="border-t border-gray-700 pt-2 flex flex-col gap-1">
