@@ -51,13 +51,27 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>('Ready to extract skeleton');
   const [skeletonData, setSkeletonData] = useState<any[]>([]);
-  const [enablePlayerIsolation, setEnablePlayerIsolation] = useState(true);
+  const [enablePlayerIsolation, setEnablePlayerIsolation] = useState(false); // Default OFF for stability
   const [isolatedFrames, setIsolatedFrames] = useState<any[]>([]);
 
   const extractSkeleton = async () => {
     if (!videoRef.current || !canvasRef.current) {
       toast.error('Video or canvas not initialized');
       return;
+    }
+
+    const video = videoRef.current;
+    
+    // Check video duration - warn if too long
+    if (video.duration > 30) {
+      toast.error('Video is too long. Please trim to under 30 seconds for best results.');
+      return;
+    }
+    
+    // Disable player isolation for videos longer than 15 seconds
+    if (video.duration > 15 && enablePlayerIsolation) {
+      toast.warning('Video is long - disabling player isolation to prevent crashes');
+      setEnablePlayerIsolation(false);
     }
 
     setIsProcessing(true);
@@ -141,8 +155,8 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
                       keypoints
                     });
 
-                    // Player isolation (if enabled) - only every 3rd frame to reduce memory usage
-                    if (enablePlayerIsolation && frameCount % 3 === 0) {
+                    // Player isolation (if enabled) - only every 10th frame to reduce memory usage
+                    if (enablePlayerIsolation && frameCount % 10 === 0) {
                       try {
                         const segmentation = await segmentPlayer(canvas, keypoints);
                         // Store compressed mask data
@@ -258,9 +272,9 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
             <h4 className="text-sm font-semibold text-blue-400 mb-2">💡 Swing Analysis Tips</h4>
             <ul className="text-xs text-gray-300 space-y-1">
               <li>• 60 FPS provides excellent precision for swing analysis</li>
-              <li>• Player isolation removes background distractions (optional)</li>
-              <li>• Extraction takes ~30-60 seconds depending on video length</li>
-              <li>• After extraction, compare your swing to pro models</li>
+              <li>• Keep videos under 15 seconds for best performance</li>
+              <li>• Player isolation is optional - try without it first</li>
+              <li>• Extraction takes ~20-40 seconds for short videos</li>
             </ul>
           </div>
 
@@ -270,10 +284,10 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
               <Sparkles className="w-5 h-5 text-[#F5A623]" />
               <div>
                 <Label htmlFor="player-isolation" className="text-sm font-medium cursor-pointer">
-                  Player Isolation
+                  Player Isolation (Experimental)
                 </Label>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Remove background for cleaner comparison
+                  May slow down processing - recommended OFF
                 </p>
               </div>
             </div>
