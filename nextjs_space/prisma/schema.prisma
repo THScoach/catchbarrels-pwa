@@ -102,6 +102,9 @@ model Video {
   
   uploadDate      DateTime  @default(now())
   
+  // Relations
+  assessments     Assessment[]
+  
   @@index([userId, uploadDate])
 }
 
@@ -310,37 +313,158 @@ model CourseTag {
   @@index([tag])
 }
 
-// Assessment Products ($299 Neuro + Swing, $399 S2 Cognition)
+// Assessment Results (Comprehensive S2 + Biomechanical + Contact Quality)
 model Assessment {
   id                String    @id @default(uuid())
   userId            String
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId           String?   // Optional video association
+  video             Video?    @relation(fields: [videoId], references: [id], onDelete: SetNull)
   
-  // Assessment Details
-  assessmentType    String    // "neuro_swing" ($299) or "s2_cognition" ($399)
-  status            String    @default("pending") // "pending", "scheduled", "completed", "cancelled"
+  // Assessment Metadata
+  assessmentType    String    // "neuro", "biomechanical", "combined", "timing_test"
+  assessmentName    String?   // Custom name for the assessment
+  status            String    @default("pending") // "pending", "in_progress", "completed", "cancelled"
   
-  // Whop Purchase Tracking
-  whopPaymentId     String?   @unique // Whop payment ID
-  purchaseDate      DateTime  @default(now())
-  amountPaid        Int       // Amount in cents (29900 or 39900)
+  // Whop Purchase Tracking (Optional - for paid assessments)
+  whopPaymentId     String?   @unique
+  purchaseDate      DateTime?
+  amountPaid        Int?      // Amount in cents
   
   // Scheduling
   scheduledDate     DateTime?
   location          String?   // In-person location
+  testDate          DateTime? // Actual test completion date
   
-  // Report Generation
-  reportGenerated   Boolean   @default(false)
-  reportUrl         String?   // S3 URL for generated PDF report
-  reportData        Json?     // Structured assessment data for report generation
+  // === STANDARD NEURO (S2 Cognitive Assessment) ===
+  // Timing Control Metrics (0-100)
+  timingControlScore     Float?
+  avgTimingAccuracy      Float?   // Milliseconds off target
+  velocityAdaptation     Float?   // 0-100 ability to adjust to speed changes
+  fooledByVelocity       Float?   // % fooled by velocity changes
+  
+  // Trajectory Prediction Metrics (0-100)
+  trajectoryScore        Float?
+  zoneRecognitionAccuracy Float? // % correct zone predictions
+  pitchTypeRecognition   Float?   // % breaking ball vs fastball correct
+  callAccuracy           Float?   // % correct ball/strike predictions
+  
+  // Take Decisions (Impulse Control) Metrics (0-100)
+  impulseControlScore    Float?
+  chaseRate              Float?   // % swings at balls out of zone
+  strikeZoneJudgment     Float?   // Accuracy of ball/strike judgment
+  swingDecisionQuality   Float?   // Overall swing/take decision quality
+  
+  // Overall Neuro Composite (0-100)
+  neuroCompositeScore    Float?
+  
+  // === 52-PITCH TIMING TEST DATA ===
+  pitchTestCompleted     Boolean  @default(false)
+  totalPitches           Int      @default(0)
+  
+  // Contact Metrics
+  contactCount           Int      @default(0)
+  contactRate            Float?   // %
+  hardContactCount       Int      @default(0)
+  hardContactRate        Float?   // %
+  missCount              Int      @default(0)
+  foulCount              Int      @default(0)
+  
+  // Velocity Mix Performance (out of totals)
+  fastballPitches        Int      @default(0)
+  fastballContact        Int      @default(0)
+  fastballContactRate    Float?   // %
+  
+  offspeedPitches        Int      @default(0)
+  offspeedContact        Int      @default(0)
+  offspeedContactRate    Float?   // %
+  
+  breakingBallPitches    Int      @default(0)
+  breakingBallContact    Int      @default(0)
+  breakingBallContactRate Float?  // %
+  
+  // Timing Errors
+  earlySwings            Int      @default(0)
+  earlySwingRate         Float?   // %
+  lateSwings             Int      @default(0)
+  lateSwingRate          Float?   // %
+  onTimeSwings           Int      @default(0)
+  onTimeSwingRate        Float?   // %
+  
+  // Zone Discipline
+  swingsInZone           Int      @default(0)
+  swingsOutOfZone        Int      @default(0)
+  swingRate              Float?   // % of total pitches swung at
+  
+  takesInZone            Int      @default(0)
+  takesOutOfZone         Int      @default(0)
+  takeRate               Float?   // % of total pitches taken
+  
+  zoneControl            Float?   // % swings in zone / total swings
+  
+  // === ANCHOR ENGINE WHIP (4Bs Biomechanical) ===
+  // Reference video scores or standalone biomech assessment
+  anchorScore            Float?   // Lower body/stance (0-100)
+  engineScore            Float?   // Rotation/power/core (0-100)
+  whipScore              Float?   // Bat speed/path/connection (0-100)
+  biomechanicalComposite Float?   // Average of 3 metrics (0-100)
+  
+  // Detailed Anchor Metrics
+  anchorStance              Float?
+  anchorWeightShift         Float?
+  anchorGroundConnection    Float?
+  anchorLowerBodyMechanics  Float?
+  
+  // Detailed Engine Metrics
+  engineHipRotation    Float?
+  engineSeparation     Float?
+  engineCorePower      Float?
+  engineTorsoMechanics Float?
+  
+  // Detailed Whip Metrics
+  whipArmPath      Float?
+  whipBatSpeed     Float?
+  whipBatPath      Float?
+  whipConnection   Float?
+  
+  // === BAT AND BALL (Contact Quality) ===
+  exitVelocityAvg        Float?   // mph
+  exitVelocityMax        Float?   // mph
+  launchAngleAvg         Float?   // degrees
+  launchAngleMax         Float?   // degrees
+  barrelRate             Float?   // %
+  sweetSpotRate          Float?   // %
+  hardHitRate            Float?   // % exit velo > 95mph
+  lineDriverate          Float?   // % launch angle 10-25 degrees
+  
+  // === ASSESSMENT INSIGHTS ===
+  overallGrade           String?  // "Elite", "Advanced", "Intermediate", "Developing"
+  cognitiveGrade         String?  // S2 neuro grade
+  biomechanicalGrade     String?  // 4Bs grade
+  contactQualityGrade    String?  // Bat-ball grade
+  
+  // Strengths & Weaknesses (JSON arrays)
+  strengths              Json?    // ["Excellent timing control", "Strong impulse control"]
+  weaknesses             Json?    // ["Trajectory prediction needs work"]
+  recommendations        Json?    // ["Focus on breaking ball recognition drills"]
+  
+  // Coach Notes
+  coachNotes             String?  @db.Text
+  testNotes              String?  @db.Text
+  
+  // === REPORT METADATA ===
+  reportGenerated        Boolean  @default(false)
+  reportUrl              String?  // S3 URL for generated PDF report
+  reportData             Json?    // Structured report data
   
   // Timestamps
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  completedAt       DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  completedAt            DateTime?
   
   @@index([userId, status])
   @@index([assessmentType])
+  @@index([videoId])
 }
 
 // Whop Product Mapping (Maps Whop product IDs to app tiers/features)
