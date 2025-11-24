@@ -175,7 +175,7 @@ export default function CoachRickChat({ userScores, coachingCallId, coachingCall
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-20 right-4 z-50 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 group"
+            className="fixed bottom-20 right-4 z-50 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 group"
           >
             <MessageCircle className="w-6 h-6" />
             <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap">
@@ -195,19 +195,19 @@ export default function CoachRickChat({ userScores, coachingCallId, coachingCall
             className="fixed bottom-20 right-4 z-50 w-96 h-[600px] bg-[#1a2332] border border-gray-700 rounded-lg shadow-2xl flex flex-col"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-t-lg flex items-center justify-between">
+            <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-4 rounded-t-lg flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-2xl">
                   ⚾
                 </div>
                 <div>
                   <h3 className="text-white font-semibold">Coach Rick</h3>
-                  <p className="text-blue-100 text-xs">Always here to help!</p>
+                  <p className="text-orange-100 text-xs">Always here to help!</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors"
+                className="text-white hover:bg-orange-800 rounded-full p-2 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -223,7 +223,7 @@ export default function CoachRickChat({ userScores, coachingCallId, coachingCall
                   <div
                     className={`max-w-[80%] rounded-lg p-3 ${
                       msg.role === 'user'
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-orange-600 text-white'
                         : 'bg-gray-700 text-gray-100'
                     }`}
                   >
@@ -236,7 +236,7 @@ export default function CoachRickChat({ userScores, coachingCallId, coachingCall
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="bg-gray-700 rounded-lg p-3">
-                    <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                    <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
                   </div>
                 </div>
               )}
@@ -272,13 +272,13 @@ export default function CoachRickChat({ userScores, coachingCallId, coachingCall
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask Coach Rick anything..."
-                  className="flex-1 bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
                   disabled={isLoading}
                 />
                 <button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isLoading}
-                  className="bg-blue-600 text-white rounded-lg p-2 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="bg-orange-600 text-white rounded-lg p-2 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <Send className="w-5 h-5" />
                 </button>

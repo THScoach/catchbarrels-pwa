@@ -54,7 +54,7 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
         <div className="bg-gradient-to-r from-[#1a2332] to-[#0f1621] border-b border-[#2a3f5f] sticky top-0 z-10">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Video className="w-6 h-6 text-[#2196F3]" />
+              <Video className="w-6 h-6 text-[#F5A623]" />
               Coaching Sessions
             </h1>
             <p className="text-sm text-[#8b949e] mt-1">
@@ -72,7 +72,7 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
               placeholder="Search by title, topic, or keyword..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
+              className="w-full pl-10 pr-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#F5A623] transition-colors"
             />
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
               {filteredSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="bg-[#1a2332] border border-[#2a3f5f] rounded-lg p-4 hover:border-[#2196F3] transition-colors cursor-pointer"
+                  className="bg-[#1a2332] border border-[#2a3f5f] rounded-lg p-4 hover:border-[#F5A623] transition-colors cursor-pointer"
                   onClick={() => setSelectedSession(session)}
                 >
                   {/* Session Header */}
@@ -107,7 +107,7 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
                           {session.title}
                         </h3>
                         {session.transcript && (
-                          <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">
+                          <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full border border-orange-500/30">
                             📝 Transcript
                           </span>
                         )}
@@ -125,7 +125,7 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
                         )}
                       </div>
                     </div>
-                    <button className="p-3 bg-[#2196F3] rounded-full hover:bg-[#1976D2] transition-colors">
+                    <button className="p-3 bg-[#F5A623] rounded-full hover:bg-[#E89815] transition-colors">
                       <Play className="w-5 h-5 text-white" fill="white" />
                     </button>
                   </div>
@@ -246,7 +246,7 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
                         📝 Session Transcript
                       </h3>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-blue-400 px-2 py-1 bg-blue-500/10 rounded-full border border-blue-500/30 flex items-center gap-1">
+                        <span className="text-xs text-orange-400 px-2 py-1 bg-orange-500/10 rounded-full border border-orange-500/30 flex items-center gap-1">
                           💬 Ask Coach Rick about this call!
                         </span>
                         <span className="text-xs text-[#6a7280]">
@@ -263,7 +263,7 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
                         placeholder="Search for keywords..."
                         value={transcriptSearchQuery}
                         onChange={(e) => setTranscriptSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-[#0a0f1a] border border-[#2a3f5f] rounded-lg text-white text-sm placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
+                        className="w-full pl-9 pr-4 py-2 bg-[#0a0f1a] border border-[#2a3f5f] rounded-lg text-white text-sm placeholder-[#4a5568] focus:outline-none focus:border-[#F5A623] transition-colors"
                       />
                     </div>
 

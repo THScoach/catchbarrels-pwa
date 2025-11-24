@@ -119,7 +119,7 @@ export function VideoDetailClient({ video }: any) {
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-2xl font-bold text-white">{video?.title}</h1>
           {video?.videoType && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#2196F3]/20 text-[#2196F3] border border-[#2196F3]/30">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#F5A623]/20 text-[#F5A623] border border-[#F5A623]/30">
               {video.videoType}
             </span>
           )}
@@ -143,7 +143,7 @@ export function VideoDetailClient({ video }: any) {
               </div>
               <button
                 onClick={handleRetryVideo}
-                className="bg-[#2196F3] hover:bg-[#1976D2] text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
+                className="bg-[#F5A623] hover:bg-[#E89815] text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
                 Try Again
@@ -151,7 +151,7 @@ export function VideoDetailClient({ video }: any) {
             </div>
           ) : loadingUrl ? (
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-12 h-12 text-[#2196F3] animate-spin" />
+              <Loader2 className="w-12 h-12 text-[#F5A623] animate-spin" />
               <p className="text-gray-400 text-sm">Loading video...</p>
             </div>
           ) : videoUrl ? (
@@ -177,7 +177,7 @@ export function VideoDetailClient({ video }: any) {
             onClick={() => setActiveTab('analysis')}
             className={`pb-3 px-1 border-b-2 transition-colors ${
               activeTab === 'analysis'
-                ? 'border-[#2196F3] text-white'
+                ? 'border-[#F5A623] text-white'
                 : 'border-transparent text-gray-400'
             }`}
           >
@@ -187,7 +187,7 @@ export function VideoDetailClient({ video }: any) {
             onClick={() => setActiveTab('coach')}
             className={`pb-3 px-1 border-b-2 transition-colors ${
               activeTab === 'coach'
-                ? 'border-[#2196F3] text-white'
+                ? 'border-[#F5A623] text-white'
                 : 'border-transparent text-gray-400'
             }`}
           >
@@ -204,7 +204,7 @@ export function VideoDetailClient({ video }: any) {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-5xl font-bold text-white">{video.overallScore}</div>
-                      <div className="text-2xl font-semibold text-[#2196F3] mt-1">{video.tier}</div>
+                      <div className="text-2xl font-semibold text-[#F5A623] mt-1">{video.tier}</div>
                     </div>
                     {video?.exitVelocity && (
                       <div className="text-right">
@@ -263,7 +263,7 @@ export function VideoDetailClient({ video }: any) {
               </div>
             ) : (
               <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-8 text-center">
-                <Loader2 className="w-12 h-12 text-[#2196F3] mx-auto mb-4 animate-spin" />
+                <Loader2 className="w-12 h-12 text-[#F5A623] mx-auto mb-4 animate-spin" />
                 <p className="text-white text-lg">Analyzing your swing...</p>
                 <p className="text-gray-400 text-sm mt-2">This usually takes 30-60 seconds</p>
               </div>
@@ -272,7 +272,7 @@ export function VideoDetailClient({ video }: any) {
         ) : (
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-[#2196F3] rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-[#F5A623] rounded-full flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -289,7 +289,7 @@ export function VideoDetailClient({ video }: any) {
               <div className="text-center py-8">
                 {loadingFeedback ? (
                   <div>
-                    <Loader2 className="w-8 h-8 text-[#2196F3] mx-auto mb-3 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-[#F5A623] mx-auto mb-3 animate-spin" />
                     <p className="text-gray-400">Generating personalized feedback...</p>
                   </div>
                 ) : (
@@ -297,7 +297,7 @@ export function VideoDetailClient({ video }: any) {
                     <p className="text-gray-400 mb-4">Get personalized coaching feedback from Coach Rick</p>
                     <button
                       onClick={getAIFeedback}
-                      className="bg-[#2196F3] hover:bg-[#1976D2] text-white px-6 py-3 rounded-lg transition-colors"
+                      className="bg-[#F5A623] hover:bg-[#E89815] text-white px-6 py-3 rounded-lg transition-colors"
                     >
                       Get AI Feedback
                     </button>

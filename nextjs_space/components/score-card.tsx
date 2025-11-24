@@ -38,7 +38,7 @@ export function ScoreCard({
   const percentage = (score / maxScore) * 100;
 
   const colorClasses = {
-    blue: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
+    blue: 'from-orange-500/20 to-orange-600/20 border-orange-500/30',
     green: 'from-green-500/20 to-green-600/20 border-green-500/30',
     orange: 'from-orange-500/20 to-orange-600/20 border-orange-500/30',
     red: 'from-red-500/20 to-red-600/20 border-red-500/30',
@@ -88,7 +88,7 @@ export function ScoreCard({
             percentage >= 80
               ? 'bg-green-500'
               : percentage >= 60
-              ? 'bg-blue-500'
+              ? 'bg-orange-500'
               : percentage >= 40
               ? 'bg-orange-500'
               : 'bg-red-500'
@@ -171,7 +171,7 @@ export function ScoreCard({
                           subPercentage >= 80
                             ? 'bg-green-500'
                             : subPercentage >= 60
-                            ? 'bg-blue-500'
+                            ? 'bg-orange-500'
                             : subPercentage >= 40
                             ? 'bg-orange-500'
                             : 'bg-red-500'

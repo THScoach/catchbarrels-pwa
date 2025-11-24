@@ -112,7 +112,7 @@ export function DashboardClient({
           <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
             <Link
               href="/video/upload"
-              className="block bg-gradient-to-r from-[#2196F3] to-[#1976D2] p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-xl transition-all duration-200"
+              className="block bg-gradient-to-r from-[#F5A623] to-[#E89815] p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-xl transition-all duration-200"
             >
               <Upload className="w-5 h-5 text-white mb-1" />
               <span className="text-white font-medium text-sm">Upload</span>
@@ -149,7 +149,7 @@ export function DashboardClient({
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-5xl font-bold text-white">{scores.overall}</div>
-                <div className="text-2xl font-semibold text-[#2196F3] mt-1">{scores.tier}</div>
+                <div className="text-2xl font-semibold text-[#F5A623] mt-1">{scores.tier}</div>
                 <p className="text-gray-400 text-sm mt-2">
                   {scores.overall >= 85
                     ? 'Elite level! All three areas working together.'
@@ -179,7 +179,7 @@ export function DashboardClient({
                     strokeWidth="8"
                     fill="none"
                     strokeDasharray={`${(scores.overall / 100) * 352} 352`}
-                    className="text-[#2196F3]"
+                    className="text-[#F5A623]"
                   />
                 </svg>
               </div>
@@ -259,7 +259,7 @@ export function DashboardClient({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-[#2196F3]/10 to-[#1976D2]/10 rounded-xl p-6 border border-[#2196F3]/20"
+            className="bg-gradient-to-br from-[#F5A623]/10 to-[#E89815]/10 rounded-xl p-6 border border-[#F5A623]/20"
           >
             <div className="flex items-start justify-between mb-3">
               <div>
@@ -268,7 +268,7 @@ export function DashboardClient({
               </div>
               <Link
                 href="/coaching"
-                className="flex items-center gap-2 bg-[#2196F3] hover:bg-[#1976D2] text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-2 bg-[#F5A623] hover:bg-[#E89815] text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
               >
                 <Play className="w-4 h-4" fill="white" />
                 Watch Now
@@ -293,7 +293,7 @@ export function DashboardClient({
                   {latestCoachingCall.topics.slice(0, 3).map((topic: string, index: number) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-[#2196F3]/20 text-[#2196F3] text-xs rounded-full"
+                      className="px-3 py-1 bg-[#F5A623]/20 text-[#F5A623] text-xs rounded-full"
                     >
                       {topic}
                     </span>
@@ -312,7 +312,7 @@ export function DashboardClient({
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Recent Swings</h2>
-            <Link href="/video" className="text-[#2196F3] text-sm hover:underline">
+            <Link href="/video" className="text-[#F5A623] text-sm hover:underline">
               View All
             </Link>
           </div>
@@ -334,7 +334,7 @@ export function DashboardClient({
                     </p>
                     {video?.analyzed && (
                       <div className="flex items-center space-x-4 mt-1">
-                        <span className="text-sm text-[#2196F3]">
+                        <span className="text-sm text-[#F5A623]">
                           Overall: {video.overallScore}
                         </span>
                         {video?.exitVelocity && (
@@ -354,7 +354,7 @@ export function DashboardClient({
                 <p className="text-gray-400 mb-4">No swings yet</p>
                 <Link
                   href="/video/upload"
-                  className="inline-flex items-center space-x-2 bg-[#2196F3] hover:bg-[#1976D2] text-white px-6 py-2 rounded-lg transition-colors"
+                  className="inline-flex items-center space-x-2 bg-[#F5A623] hover:bg-[#E89815] text-white px-6 py-2 rounded-lg transition-colors"
                 >
                   <Upload className="w-4 h-4" />
                   <span>Upload Your First Swing</span>

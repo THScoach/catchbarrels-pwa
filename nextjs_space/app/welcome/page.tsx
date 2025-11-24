@@ -52,14 +52,14 @@ export default function WelcomePage() {
         {/* BARRELS Logo */}
         <div className="mb-8">
           <h1 className="text-5xl font-bold text-white mb-2">
-            <span className="text-[#2196F3]">BARRELS</span>
+            <span className="text-[#F5A623]">BARRELS</span>
           </h1>
           <p className="text-gray-400 text-lg">Baseball Training</p>
         </div>
 
         {/* Loading Animation */}
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="w-12 h-12 text-[#2196F3] animate-spin" />
+          <Loader2 className="w-12 h-12 text-[#F5A623] animate-spin" />
           <p className="text-white text-lg">
             {status === 'authenticating' ? 'Verifying access...' : 'Loading your dashboard...'}
           </p>

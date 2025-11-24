@@ -89,7 +89,7 @@ export function ErrorState({
           {onRetry && (
             <Button
               onClick={onRetry}
-              className="bg-[#2196F3] hover:bg-[#1976D2] text-white"
+              className="bg-[#F5A623] hover:bg-[#E89815] text-white"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Try Again

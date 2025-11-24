@@ -87,7 +87,7 @@ export function UpgradeCTA({
   };
 
   return (
-    <Card className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 border-blue-500/30 p-6 shadow-xl">
+    <Card className="bg-gradient-to-br from-orange-900/50 to-purple-900/50 border-orange-500/30 p-6 shadow-xl">
       <div className="space-y-4">
         {/* Header */}
         <div>
@@ -129,7 +129,7 @@ export function UpgradeCTA({
         {/* CTA Button */}
         <Button
           onClick={handleUpgrade}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 text-lg"
+          className="w-full bg-gradient-to-r from-orange-600 to-purple-600 hover:from-orange-700 hover:to-purple-700 text-white font-semibold py-3 text-lg"
         >
           Upgrade Now
           <ArrowUpRight className="w-5 h-5 ml-2" />

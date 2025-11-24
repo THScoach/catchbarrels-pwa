@@ -14,7 +14,7 @@ export function ProfileClient({ user }: any) {
           {/* Basic Info */}
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             <div className="flex items-center space-x-4 mb-4">
-              <div className="w-16 h-16 bg-[#2196F3] rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-[#F5A623] rounded-full flex items-center justify-center">
                 <User className="w-8 h-8 text-white" />
               </div>
               <div>

@@ -95,7 +95,7 @@ export default function KnowledgeBaseAdminClient() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                <BookOpen className="w-6 h-6 text-[#2196F3]" />
+                <BookOpen className="w-6 h-6 text-[#F5A623]" />
                 Knowledge Base Management
               </h1>
               <p className="text-sm text-[#8b949e] mt-1">
@@ -105,7 +105,7 @@ export default function KnowledgeBaseAdminClient() {
             
             <button
               onClick={() => setImportMode(!importMode)}
-              className="px-4 py-2 bg-[#2196F3] text-white rounded-lg hover:bg-[#1976D2] transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-[#F5A623] text-white rounded-lg hover:bg-[#E89815] transition-colors flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
               {importMode ? 'Cancel Import' : 'Import Content'}
@@ -167,7 +167,7 @@ export default function KnowledgeBaseAdminClient() {
     ]
   }
 ]`}
-                  className="w-full h-96 bg-[#0a0f1a] border border-[#2a3f5f] rounded-lg p-4 text-white font-mono text-sm focus:outline-none focus:border-[#2196F3] transition-colors"
+                  className="w-full h-96 bg-[#0a0f1a] border border-[#2a3f5f] rounded-lg p-4 text-white font-mono text-sm focus:outline-none focus:border-[#F5A623] transition-colors"
                   disabled={importing}
                 />
               </div>
@@ -176,7 +176,7 @@ export default function KnowledgeBaseAdminClient() {
                 <button
                   onClick={handleImport}
                   disabled={importing || !scrapedData.trim()}
-                  className="px-6 py-2 bg-[#2196F3] text-white rounded-lg hover:bg-[#1976D2] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="px-6 py-2 bg-[#F5A623] text-white rounded-lg hover:bg-[#E89815] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
                   {importing ? (
                     <>
@@ -222,7 +222,7 @@ export default function KnowledgeBaseAdminClient() {
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-[#2196F3] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[#F5A623] animate-spin" />
           </div>
         ) : courses.length === 0 ? (
           <div className="text-center py-12">
@@ -237,7 +237,7 @@ export default function KnowledgeBaseAdminClient() {
             {courses.map((course) => (
               <div
                 key={course.id}
-                className="bg-[#1a2332] border border-[#2a3f5f] rounded-lg p-4 hover:border-[#2196F3] transition-colors"
+                className="bg-[#1a2332] border border-[#2a3f5f] rounded-lg p-4 hover:border-[#F5A623] transition-colors"
               >
                 {/* Course Header */}
                 <div className="flex items-start justify-between mb-3">
@@ -264,7 +264,7 @@ export default function KnowledgeBaseAdminClient() {
                       Admin Only
                     </span>
                   )}
-                  <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">
+                  <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full border border-orange-500/30">
                     {course.contentType}
                   </span>
                 </div>

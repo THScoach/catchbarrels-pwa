@@ -160,8 +160,8 @@ export function VideoUploadClient() {
         <h1 className="text-2xl font-bold text-white mb-4">Upload Swing Video</h1>
 
         {/* Baseball Hitting Only Notice */}
-        <div className="mb-6 bg-[#2196F3]/10 border border-[#2196F3] rounded-lg p-4 flex items-start gap-3">
-          <Info className="w-5 h-5 text-[#2196F3] flex-shrink-0 mt-0.5" />
+        <div className="mb-6 bg-[#F5A623]/10 border border-[#F5A623] rounded-lg p-4 flex items-start gap-3">
+          <Info className="w-5 h-5 text-[#F5A623] flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-white font-medium">Baseball Hitting Videos Only</p>
             <p className="text-gray-300 text-sm mt-1">
@@ -187,7 +187,7 @@ export function VideoUploadClient() {
             <select
               value={videoType}
               onChange={(e) => setVideoType(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-[#2196F3] focus:outline-none focus:ring-2 focus:ring-[#2196F3]/20"
+              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-[#F5A623] focus:outline-none focus:ring-2 focus:ring-[#F5A623]/20"
             >
               <option value="">Select video type...</option>
               <option value="Tee Work">Tee Work</option>
@@ -213,11 +213,11 @@ export function VideoUploadClient() {
             </div>
           ) : uploading ? (
             <div className="space-y-4">
-              <Loader2 className="w-16 h-16 text-[#2196F3] mx-auto animate-spin" />
+              <Loader2 className="w-16 h-16 text-[#F5A623] mx-auto animate-spin" />
               <p className="text-white text-lg">Uploading... {progress}%</p>
               <div className="w-full bg-gray-700 rounded-full h-2">
                 <div
-                  className="bg-[#2196F3] h-2 rounded-full transition-all duration-300"
+                  className="bg-[#F5A623] h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -225,7 +225,7 @@ export function VideoUploadClient() {
             </div>
           ) : selectedFile ? (
             <div className="space-y-4">
-              <VideoIcon className="w-16 h-16 text-[#2196F3] mx-auto" />
+              <VideoIcon className="w-16 h-16 text-[#F5A623] mx-auto" />
               <div className="bg-gray-900/50 rounded-lg p-4 max-w-md mx-auto">
                 <p className="text-white font-medium">{selectedFile.name}</p>
                 <p className="text-gray-400 text-sm mt-1">
@@ -246,7 +246,7 @@ export function VideoUploadClient() {
                 </button>
                 <button
                   onClick={handleUpload}
-                  className="bg-[#2196F3] hover:bg-[#1976D2] text-white px-8 py-3 rounded-lg transition-colors"
+                  className="bg-[#F5A623] hover:bg-[#E89815] text-white px-8 py-3 rounded-lg transition-colors"
                 >
                   Upload Video
                 </button>
@@ -266,7 +266,7 @@ export function VideoUploadClient() {
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-4 bg-[#2196F3] hover:bg-[#1976D2] text-white px-8 py-3 rounded-lg transition-colors"
+                className="mt-4 bg-[#F5A623] hover:bg-[#E89815] text-white px-8 py-3 rounded-lg transition-colors"
               >
                 Select Video
               </button>
@@ -279,23 +279,23 @@ export function VideoUploadClient() {
           <h3 className="text-white font-medium mb-3">📹 Hitting Video Recording Tips:</h3>
           <ul className="text-gray-400 text-sm space-y-2">
             <li className="flex items-start gap-2">
-              <span className="text-[#2196F3] font-bold">•</span>
+              <span className="text-[#F5A623] font-bold">•</span>
               <span><strong className="text-gray-300">Camera angle:</strong> Record from the side (perpendicular to your stance) for best swing mechanics analysis</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#2196F3] font-bold">•</span>
+              <span className="text-[#F5A623] font-bold">•</span>
               <span><strong className="text-gray-300">Full body visible:</strong> Ensure entire swing path is captured from stance to follow-through</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#2196F3] font-bold">•</span>
+              <span className="text-[#F5A623] font-bold">•</span>
               <span><strong className="text-gray-300">Steady camera:</strong> Use a tripod or stable surface to avoid camera shake</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#2196F3] font-bold">•</span>
+              <span className="text-[#F5A623] font-bold">•</span>
               <span><strong className="text-gray-300">Good lighting:</strong> Clear visibility improves AI analysis accuracy</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#2196F3] font-bold">•</span>
+              <span className="text-[#F5A623] font-bold">•</span>
               <span><strong className="text-gray-300">Multiple swings:</strong> Upload 3-5 swings for better trend analysis and progress tracking</span>
             </li>
           </ul>

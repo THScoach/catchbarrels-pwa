@@ -81,7 +81,7 @@ export function VideoListClient({ videos }: any) {
           transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: 'linear' }}
         >
           <RefreshCw 
-            className={`w-5 h-5 ${isReady ? 'text-[#2196F3]' : 'text-gray-400'}`}
+            className={`w-5 h-5 ${isReady ? 'text-[#F5A623]' : 'text-gray-400'}`}
           />
         </motion.div>
       </div>
@@ -96,7 +96,7 @@ export function VideoListClient({ videos }: any) {
           <h1 className="text-2xl font-bold text-white">My Videos</h1>
           <Link
             href="/video/upload"
-            className="flex items-center space-x-2 bg-[#2196F3] hover:bg-[#1976D2] text-white px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center space-x-2 bg-[#F5A623] hover:bg-[#E89815] text-white px-4 py-2 rounded-lg transition-colors"
           >
             <Upload className="w-4 h-4" />
             <span>Upload</span>
@@ -131,7 +131,7 @@ export function VideoListClient({ videos }: any) {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-white font-semibold truncate">{video.title}</h3>
                     {video.videoType && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#2196F3]/30 text-[#60A5FA] border border-[#2196F3]/50 flex-shrink-0">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#F5A623]/30 text-[#FDB44B] border border-[#F5A623]/50 flex-shrink-0">
                         {video.videoType}
                       </span>
                     )}
@@ -141,7 +141,7 @@ export function VideoListClient({ videos }: any) {
                   </p>
                   {video.analyzed ? (
                     <div className="flex flex-wrap gap-3 mt-2">
-                      <span className="text-sm text-[#2196F3] font-semibold">Score: {video.overallScore}</span>
+                      <span className="text-sm text-[#F5A623] font-semibold">Score: {video.overallScore}</span>
                       <span className="text-sm text-white font-medium">{video.tier}</span>
                       {video.exitVelocity && (
                         <span className="text-sm text-white font-medium">{video.exitVelocity} mph</span>

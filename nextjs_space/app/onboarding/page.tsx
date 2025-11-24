@@ -176,7 +176,7 @@ export default function OnboardingPage() {
                     onClick={() => updateField('bats', option)}
                     className={`px-4 py-3 rounded-lg border-2 transition-colors ${
                       formData?.bats === option
-                        ? 'border-[#2196F3] bg-[#2196F3]/20 text-white'
+                        ? 'border-[#F5A623] bg-[#F5A623]/20 text-white'
                         : 'border-gray-700 bg-gray-900 text-gray-400 hover:border-gray-600'
                     }`}
                   >
@@ -195,7 +195,7 @@ export default function OnboardingPage() {
                     onClick={() => updateField('throws', option)}
                     className={`px-4 py-3 rounded-lg border-2 transition-colors ${
                       formData?.throws === option
-                        ? 'border-[#2196F3] bg-[#2196F3]/20 text-white'
+                        ? 'border-[#F5A623] bg-[#F5A623]/20 text-white'
                         : 'border-gray-700 bg-gray-900 text-gray-400 hover:border-gray-600'
                     }`}
                   >
@@ -244,7 +244,7 @@ export default function OnboardingPage() {
                   onClick={() => updateField('level', option)}
                   className={`w-full px-4 py-3 rounded-lg border-2 transition-colors text-left ${
                     formData?.level === option
-                      ? 'border-[#2196F3] bg-[#2196F3]/20 text-white'
+                      ? 'border-[#F5A623] bg-[#F5A623]/20 text-white'
                       : 'border-gray-700 bg-gray-900 text-gray-400 hover:border-gray-600'
                   }`}
                 >
@@ -319,7 +319,7 @@ export default function OnboardingPage() {
                   onClick={() => toggleArrayField('struggles', struggle)}
                   className={`w-full px-4 py-3 rounded-lg border-2 transition-colors text-left ${
                     formData?.struggles?.includes(struggle)
-                      ? 'border-[#2196F3] bg-[#2196F3]/20 text-white'
+                      ? 'border-[#F5A623] bg-[#F5A623]/20 text-white'
                       : 'border-gray-700 bg-gray-900 text-gray-400 hover:border-gray-600'
                   }`}
                 >
@@ -327,7 +327,7 @@ export default function OnboardingPage() {
                     <div
                       className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center ${
                         formData?.struggles?.includes(struggle)
-                          ? 'border-[#2196F3] bg-[#2196F3]'
+                          ? 'border-[#F5A623] bg-[#F5A623]'
                           : 'border-gray-600'
                       }`}
                     >
@@ -374,7 +374,7 @@ export default function OnboardingPage() {
                   onClick={() => toggleArrayField('goals', goal)}
                   className={`w-full px-4 py-3 rounded-lg border-2 transition-colors text-left ${
                     formData?.goals?.includes(goal)
-                      ? 'border-[#2196F3] bg-[#2196F3]/20 text-white'
+                      ? 'border-[#F5A623] bg-[#F5A623]/20 text-white'
                       : 'border-gray-700 bg-gray-900 text-gray-400 hover:border-gray-600'
                   }`}
                   disabled={!formData?.goals?.includes(goal) && formData?.goals?.length >= 3}
@@ -383,7 +383,7 @@ export default function OnboardingPage() {
                     <div
                       className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center ${
                         formData?.goals?.includes(goal)
-                          ? 'border-[#2196F3] bg-[#2196F3]'
+                          ? 'border-[#F5A623] bg-[#F5A623]'
                           : 'border-gray-600'
                       }`}
                     >
@@ -425,7 +425,7 @@ export default function OnboardingPage() {
                     onClick={() => updateField('mentalApproach', option.value)}
                     className={`w-full px-4 py-3 rounded-lg border-2 transition-colors text-left ${
                       formData?.mentalApproach === option.value
-                        ? 'border-[#2196F3] bg-[#2196F3]/20 text-white'
+                        ? 'border-[#F5A623] bg-[#F5A623]/20 text-white'
                         : 'border-gray-700 bg-gray-900 text-gray-400 hover:border-gray-600'
                     }`}
                   >
@@ -445,7 +445,7 @@ export default function OnboardingPage() {
                 max="10"
                 value={formData?.confidenceLevel || 5}
                 onChange={(e) => updateField('confidenceLevel', parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#2196F3]"
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#F5A623]"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>Low</span>
@@ -473,7 +473,7 @@ export default function OnboardingPage() {
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <motion.div
-              className="bg-[#2196F3] h-2 rounded-full"
+              className="bg-[#F5A623] h-2 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
               transition={{ duration: 0.3 }}
@@ -509,7 +509,7 @@ export default function OnboardingPage() {
           <button
             onClick={handleNext}
             disabled={loading}
-            className="flex items-center px-6 py-3 bg-[#2196F3] hover:bg-[#1976D2] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center px-6 py-3 bg-[#F5A623] hover:bg-[#E89815] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>

@@ -131,9 +131,9 @@ export function ProgressClient({ progress }: any) {
                     <Line
                       type="monotone"
                       dataKey="Anchor (Lower Body)"
-                      stroke="#2196F3"
+                      stroke="#F5A623"
                       strokeWidth={3}
-                      dot={{ r: 5, fill: '#2196F3' }}
+                      dot={{ r: 5, fill: '#F5A623' }}
                       activeDot={{ r: 7 }}
                     />
                     <Line
@@ -174,7 +174,7 @@ export function ProgressClient({ progress }: any) {
               className="grid grid-cols-2 md:grid-cols-4 gap-4"
             >
               {[
-                { label: 'Anchor', subtitle: 'Lower Body', value: chartData[chartData.length - 1]?.['Anchor (Lower Body)'], color: '#2196F3', icon: '⚓' },
+                { label: 'Anchor', subtitle: 'Lower Body', value: chartData[chartData.length - 1]?.['Anchor (Lower Body)'], color: '#F5A623', icon: '⚓' },
                 { label: 'Engine', subtitle: 'Trunk/Core', value: chartData[chartData.length - 1]?.['Engine (Trunk/Core)'], color: '#4CAF50', icon: '🔄' },
                 { label: 'Whip', subtitle: 'Arms & Bat', value: chartData[chartData.length - 1]?.['Whip (Arms & Bat)'], color: '#9C27B0', icon: '⚡' },
                 { label: 'Overall', subtitle: 'Average', value: chartData[chartData.length - 1]?.['Overall'], color: '#FF9800', icon: '📊' },

@@ -19,7 +19,7 @@ export function DrillDetailClient({ drill }: any) {
         <h1 className="text-2xl font-bold text-white mb-4">{drill?.name}</h1>
 
         <div className="flex flex-wrap gap-2 mb-6">
-          <span className="px-3 py-1 bg-[#2196F3]/20 text-[#2196F3] text-sm rounded-full">
+          <span className="px-3 py-1 bg-[#F5A623]/20 text-[#F5A623] text-sm rounded-full">
             {drill?.category}
           </span>
           <span className="px-3 py-1 bg-gray-700 text-gray-300 text-sm rounded-full">
@@ -47,7 +47,7 @@ export function DrillDetailClient({ drill }: any) {
         {/* Setup */}
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 mb-4">
           <h2 className="text-white font-semibold mb-2 flex items-center">
-            <Wrench className="w-5 h-5 mr-2 text-[#2196F3]" />
+            <Wrench className="w-5 h-5 mr-2 text-[#F5A623]" />
             Setup
           </h2>
           <p className="text-gray-300">{drill?.setup}</p>
@@ -66,7 +66,7 @@ export function DrillDetailClient({ drill }: any) {
             <ul className="space-y-2">
               {drill.keyPoints.map((point: string, index: number) => (
                 <li key={index} className="text-gray-300 flex items-start">
-                  <span className="text-[#2196F3] mr-2">•</span>
+                  <span className="text-[#F5A623] mr-2">•</span>
                   {point}
                 </li>
               ))}

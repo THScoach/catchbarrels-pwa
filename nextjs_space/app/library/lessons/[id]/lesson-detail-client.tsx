@@ -69,7 +69,7 @@ export default function LessonDetailClient({ lesson }: LessonDetailClientProps) 
 
         {/* Watch on membership.io CTA */}
         {lesson.sourceUrl && (
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 shadow-lg">
+          <div className="bg-gradient-to-r from-orange-600 to-blue-700 rounded-xl p-6 shadow-lg">
             <div className="flex items-start gap-4">
               <div className="bg-white/20 rounded-lg p-3">
                 <Video className="w-6 h-6 text-white" />
@@ -83,7 +83,7 @@ export default function LessonDetailClient({ lesson }: LessonDetailClientProps) 
                   href={lesson.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+                  className="inline-flex items-center gap-2 bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Open on membership.io
@@ -96,13 +96,13 @@ export default function LessonDetailClient({ lesson }: LessonDetailClientProps) 
         {/* Course Context */}
         <div className="bg-[#1e293b] rounded-xl p-4 border border-gray-700">
           <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-blue-400" />
+            <BookOpen className="w-4 h-4 text-orange-400" />
             Course Information
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-400">Course:</span>
-              <Link href="/library" className="text-blue-400 hover:text-blue-300">
+              <Link href="/library" className="text-orange-400 hover:text-blue-300">
                 {lesson.module.course.title}
               </Link>
             </div>
@@ -113,7 +113,7 @@ export default function LessonDetailClient({ lesson }: LessonDetailClientProps) 
             {lesson.module.course.category && (
               <div className="flex justify-between">
                 <span className="text-gray-400">Category:</span>
-                <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-xs">
+                <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs">
                   {lesson.module.course.category}
                 </span>
               </div>
@@ -135,7 +135,7 @@ export default function LessonDetailClient({ lesson }: LessonDetailClientProps) 
         )}
 
         {/* Ask Coach Rick */}
-        <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-xl p-5 border border-purple-500/30">
+        <div className="bg-gradient-to-r from-purple-600/20 to-orange-600/20 rounded-xl p-5 border border-purple-500/30">
           <div className="flex items-center gap-3 mb-3">
             <div className="bg-purple-500/30 rounded-lg p-2">
               <MessageCircle className="w-5 h-5 text-purple-300" />

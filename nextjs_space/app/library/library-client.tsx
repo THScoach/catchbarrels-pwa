@@ -123,7 +123,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
         >
           <div className="max-w-4xl mx-auto px-4 py-4">
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-[#2196F3]" />
+              <BookOpen className="w-6 h-6 text-[#F5A623]" />
               Training Library
             </h1>
             <p className="text-sm text-[#8b949e] mt-1">
@@ -146,7 +146,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
               placeholder="Search courses, lessons..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
+              className="w-full pl-10 pr-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#F5A623] transition-colors"
             />
           </div>
         </motion.div>
@@ -190,7 +190,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
                   <div
                     key={course.id}
                     onClick={() => setSelectedCourse(course)}
-                    className="bg-[#1a2332] border border-[#2a3f5f] rounded-lg p-4 hover:border-[#2196F3] transition-colors cursor-pointer"
+                    className="bg-[#1a2332] border border-[#2a3f5f] rounded-lg p-4 hover:border-[#F5A623] transition-colors cursor-pointer"
                   >
                     <div className="flex items-start gap-4">
                       {/* Thumbnail */}
@@ -224,7 +224,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
                         )}
                         
                         {course.category && (
-                          <span className="inline-block px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                          <span className="inline-block px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full">
                             {course.category}
                           </span>
                         )}
@@ -247,7 +247,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
             {/* Back Button */}
             <button
               onClick={() => setSelectedCourse(null)}
-              className="text-[#2196F3] text-sm mb-4 hover:text-[#1976D2] transition-colors"
+              className="text-[#F5A623] text-sm mb-4 hover:text-[#E89815] transition-colors"
             >
               ← Back to Library
             </button>
@@ -264,7 +264,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
               )}
               <div className="flex items-center gap-2">
                 {selectedCourse.category && (
-                  <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded-full">
+                  <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm rounded-full">
                     {selectedCourse.category}
                   </span>
                 )}
@@ -290,7 +290,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
                   >
                     <div className="flex items-center gap-3">
                       {expandedModules.has(module.id) ? (
-                        <ChevronDown className="w-5 h-5 text-[#2196F3]" />
+                        <ChevronDown className="w-5 h-5 text-[#F5A623]" />
                       ) : (
                         <ChevronRight className="w-5 h-5 text-[#8b949e]" />
                       )}
@@ -320,9 +320,9 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
                           className="w-full p-4 flex items-start gap-3 hover:bg-[#1f2937] transition-colors border-b border-[#2a3f5f] last:border-b-0"
                         >
                           {lesson.lessonType === 'video' ? (
-                            <Play className="w-5 h-5 text-[#2196F3] flex-shrink-0 mt-0.5" />
+                            <Play className="w-5 h-5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                           ) : (
-                            <FileText className="w-5 h-5 text-[#2196F3] flex-shrink-0 mt-0.5" />
+                            <FileText className="w-5 h-5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                           )}
                           <div className="flex-1 text-left">
                             <p className="text-white text-sm font-medium">
@@ -355,7 +355,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
             {/* Back Button */}
             <button
               onClick={() => setSelectedLesson(null)}
-              className="text-[#2196F3] text-sm mb-4 hover:text-[#1976D2] transition-colors"
+              className="text-[#F5A623] text-sm mb-4 hover:text-[#E89815] transition-colors"
             >
               ← Back to Course
             </button>
@@ -392,10 +392,10 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
                     >
                       <div className="flex items-center gap-3">
                         {asset.assetType === 'video' && (
-                          <Play className="w-5 h-5 text-[#2196F3]" />
+                          <Play className="w-5 h-5 text-[#F5A623]" />
                         )}
                         {asset.assetType === 'pdf' && (
-                          <FileText className="w-5 h-5 text-[#2196F3]" />
+                          <FileText className="w-5 h-5 text-[#F5A623]" />
                         )}
                         <span className="text-white text-sm">{asset.title}</span>
                       </div>
@@ -404,7 +404,7 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
                           href={asset.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1 bg-[#2196F3] text-white text-sm rounded hover:bg-[#1976D2] transition-colors"
+                          className="px-3 py-1 bg-[#F5A623] text-white text-sm rounded hover:bg-[#E89815] transition-colors"
                         >
                           Open
                         </a>

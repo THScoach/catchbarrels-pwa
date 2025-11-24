@@ -106,7 +106,7 @@ export default function AdminCoachingClient() {
             {transcriptStatus && (
               <div className={`p-4 rounded-lg text-center ${
                 transcriptStatus.includes('✅') 
-                  ? 'bg-blue-500/10 border border-blue-500/30 text-blue-400'
+                  ? 'bg-orange-500/10 border border-orange-500/30 text-orange-400'
                   : 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400'
               }`}>
                 <p>{transcriptStatus}</p>
@@ -127,7 +127,7 @@ export default function AdminCoachingClient() {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="Monday Night Coaching - Nov 23"
-              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
+              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#F5A623] transition-colors"
             />
           </div>
 
@@ -143,7 +143,7 @@ export default function AdminCoachingClient() {
               value={formData.zoomLink}
               onChange={(e) => setFormData({ ...formData, zoomLink: e.target.value })}
               placeholder="https://us06web.zoom.us/rec/share/..."
-              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
+              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#F5A623] transition-colors"
             />
             <p className="text-xs text-[#6a7280] mt-1">
               Paste the full Zoom recording link from your email notification
@@ -161,7 +161,7 @@ export default function AdminCoachingClient() {
               required
               value={formData.callDate}
               onChange={(e) => setFormData({ ...formData, callDate: e.target.value })}
-              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white focus:outline-none focus:border-[#2196F3] transition-colors"
+              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white focus:outline-none focus:border-[#F5A623] transition-colors"
             />
           </div>
 
@@ -177,7 +177,7 @@ export default function AdminCoachingClient() {
               onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
               placeholder="45"
               min="1"
-              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
+              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#F5A623] transition-colors"
             />
           </div>
 
@@ -192,7 +192,7 @@ export default function AdminCoachingClient() {
               value={formData.topics}
               onChange={(e) => setFormData({ ...formData, topics: e.target.value })}
               placeholder="Hip Rotation, Weight Shift, Separation"
-              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors"
+              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#F5A623] transition-colors"
             />
             <p className="text-xs text-[#6a7280] mt-1">
               Separate multiple topics with commas
@@ -209,7 +209,7 @@ export default function AdminCoachingClient() {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Brief summary of what was covered in this session..."
               rows={4}
-              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#2196F3] transition-colors resize-none"
+              className="w-full px-4 py-3 bg-[#1a2332] border border-[#2a3f5f] rounded-lg text-white placeholder-[#4a5568] focus:outline-none focus:border-[#F5A623] transition-colors resize-none"
             />
           </div>
 
@@ -217,7 +217,7 @@ export default function AdminCoachingClient() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-[#2196F3] to-[#1976D2] text-white font-semibold rounded-lg hover:from-[#1976D2] hover:to-[#1565C0] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gradient-to-r from-[#F5A623] to-[#E89815] text-white font-semibold rounded-lg hover:from-[#E89815] hover:to-[#D88A0C] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

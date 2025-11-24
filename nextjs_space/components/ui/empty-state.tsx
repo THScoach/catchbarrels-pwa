@@ -32,9 +32,9 @@ export function EmptyState({
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
       {/* Icon with gradient background */}
       <div className="relative mb-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2196F3]/20 to-purple-500/20 blur-2xl rounded-full" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#F5A623]/20 to-purple-500/20 blur-2xl rounded-full" />
         <div className="relative bg-[#1e2837] p-6 rounded-2xl border border-white/10">
-          <Icon className="w-12 h-12 text-[#2196F3]" strokeWidth={1.5} />
+          <Icon className="w-12 h-12 text-[#F5A623]" strokeWidth={1.5} />
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export function EmptyState({
               <Link href={actionHref}>
                 <Button 
                   size="lg"
-                  className="bg-gradient-to-r from-[#2196F3] to-[#1976D2] hover:from-[#1976D2] hover:to-[#1565C0] text-white shadow-lg shadow-blue-500/25"
+                  className="bg-gradient-to-r from-[#F5A623] to-[#E89815] hover:from-[#E89815] hover:to-[#D88A0C] text-white shadow-lg shadow-orange-500/25"
                 >
                   {actionLabel}
                 </Button>
@@ -65,7 +65,7 @@ export function EmptyState({
               <Button 
                 size="lg"
                 onClick={onAction}
-                className="bg-gradient-to-r from-[#2196F3] to-[#1976D2] hover:from-[#1976D2] hover:to-[#1565C0] text-white shadow-lg shadow-blue-500/25"
+                className="bg-gradient-to-r from-[#F5A623] to-[#E89815] hover:from-[#E89815] hover:to-[#D88A0C] text-white shadow-lg shadow-orange-500/25"
               >
                 {actionLabel}
               </Button>

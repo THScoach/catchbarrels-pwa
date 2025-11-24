@@ -33,7 +33,7 @@ export function BottomNav() {
               onClick={handleNavClick}
               className={`flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-all touch-target active:scale-95 ${
                 isActive
-                  ? 'text-[#2196F3]'
+                  ? 'text-[#F5A623]'
                   : 'text-gray-400 active:text-gray-200'
               }`}
             >

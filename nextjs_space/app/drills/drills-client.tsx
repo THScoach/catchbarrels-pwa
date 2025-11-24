@@ -86,7 +86,7 @@ export function DrillsClient({ drills }: any) {
           transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: 'linear' }}
         >
           <RefreshCw 
-            className={`w-5 h-5 ${isReady ? 'text-[#2196F3]' : 'text-gray-400'}`}
+            className={`w-5 h-5 ${isReady ? 'text-[#F5A623]' : 'text-gray-400'}`}
           />
         </motion.div>
       </div>
@@ -114,7 +114,7 @@ export function DrillsClient({ drills }: any) {
             placeholder="Search drills..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+            className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#F5A623]"
           />
         </motion.div>
 
@@ -134,7 +134,7 @@ export function DrillsClient({ drills }: any) {
               variants={buttonVariants}
               className={`px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 ${
                 categoryFilter === category
-                  ? 'bg-[#2196F3] text-white shadow-lg'
+                  ? 'bg-[#F5A623] text-white shadow-lg'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
               }`}
             >
@@ -165,14 +165,14 @@ export function DrillsClient({ drills }: any) {
                 className="block bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/80 hover:border-gray-600 hover:shadow-lg transition-all duration-200"
               >
               <div className="flex items-start space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#2196F3] to-[#1976D2] rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#F5A623] to-[#E89815] rounded-lg flex items-center justify-center flex-shrink-0">
                   <Target className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-white font-semibold mb-1">{drill?.name}</h3>
                   <p className="text-white/80 text-sm mb-2 line-clamp-2">{drill?.primaryPurpose}</p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-[#2196F3]/30 text-white text-xs font-medium rounded border border-[#2196F3]/50">
+                    <span className="px-2 py-1 bg-[#F5A623]/30 text-white text-xs font-medium rounded border border-[#F5A623]/50">
                       {drill?.category}
                     </span>
                     <span className="px-2 py-1 bg-gray-700/50 text-white text-xs font-medium rounded border border-gray-600">

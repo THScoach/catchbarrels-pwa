@@ -35,7 +35,7 @@ export function MembershipTierBadge({
       case "pro":
         return {
           label: "BARRELS Pro",
-          color: "bg-gradient-to-r from-blue-600 to-cyan-600",
+          color: "bg-gradient-to-r from-orange-600 to-cyan-600",
           icon: Zap,
           textColor: "text-white",
         };
