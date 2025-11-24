@@ -157,6 +157,9 @@ export default function PublicShareClient({ video }: PublicShareClientProps) {
                   )}
                   
                   {/* 4Bs Metrics */}
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-400">Motion (Timing) • Stability • Sequencing</p>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {video.anchor && (
                       <ScoreCard
@@ -166,10 +169,21 @@ export default function PublicShareClient({ video }: PublicShareClientProps) {
                         description="Lower Body"
                         color="blue"
                         subCategories={[
-                          { name: 'Stance', score: video.anchorStance || 0 },
-                          { name: 'Weight Shift', score: video.anchorWeightShift || 0 },
-                          { name: 'Ground Connection', score: video.anchorGroundConnection || 0 },
-                          { name: 'Lower Body Mechanics', score: video.anchorLowerBodyMechanics || 0 }
+                          { 
+                            name: 'Motion (40%)', 
+                            score: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2), 
+                            description: 'Load→Launch timing'
+                          },
+                          { 
+                            name: 'Stability (40%)', 
+                            score: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2), 
+                            description: 'Knee angles, head stability'
+                          },
+                          { 
+                            name: 'Sequencing (20%)', 
+                            score: video.anchorLowerBodyMechanics || 0, 
+                            description: 'Pelvis initiates'
+                          }
                         ].filter(s => s.score > 0)}
                       />
                     )}
@@ -182,10 +196,21 @@ export default function PublicShareClient({ video }: PublicShareClientProps) {
                         description="Trunk/Core"
                         color="green"
                         subCategories={[
-                          { name: 'Hip Rotation', score: video.engineHipRotation || 0 },
-                          { name: 'Separation', score: video.engineSeparation || 0 },
-                          { name: 'Core Power', score: video.engineCorePower || 0 },
-                          { name: 'Torso Mechanics', score: video.engineTorsoMechanics || 0 }
+                          { 
+                            name: 'Motion (40%)', 
+                            score: Math.round(((video.engineHipRotation || 0) + (video.engineCorePower || 0)) / 2), 
+                            description: 'Pelvis→Torso timing'
+                          },
+                          { 
+                            name: 'Stability (40%)', 
+                            score: video.engineSeparation || 0, 
+                            description: 'X-Factor consistency'
+                          },
+                          { 
+                            name: 'Sequencing (20%)', 
+                            score: video.engineTorsoMechanics || 0, 
+                            description: 'Pelvis→Torso order'
+                          }
                         ].filter(s => s.score > 0)}
                       />
                     )}
@@ -198,10 +223,21 @@ export default function PublicShareClient({ video }: PublicShareClientProps) {
                         description="Arms & Bat"
                         color="purple"
                         subCategories={[
-                          { name: 'Arm Path', score: video.whipArmPath || 0 },
-                          { name: 'Bat Speed', score: video.whipBatSpeed || 0 },
-                          { name: 'Bat Path', score: video.whipBatPath || 0 },
-                          { name: 'Connection', score: video.whipConnection || 0 }
+                          { 
+                            name: 'Motion (40%)', 
+                            score: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2), 
+                            description: 'Arm→Bat timing'
+                          },
+                          { 
+                            name: 'Stability (30%)', 
+                            score: video.whipConnection || 0, 
+                            description: 'Elbow/shoulder angles'
+                          },
+                          { 
+                            name: 'Sequencing (30%)', 
+                            score: video.whipBatPath || 0, 
+                            description: 'Torso→Arm→Bat order'
+                          }
                         ].filter(s => s.score > 0)}
                       />
                     )}

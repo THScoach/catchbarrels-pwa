@@ -692,6 +692,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
 
                 <div>
                   <h2 className="text-lg font-semibold text-white mb-4">Body Metrics Breakdown</h2>
+                  <p className="text-sm text-gray-400 mb-4">Motion (Timing) • Stability • Sequencing</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <ScoreCard 
                       title="Anchor" 
@@ -700,10 +701,21 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                       description="Lower Body" 
                       color="blue"
                       subCategories={[
-                        { name: 'Stance/Setup', score: video.anchorStance || 0, description: 'Initial position quality' },
-                        { name: 'Weight Shift', score: video.anchorWeightShift || 0, description: 'Weight transfer efficiency' },
-                        { name: 'Ground Connection', score: video.anchorGroundConnection || 0, description: 'Ground force utilization' },
-                        { name: 'Lower Body Mechanics', score: video.anchorLowerBodyMechanics || 0, description: 'Overall leg movement' },
+                        { 
+                          name: 'Motion (40%)', 
+                          score: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2), 
+                          description: 'Load→Launch timing, stride timing'
+                        },
+                        { 
+                          name: 'Stability (40%)', 
+                          score: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2), 
+                          description: 'Knee angles, head stability'
+                        },
+                        { 
+                          name: 'Sequencing (20%)', 
+                          score: video.anchorLowerBodyMechanics || 0, 
+                          description: 'Pelvis initiates movement'
+                        },
                       ]}
                     />
                     <ScoreCard 
@@ -713,10 +725,21 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                       description="Trunk/Core" 
                       color="green"
                       subCategories={[
-                        { name: 'Hip Rotation', score: video.engineHipRotation || 0, description: 'Hip rotation power' },
-                        { name: 'Separation', score: video.engineSeparation || 0, description: 'Upper/lower body separation' },
-                        { name: 'Core Power', score: video.engineCorePower || 0, description: 'Core engagement & strength' },
-                        { name: 'Torso Mechanics', score: video.engineTorsoMechanics || 0, description: 'Torso rotation quality' },
+                        { 
+                          name: 'Motion (40%)', 
+                          score: Math.round(((video.engineHipRotation || 0) + (video.engineCorePower || 0)) / 2), 
+                          description: 'Pelvis→Torso gap timing'
+                        },
+                        { 
+                          name: 'Stability (40%)', 
+                          score: video.engineSeparation || 0, 
+                          description: 'X-Factor, spine tilt consistency'
+                        },
+                        { 
+                          name: 'Sequencing (20%)', 
+                          score: video.engineTorsoMechanics || 0, 
+                          description: 'Pelvis→Torso order correct'
+                        },
                       ]}
                     />
                     <ScoreCard 
@@ -726,10 +749,21 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                       description="Arms & Bat" 
                       color="purple"
                       subCategories={[
-                        { name: 'Arm Path', score: video.whipArmPath || 0, description: 'Arm path efficiency' },
-                        { name: 'Bat Speed', score: video.whipBatSpeed || 0, description: 'Bat speed generation' },
-                        { name: 'Bat Path', score: video.whipBatPath || 0, description: 'Bat path quality' },
-                        { name: 'Connection', score: video.whipConnection || 0, description: 'Arms-body connection' },
+                        { 
+                          name: 'Motion (40%)', 
+                          score: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2), 
+                          description: 'Arm→Bat gap timing'
+                        },
+                        { 
+                          name: 'Stability (30%)', 
+                          score: video.whipConnection || 0, 
+                          description: 'Elbow angles, shoulder tilt'
+                        },
+                        { 
+                          name: 'Sequencing (30%)', 
+                          score: video.whipBatPath || 0, 
+                          description: 'Torso→Arm→Bat order'
+                        },
                       ]}
                     />
                   </div>

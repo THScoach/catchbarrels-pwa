@@ -195,6 +195,7 @@ export function DashboardClient({
           transition={{ duration: 0.5, delay: 0.3 }}
         >
           <h2 className="text-lg font-semibold text-white mb-4">Body Metrics</h2>
+          <p className="text-sm text-gray-400 mb-4">Motion (Timing) • Stability • Sequencing</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ScoreCard
               title="Anchor"
@@ -203,10 +204,21 @@ export function DashboardClient({
               description="Lower Body"
               color="blue"
               subCategories={[
-                { name: 'Stance/Setup', score: scores.anchorSubs?.stance || 0, description: 'Initial position quality' },
-                { name: 'Weight Shift', score: scores.anchorSubs?.weightShift || 0, description: 'Weight transfer efficiency' },
-                { name: 'Ground Connection', score: scores.anchorSubs?.groundConnection || 0, description: 'Ground force utilization' },
-                { name: 'Lower Body Mechanics', score: scores.anchorSubs?.lowerBodyMechanics || 0, description: 'Overall leg movement' },
+                { 
+                  name: 'Motion (40%)', 
+                  score: Math.round(((scores.anchorSubs?.stance || 0) + (scores.anchorSubs?.weightShift || 0)) / 2), 
+                  description: 'Load→Launch timing, stride timing'
+                },
+                { 
+                  name: 'Stability (40%)', 
+                  score: Math.round(((scores.anchorSubs?.groundConnection || 0) + (scores.anchorSubs?.lowerBodyMechanics || 0)) / 2), 
+                  description: 'Knee angles, head stability'
+                },
+                { 
+                  name: 'Sequencing (20%)', 
+                  score: scores.anchorSubs?.lowerBodyMechanics || 0, 
+                  description: 'Pelvis initiates movement'
+                },
               ]}
             />
             <ScoreCard
@@ -216,10 +228,21 @@ export function DashboardClient({
               description="Trunk/Core"
               color="green"
               subCategories={[
-                { name: 'Hip Rotation', score: scores.engineSubs?.hipRotation || 0, description: 'Hip rotation power' },
-                { name: 'Separation', score: scores.engineSubs?.separation || 0, description: 'Upper/lower body separation' },
-                { name: 'Core Power', score: scores.engineSubs?.corePower || 0, description: 'Core engagement & strength' },
-                { name: 'Torso Mechanics', score: scores.engineSubs?.torsoMechanics || 0, description: 'Torso rotation quality' },
+                { 
+                  name: 'Motion (40%)', 
+                  score: Math.round(((scores.engineSubs?.hipRotation || 0) + (scores.engineSubs?.corePower || 0)) / 2), 
+                  description: 'Pelvis→Torso gap timing'
+                },
+                { 
+                  name: 'Stability (40%)', 
+                  score: scores.engineSubs?.separation || 0, 
+                  description: 'X-Factor, spine tilt consistency'
+                },
+                { 
+                  name: 'Sequencing (20%)', 
+                  score: scores.engineSubs?.torsoMechanics || 0, 
+                  description: 'Pelvis→Torso order correct'
+                },
               ]}
             />
             <ScoreCard
@@ -229,10 +252,21 @@ export function DashboardClient({
               description="Arms & Bat"
               color="purple"
               subCategories={[
-                { name: 'Arm Path', score: scores.whipSubs?.armPath || 0, description: 'Arm path efficiency' },
-                { name: 'Bat Speed', score: scores.whipSubs?.batSpeed || 0, description: 'Bat speed generation' },
-                { name: 'Bat Path', score: scores.whipSubs?.batPath || 0, description: 'Bat path quality' },
-                { name: 'Connection', score: scores.whipSubs?.connection || 0, description: 'Arms-body connection' },
+                { 
+                  name: 'Motion (40%)', 
+                  score: Math.round(((scores.whipSubs?.batSpeed || 0) + (scores.whipSubs?.armPath || 0)) / 2), 
+                  description: 'Arm→Bat gap timing'
+                },
+                { 
+                  name: 'Stability (30%)', 
+                  score: scores.whipSubs?.connection || 0, 
+                  description: 'Elbow angles, shoulder tilt'
+                },
+                { 
+                  name: 'Sequencing (30%)', 
+                  score: scores.whipSubs?.batPath || 0, 
+                  description: 'Torso→Arm→Bat order'
+                },
               ]}
             />
           </div>
