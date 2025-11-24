@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { 
   Upload, 
@@ -21,7 +22,9 @@ import {
   Loader2,
   Video as VideoIcon,
   Info,
-  Zap
+  Zap,
+  Download,
+  Cloud
 } from 'lucide-react';
 import type { OnFormImportPanelProps, Video } from '@/lib/types';
 import { VIDEO_TYPES } from '@/lib/types';
@@ -40,6 +43,9 @@ export function OnFormImportPanel({
   const [videoType, setVideoType] = useState<string>('');
   const [cameraAngle, setCameraAngle] = useState<string>('side');
   const [showInstructions, setShowInstructions] = useState(true);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedMB, setUploadedMB] = useState(0);
+  const [totalMB, setTotalMB] = useState(0);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -63,6 +69,12 @@ export function OnFormImportPanel({
     }
 
     setImporting(true);
+    setUploadProgress(0);
+    
+    const fileSizeMB = videoFile.size / (1024 * 1024);
+    setTotalMB(fileSizeMB);
+    setUploadedMB(0);
+
     try {
       const formData = new FormData();
       formData.append('file', videoFile);
@@ -72,17 +84,55 @@ export function OnFormImportPanel({
       if (athleteId) formData.append('athleteId', athleteId);
       if (sessionId) formData.append('sessionId', sessionId);
 
-      const response = await fetch('/api/videos/onform/import', {
-        method: 'POST',
-        body: formData
+      // Use XMLHttpRequest for progress tracking
+      const result = await new Promise<any>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        // Track upload progress
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            const uploadedMegabytes = e.loaded / (1024 * 1024);
+            
+            setUploadProgress(Math.round(percentComplete));
+            setUploadedMB(uploadedMegabytes);
+            
+            console.log(`Upload progress: ${percentComplete.toFixed(1)}% (${uploadedMegabytes.toFixed(1)}/${fileSizeMB.toFixed(1)} MB)`);
+          }
+        });
+
+        // Handle completion
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response);
+            } catch (e) {
+              reject(new Error('Invalid server response'));
+            }
+          } else {
+            try {
+              const errorData = JSON.parse(xhr.responseText);
+              reject(new Error(errorData.error || 'Upload failed'));
+            } catch (e) {
+              reject(new Error(`Upload failed with status ${xhr.status}`));
+            }
+          }
+        });
+
+        // Handle errors
+        xhr.addEventListener('error', () => {
+          reject(new Error('Network error during upload'));
+        });
+
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload cancelled'));
+        });
+
+        // Send request
+        xhr.open('POST', '/api/videos/onform/import');
+        xhr.send(formData);
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
-        throw new Error(errorData.error || 'Failed to import video');
-      }
-
-      const result = await response.json();
       
       toast.success('🎉 OnForm video imported!', {
         description: 'Video uploaded successfully. Analysis will begin automatically.',
@@ -103,6 +153,9 @@ export function OnFormImportPanel({
       setOnformUrl('');
       setVideoType('');
       setCameraAngle('side');
+      setUploadProgress(0);
+      setUploadedMB(0);
+      setTotalMB(0);
       onOpenChange(false);
 
     } catch (error) {
@@ -110,6 +163,9 @@ export function OnFormImportPanel({
       toast.error('Failed to import video', {
         description: error instanceof Error ? error.message : 'Please try again or contact support'
       });
+      setUploadProgress(0);
+      setUploadedMB(0);
+      setTotalMB(0);
     } finally {
       setImporting(false);
     }
@@ -180,21 +236,25 @@ export function OnFormImportPanel({
   };
 
   const handleOpenOnForm = () => {
-    // Attempt deep link
-    const onformScheme = 'onform://';
-    const universalLink = 'https://onform.com/app';
+    // iOS Safari deep link guidance
+    // Note: OnForm doesn't have a registered universal link or custom URL scheme
+    // that works reliably in Safari. The best approach is to guide users.
     
-    // Try custom scheme first
-    window.location.href = onformScheme;
-    
-    // Fallback to universal link after a short delay
-    setTimeout(() => {
-      window.location.href = universalLink;
-    }, 1500);
-    
-    toast.info('Opening OnForm...', {
-      description: 'If OnForm didn\'t open, please open it manually from your home screen'
+    toast.info('📱 Please Open OnForm Manually', {
+      description: 'Tap the OnForm icon on your home screen to launch the app',
+      duration: 6000
     });
+
+    // Optionally try to open App Store if OnForm isn't installed
+    // This is more reliable than broken deep links
+    const appStoreUrl = 'https://apps.apple.com/app/onform-video-analysis/id1490456997';
+    
+    // Show App Store option after a delay
+    setTimeout(() => {
+      if (confirm('OnForm not installed? Open App Store to download?')) {
+        window.open(appStoreUrl, '_blank');
+      }
+    }, 2000);
   };
 
   return (
@@ -260,13 +320,22 @@ export function OnFormImportPanel({
                 </div>
               </div>
 
+              <Alert className="bg-blue-900/30 border-blue-700 mt-4">
+                <Info className="w-4 h-4 text-blue-400" />
+                <AlertDescription className="text-sm text-gray-300">
+                  <strong>Tip:</strong> After recording in OnForm, use "Share → Save to Photos" 
+                  for best results. This gives you a full-quality file to upload.
+                </AlertDescription>
+              </Alert>
+
               <div className="flex gap-3 mt-6">
                 <Button
                   onClick={handleOpenOnForm}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  variant="outline"
+                  className="flex-1 border-gray-600 hover:bg-gray-800"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Open OnForm App
+                  Need OnForm App?
                 </Button>
                 <Button
                   onClick={() => setShowInstructions(false)}
@@ -403,15 +472,37 @@ export function OnFormImportPanel({
               </div>
             </div>
 
+            {/* Upload Progress Indicator */}
+            {importing && importMethod === 'file' && uploadProgress > 0 && (
+              <Card className="bg-gray-800/50 border-gray-700 p-4 space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Cloud className="w-4 h-4 text-blue-400 animate-pulse" />
+                    <span className="text-gray-300">Uploading to BARRELS...</span>
+                  </div>
+                  <span className="text-[#F5A623] font-medium">{uploadProgress}%</span>
+                </div>
+                
+                <Progress value={uploadProgress} className="h-2 bg-gray-700" />
+                
+                <div className="flex items-center justify-between text-xs text-gray-400">
+                  <span>{uploadedMB.toFixed(1)} MB / {totalMB.toFixed(1)} MB</span>
+                  <span>{videoFile?.name}</span>
+                </div>
+              </Card>
+            )}
+
             <Button
               onClick={importMethod === 'file' ? handleFileImport : handleLinkImport}
               disabled={importing || (importMethod === 'file' ? !videoFile : !onformUrl.trim()) || !videoType}
-              className="w-full bg-[#F5A623] hover:bg-[#E89815] text-white"
+              className="w-full bg-[#F5A623] hover:bg-[#E89815] text-white disabled:opacity-50"
             >
               {importing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Importing...
+                  {importMethod === 'file' && uploadProgress > 0 
+                    ? `Uploading ${uploadProgress}%...` 
+                    : 'Importing...'}
                 </>
               ) : (
                 <>
