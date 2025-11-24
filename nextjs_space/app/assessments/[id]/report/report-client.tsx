@@ -316,6 +316,240 @@ export default function ReportClient({ session, report }: Props) {
           <ScoreCard title="Whip" subtitle="Bat Speed" score={metrics?.whipScore ?? null} icon={Activity} />
         </div>
 
+        {/* Body Metrics Board - Detailed Breakdown */}
+        <Card className="mb-8 bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Activity className="w-6 h-6 text-orange-400" />
+              Body Metrics - Detailed Breakdown
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Motion (Timing), Stability, and Sequencing sub-scores for each component
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Anchor Breakdown */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-700">
+                <div className="flex items-center gap-3">
+                  <Target className="w-5 h-5 text-orange-400" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Anchor (Lower Body Foundation)</h3>
+                    <p className="text-xs text-gray-500">Stride, pelvis, ground connection</p>
+                  </div>
+                </div>
+                <div className={`text-3xl font-bold ${metrics?.anchorScore !== null ? getScoreColor(metrics.anchorScore) : 'text-gray-500'}`}>
+                  {metrics?.anchorScore !== null ? metrics.anchorScore.toFixed(0) : '--'}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pl-8">
+                {/* Anchor Motion */}
+                <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-blue-400" />
+                    <div className="text-sm font-semibold text-blue-300">Motion (40%)</div>
+                  </div>
+                  <div className={`text-2xl font-bold ${metrics?.anchorMotion !== null ? getScoreColor(metrics.anchorMotion) : 'text-gray-500'}`}>
+                    {metrics?.anchorMotion !== null ? metrics.anchorMotion.toFixed(1) : '--'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Timing-based</div>
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div>• Load→Launch duration</div>
+                    <div>• Pelvis initiation timing</div>
+                    <div>• Stride timing consistency</div>
+                  </div>
+                </div>
+
+                {/* Anchor Stability */}
+                <div className="p-4 bg-green-900/20 rounded-lg border border-green-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4 text-green-400" />
+                    <div className="text-sm font-semibold text-green-300">Stability (40%)</div>
+                  </div>
+                  <div className={`text-2xl font-bold ${metrics?.anchorStability !== null ? getScoreColor(metrics.anchorStability) : 'text-gray-500'}`}>
+                    {metrics?.anchorStability !== null ? metrics.anchorStability.toFixed(1) : '--'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Joint consistency</div>
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div>• Knee angle consistency</div>
+                    <div>• Head stability</div>
+                    <div>• Stride length factor</div>
+                  </div>
+                </div>
+
+                {/* Anchor Sequencing */}
+                <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="w-4 h-4 text-purple-400" />
+                    <div className="text-sm font-semibold text-purple-300">Sequencing (20%)</div>
+                  </div>
+                  <div className={`text-2xl font-bold ${metrics?.anchorSequencing !== null ? getScoreColor(metrics.anchorSequencing) : 'text-gray-500'}`}>
+                    {metrics?.anchorSequencing !== null ? metrics.anchorSequencing.toFixed(1) : '--'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Kinematic chain</div>
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div>• Pelvis first in sequence</div>
+                    <div>• Pelvis peak timing</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Engine Breakdown */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-700">
+                <div className="flex items-center gap-3">
+                  <RotateCw className="w-5 h-5 text-orange-400" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Engine (Core Rotational Power)</h3>
+                    <p className="text-xs text-gray-500">Pelvis-torso coordination, X-factor</p>
+                  </div>
+                </div>
+                <div className={`text-3xl font-bold ${metrics?.engineScore !== null ? getScoreColor(metrics.engineScore) : 'text-gray-500'}`}>
+                  {metrics?.engineScore !== null ? metrics.engineScore.toFixed(0) : '--'}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pl-8">
+                {/* Engine Motion */}
+                <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-blue-400" />
+                    <div className="text-sm font-semibold text-blue-300">Motion (40%)</div>
+                  </div>
+                  <div className={`text-2xl font-bold ${metrics?.engineMotion !== null ? getScoreColor(metrics.engineMotion) : 'text-gray-500'}`}>
+                    {metrics?.engineMotion !== null ? metrics.engineMotion.toFixed(1) : '--'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Timing-based</div>
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div>• Pelvis→Torso gap (30-50ms)</div>
+                    <div>• Torso peak timing</div>
+                    <div>• Rotation initiation</div>
+                  </div>
+                </div>
+
+                {/* Engine Stability */}
+                <div className="p-4 bg-green-900/20 rounded-lg border border-green-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4 text-green-400" />
+                    <div className="text-sm font-semibold text-green-300">Stability (40%)</div>
+                  </div>
+                  <div className={`text-2xl font-bold ${metrics?.engineStability !== null ? getScoreColor(metrics.engineStability) : 'text-gray-500'}`}>
+                    {metrics?.engineStability !== null ? metrics.engineStability.toFixed(1) : '--'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Posture consistency</div>
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div>• Spine tilt consistency</div>
+                    <div>• Pelvis angle stability</div>
+                    <div>• X-Factor (hip-shoulder sep)</div>
+                  </div>
+                </div>
+
+                {/* Engine Sequencing */}
+                <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="w-4 h-4 text-purple-400" />
+                    <div className="text-sm font-semibold text-purple-300">Sequencing (20%)</div>
+                  </div>
+                  <div className={`text-2xl font-bold ${metrics?.engineSequencing !== null ? getScoreColor(metrics.engineSequencing) : 'text-gray-500'}`}>
+                    {metrics?.engineSequencing !== null ? metrics.engineSequencing.toFixed(1) : '--'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Kinematic chain</div>
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div>• Pelvis→Torso order</div>
+                    <div>• Gap quality (30-50ms)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Whip Breakdown */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-700">
+                <div className="flex items-center gap-3">
+                  <Activity className="w-5 h-5 text-orange-400" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Whip (Upper Body / Bat)</h3>
+                    <p className="text-xs text-gray-500">Arm action, bat path, connection</p>
+                  </div>
+                </div>
+                <div className={`text-3xl font-bold ${metrics?.whipScore !== null ? getScoreColor(metrics.whipScore) : 'text-gray-500'}`}>
+                  {metrics?.whipScore !== null ? metrics.whipScore.toFixed(0) : '--'}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pl-8">
+                {/* Whip Motion */}
+                <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-blue-400" />
+                    <div className="text-sm font-semibold text-blue-300">Motion (40%)</div>
+                  </div>
+                  <div className={`text-2xl font-bold ${metrics?.whipMotion !== null ? getScoreColor(metrics.whipMotion) : 'text-gray-500'}`}>
+                    {metrics?.whipMotion !== null ? metrics.whipMotion.toFixed(1) : '--'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Timing-based</div>
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div>• Torso→Arm gap (30-50ms)</div>
+                    <div>• Arm→Bat gap (30-50ms)</div>
+                    <div>• Bat peak at impact</div>
+                  </div>
+                </div>
+
+                {/* Whip Stability */}
+                <div className="p-4 bg-green-900/20 rounded-lg border border-green-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4 text-green-400" />
+                    <div className="text-sm font-semibold text-green-300">Stability (30%)</div>
+                  </div>
+                  <div className={`text-2xl font-bold ${metrics?.whipStability !== null ? getScoreColor(metrics.whipStability) : 'text-gray-500'}`}>
+                    {metrics?.whipStability !== null ? metrics.whipStability.toFixed(1) : '--'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Joint consistency</div>
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div>• Shoulder tilt at impact</div>
+                    <div>• Elbow angle consistency</div>
+                    <div>• Front knee bracing</div>
+                  </div>
+                </div>
+
+                {/* Whip Sequencing */}
+                <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="w-4 h-4 text-purple-400" />
+                    <div className="text-sm font-semibold text-purple-300">Sequencing (30%)</div>
+                  </div>
+                  <div className={`text-2xl font-bold ${metrics?.whipSequencing !== null ? getScoreColor(metrics.whipSequencing) : 'text-gray-500'}`}>
+                    {metrics?.whipSequencing !== null ? metrics.whipSequencing.toFixed(1) : '--'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Kinematic chain</div>
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div>• Torso→Arm→Bat order</div>
+                    <div>• Gap quality (30-50ms)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Key Insights */}
+            <div className="mt-6 p-4 bg-orange-900/20 rounded-lg border border-orange-800/50">
+              <div className="flex items-start gap-3">
+                <Award className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-orange-300">Understanding Motion Scores</h4>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    <strong className="text-orange-400">Motion = "When You Move"</strong> (not "how fast"). 
+                    These scores measure <strong>timing events</strong> and <strong>phase windows</strong> based on Dr. Kwon's research. 
+                    Good timing with moderate velocity scores higher than poor timing with high velocity. 
+                    Velocities are displayed separately for reference in the "Motion" tab above.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Summary */}
         <Card className="mb-8 bg-gray-800/50 border-gray-700">
           <CardHeader>
@@ -395,9 +629,9 @@ export default function ReportClient({ session, report }: Props) {
           <TabsContent value="motion" className="mt-6">
             <Card className="bg-gray-800/50 border-gray-700">
               <CardHeader>
-                <CardTitle className="text-white">Motion Metrics</CardTitle>
+                <CardTitle className="text-white">Motion Metrics (Reference Data)</CardTitle>
                 <CardDescription className="text-gray-400">
-                  Velocities and angular accelerations of body segments
+                  Velocity and speed reference data for power tracking (not used in Motion scoring)
                 </CardDescription>
               </CardHeader>
               <CardContent>
