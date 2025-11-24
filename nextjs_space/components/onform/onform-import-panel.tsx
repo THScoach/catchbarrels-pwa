@@ -287,19 +287,29 @@ export function OnFormImportPanel({
               ← Back to Instructions
             </Button>
 
-            <Tabs value={importMethod} onValueChange={(v) => setImportMethod(v as 'file' | 'link')}>
-              <TabsList className="grid w-full grid-cols-2 bg-gray-800">
-                <TabsTrigger value="file">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload File
-                </TabsTrigger>
-                <TabsTrigger value="link">
-                  <Link2 className="w-4 h-4 mr-2" />
-                  Paste Link
-                </TabsTrigger>
-              </TabsList>
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-gray-300">
+                Choose Import Method
+              </h3>
+              <Tabs value={importMethod} onValueChange={(v) => setImportMethod(v as 'file' | 'link')}>
+                <TabsList className="grid w-full grid-cols-2 bg-gray-800 h-12 p-1">
+                  <TabsTrigger 
+                    value="file"
+                    className="data-[state=active]:bg-[#F5A623] data-[state=active]:text-white text-base"
+                  >
+                    <Upload className="w-5 h-5 mr-2" />
+                    Upload File
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="link"
+                    className="data-[state=active]:bg-[#F5A623] data-[state=active]:text-white text-base"
+                  >
+                    <Link2 className="w-5 h-5 mr-2" />
+                    Paste Link
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="file" className="space-y-4 mt-4">
+                <TabsContent value="file" className="space-y-4 mt-4">
                 <div>
                   <Label htmlFor="video-file" className="text-sm font-medium text-gray-300 mb-2 block">
                     OnForm Video File
@@ -330,27 +340,28 @@ export function OnFormImportPanel({
                     </label>
                   </div>
                 </div>
-              </TabsContent>
+                </TabsContent>
 
-              <TabsContent value="link" className="space-y-4 mt-4">
-                <div>
-                  <Label htmlFor="onform-url" className="text-sm font-medium text-gray-300 mb-2 block">
-                    OnForm Share Link
-                  </Label>
-                  <Input
-                    id="onform-url"
-                    type="url"
-                    value={onformUrl}
-                    onChange={(e) => setOnformUrl(e.target.value)}
-                    placeholder="https://onform.com/share/..."
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">
-                    Paste the share link from OnForm's export menu
-                  </p>
-                </div>
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="link" className="space-y-4 mt-4">
+                  <div>
+                    <Label htmlFor="onform-url" className="text-sm font-medium text-gray-300 mb-2 block">
+                      OnForm Share Link
+                    </Label>
+                    <Input
+                      id="onform-url"
+                      type="url"
+                      value={onformUrl}
+                      onChange={(e) => setOnformUrl(e.target.value)}
+                      placeholder="https://onform.com/share/..."
+                      className="bg-gray-800 border-gray-700 text-white"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Paste the share link from OnForm's export menu
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
 
             {/* Common Fields */}
             <div className="space-y-4">
