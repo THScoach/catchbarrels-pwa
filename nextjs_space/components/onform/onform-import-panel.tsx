@@ -50,9 +50,30 @@ export function OnFormImportPanel({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const fileSizeInMB = file.size / (1024 * 1024);
+      setTotalMB(fileSizeInMB);
+      
+      // Check file size IMMEDIATELY
+      if (fileSizeInMB > 500) {
+        toast.error('File too large', {
+          description: `This file is ${fileSizeInMB.toFixed(0)}MB. OnForm videos must be under 500MB. Please compress or trim the video in OnForm first.`,
+          duration: 6000
+        });
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
+      // Warn for large files (will take time)
+      if (fileSizeInMB > 100) {
+        toast.warning('Large file detected', {
+          description: `This ${fileSizeInMB.toFixed(0)}MB video may take 2-5 minutes to upload. Please be patient and don't close this window.`,
+          duration: 6000
+        });
+      }
+      
       setVideoFile(file);
       toast.success('File selected', {
-        description: `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`
+        description: `${file.name} (${fileSizeInMB.toFixed(1)} MB)${fileSizeInMB > 50 ? ' - This may take a few minutes' : ''}`
       });
     }
   };
@@ -74,6 +95,12 @@ export function OnFormImportPanel({
     const fileSizeMB = videoFile.size / (1024 * 1024);
     setTotalMB(fileSizeMB);
     setUploadedMB(0);
+    
+    // Show immediate feedback
+    toast.info('🚀 Starting upload...', {
+      description: `Uploading ${videoFile.name} (${fileSizeMB.toFixed(1)}MB). This may take a few minutes.`,
+      duration: 3000
+    });
 
     try {
       const formData = new FormData();
@@ -87,6 +114,9 @@ export function OnFormImportPanel({
       // Use XMLHttpRequest for progress tracking
       const result = await new Promise<any>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        
+        // Set a 10-minute timeout for large files
+        xhr.timeout = 600000; // 10 minutes
 
         // Track upload progress
         xhr.upload.addEventListener('progress', (e) => {
@@ -127,6 +157,10 @@ export function OnFormImportPanel({
 
         xhr.addEventListener('abort', () => {
           reject(new Error('Upload cancelled'));
+        });
+        
+        xhr.addEventListener('timeout', () => {
+          reject(new Error('Upload timed out. The file may be too large or your internet connection is slow. Try compressing the video or using a faster connection.'));
         });
 
         // Send request
@@ -181,14 +215,41 @@ export function OnFormImportPanel({
       toast.error('Please select a video type');
       return;
     }
+    
+    // Validate URL format immediately
+    const trimmedUrl = onformUrl.trim();
+    try {
+      new URL(trimmedUrl);
+    } catch (e) {
+      toast.error('Invalid URL', {
+        description: 'Please paste a valid OnForm share link (e.g., https://onform.com/share/...)',
+        duration: 5000
+      });
+      return;
+    }
+    
+    // Check if it looks like an OnForm URL
+    if (!trimmedUrl.toLowerCase().includes('onform')) {
+      toast.warning('This doesn\'t look like an OnForm link', {
+        description: 'Make sure you copied the share link from the OnForm app.',
+        duration: 5000
+      });
+    }
 
     setImporting(true);
+    
+    // Show immediate feedback
+    toast.info('🔗 Importing from OnForm...', {
+      description: 'Validating share link and creating video record.',
+      duration: 3000
+    });
+    
     try {
       const response = await fetch('/api/videos/onform/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          shareUrl: onformUrl.trim(),
+          shareUrl: trimmedUrl,
           videoType,
           cameraAngle,
           source: 'onform',
