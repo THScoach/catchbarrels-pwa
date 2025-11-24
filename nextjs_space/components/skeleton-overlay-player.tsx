@@ -1,0 +1,455 @@
+
+'use client';
+
+/**
+ * Skeleton Overlay Video Player
+ * - Synchronized skeleton rendering (green = model, yellow = player)
+ * - Frame-by-frame playback with skeleton tracking
+ * - Toggle model/player visibility
+ * - Side-by-side or overlay comparison modes
+ */
+
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { 
+  Play, Pause, SkipBack, SkipForward, Eye, EyeOff,
+  Layers, SplitSquareHorizontal, Maximize2
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface SkeletonData {
+  frame: number;
+  timestamp: number;
+  keypoints: Array<{
+    x: number;
+    y: number;
+    z: number;
+    visibility: number;
+    name: string;
+  }>;
+}
+
+interface SkeletonOverlayPlayerProps {
+  videoUrl: string;
+  playerSkeleton?: SkeletonData[] | null;
+  modelSkeleton?: SkeletonData[] | null;
+  impactFrame?: number | null;
+  onTimeUpdate?: (currentTime: number, currentFrame: number) => void;
+}
+
+// MediaPipe Pose connections (which joints to connect with lines)
+const POSE_CONNECTIONS = [
+  [11, 12], // shoulders
+  [11, 13], [13, 15], // left arm
+  [12, 14], [14, 16], // right arm
+  [11, 23], [12, 24], // torso
+  [23, 24], // hips
+  [23, 25], [25, 27], [27, 29], [29, 31], // left leg
+  [24, 26], [26, 28], [28, 30], [30, 32], // right leg
+];
+
+export function SkeletonOverlayPlayer({
+  videoUrl,
+  playerSkeleton,
+  modelSkeleton,
+  impactFrame = 0,
+  onTimeUpdate
+}: SkeletonOverlayPlayerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentFrame, setCurrentFrame] = useState(0);
+  
+  // Visibility toggles
+  const [showPlayerSkeleton, setShowPlayerSkeleton] = useState(true);
+  const [showModelSkeleton, setShowModelSkeleton] = useState(true);
+  
+  // Display modes
+  const [viewMode, setViewMode] = useState<'overlay' | 'side-by-side'>('overlay');
+  
+  // Frame rate (60 FPS normalized)
+  const fps = 60;
+
+  /**
+   * Draw skeleton on canvas
+   */
+  const drawSkeleton = useCallback((
+    ctx: CanvasRenderingContext2D,
+    keypoints: any[],
+    color: string,
+    offsetX: number = 0,
+    offsetY: number = 0,
+    scale: number = 1
+  ) => {
+    if (!keypoints || keypoints.length === 0) return;
+
+    // Draw connections (lines between joints)
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+
+    POSE_CONNECTIONS.forEach(([startIdx, endIdx]) => {
+      const start = keypoints[startIdx];
+      const end = keypoints[endIdx];
+
+      if (!start || !end || start.visibility < 0.5 || end.visibility < 0.5) {
+        return;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(
+        offsetX + start.x * scale,
+        offsetY + start.y * scale
+      );
+      ctx.lineTo(
+        offsetX + end.x * scale,
+        offsetY + end.y * scale
+      );
+      ctx.stroke();
+    });
+
+    // Draw keypoints (joints)
+    ctx.fillStyle = color;
+    keypoints.forEach((kp) => {
+      if (!kp || kp.visibility < 0.5) return;
+
+      ctx.beginPath();
+      ctx.arc(
+        offsetX + kp.x * scale,
+        offsetY + kp.y * scale,
+        6,
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+      
+      // Draw inner circle for better visibility
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.beginPath();
+      ctx.arc(
+        offsetX + kp.x * scale,
+        offsetY + kp.y * scale,
+        3,
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+      ctx.fillStyle = color;
+    });
+  }, []);
+
+  /**
+   * Render frame - draw video and skeletons
+   */
+  const renderFrame = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const frame = Math.floor(currentTime * fps);
+
+    if (viewMode === 'overlay') {
+      // Overlay mode: draw video once, both skeletons on top
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Draw model skeleton (GREEN)
+      if (showModelSkeleton && modelSkeleton) {
+        const modelFrame = modelSkeleton.find(f => f.frame === frame);
+        if (modelFrame) {
+          drawSkeleton(ctx, modelFrame.keypoints, '#10B981', 0, 0, 1); // Green
+        }
+      }
+
+      // Draw player skeleton (YELLOW)
+      if (showPlayerSkeleton && playerSkeleton) {
+        const playerFrame = playerSkeleton.find(f => f.frame === frame);
+        if (playerFrame) {
+          drawSkeleton(ctx, playerFrame.keypoints, '#FBBF24', 0, 0, 1); // Yellow
+        }
+      }
+
+    } else {
+      // Side-by-side mode
+      const halfWidth = canvas.width / 2;
+
+      // Left side: Model skeleton
+      if (showModelSkeleton && modelSkeleton) {
+        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, halfWidth, canvas.height);
+        const modelFrame = modelSkeleton.find(f => f.frame === frame);
+        if (modelFrame) {
+          drawSkeleton(ctx, modelFrame.keypoints, '#10B981', 0, 0, 0.5); // Scale down for half view
+        }
+        
+        // Label
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(10, 10, 100, 30);
+        ctx.fillStyle = '#10B981';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('MODEL', 20, 32);
+      }
+
+      // Right side: Player skeleton
+      if (showPlayerSkeleton && playerSkeleton) {
+        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, halfWidth, 0, halfWidth, canvas.height);
+        const playerFrame = playerSkeleton.find(f => f.frame === frame);
+        if (playerFrame) {
+          drawSkeleton(ctx, playerFrame.keypoints, '#FBBF24', halfWidth, 0, 0.5); // Scale down for half view
+        }
+        
+        // Label
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(halfWidth + 10, 10, 100, 30);
+        ctx.fillStyle = '#FBBF24';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('PLAYER', halfWidth + 20, 32);
+      }
+
+      // Divider line
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(halfWidth, 0);
+      ctx.lineTo(halfWidth, canvas.height);
+      ctx.stroke();
+    }
+
+    // Draw impact marker
+    if (frame === impactFrame) {
+      ctx.strokeStyle = '#EF4444';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([10, 5]);
+      ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+      ctx.setLineDash([]);
+      
+      ctx.fillStyle = '#EF4444';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('⚾ IMPACT', canvas.width / 2 - 50, 40);
+    }
+
+  }, [currentTime, fps, viewMode, showPlayerSkeleton, showModelSkeleton, playerSkeleton, modelSkeleton, impactFrame, drawSkeleton]);
+
+  /**
+   * Handle video time updates
+   */
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+      const frame = Math.floor(video.currentTime * fps);
+      setCurrentFrame(frame);
+      
+      if (onTimeUpdate) {
+        onTimeUpdate(video.currentTime, frame);
+      }
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(video.duration);
+      
+      // Set canvas size to match video
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [fps, onTimeUpdate]);
+
+  /**
+   * Render skeleton overlay whenever time changes
+   */
+  useEffect(() => {
+    renderFrame();
+  }, [renderFrame]);
+
+  /**
+   * Playback controls
+   */
+  const togglePlayPause = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlaying) {
+      video.pause();
+    } else {
+      video.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleSeek = (value: number[]) => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    video.currentTime = value[0];
+    setCurrentTime(value[0]);
+  };
+
+  const skipFrames = (frames: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const newTime = Math.max(0, Math.min(duration, currentTime + (frames / fps)));
+    video.currentTime = newTime;
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Video and Canvas Container */}
+      <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          className="absolute top-0 left-0 w-full h-full object-contain opacity-0"
+          crossOrigin="anonymous"
+          playsInline
+        />
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full object-contain"
+        />
+      </div>
+
+      {/* Controls */}
+      <div className="space-y-3">
+        {/* Timeline */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-400 font-mono">
+            {Math.floor(currentTime / 60)}:{String(Math.floor(currentTime % 60)).padStart(2, '0')}
+          </span>
+          <Slider
+            value={[currentTime]}
+            max={duration || 100}
+            step={1 / fps}
+            onValueChange={handleSeek}
+            className="flex-1"
+          />
+          <span className="text-sm text-gray-400 font-mono">
+            {Math.floor(duration / 60)}:{String(Math.floor(duration % 60)).padStart(2, '0')}
+          </span>
+        </div>
+
+        {/* Frame Info */}
+        <div className="text-xs text-gray-500 text-center font-mono">
+          Frame {currentFrame} {impactFrame && currentFrame === impactFrame ? '⚾ IMPACT' : ''}
+        </div>
+
+        {/* Playback Controls */}
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => skipFrames(-5)}
+            className="h-10 w-10"
+          >
+            <SkipBack className="w-4 h-4" />
+          </Button>
+
+          <Button
+            size="icon"
+            variant="default"
+            onClick={togglePlayPause}
+            className="h-12 w-12 bg-[#F5A623] hover:bg-[#E89815]"
+          >
+            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+          </Button>
+
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => skipFrames(5)}
+            className="h-10 w-10"
+          >
+            <SkipForward className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Skeleton Visibility & View Mode Controls */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={showModelSkeleton ? 'default' : 'outline'}
+              onClick={() => setShowModelSkeleton(!showModelSkeleton)}
+              className={cn(
+                showModelSkeleton && 'bg-green-600 hover:bg-green-700'
+              )}
+            >
+              {showModelSkeleton ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
+              Model
+            </Button>
+
+            <Button
+              size="sm"
+              variant={showPlayerSkeleton ? 'default' : 'outline'}
+              onClick={() => setShowPlayerSkeleton(!showPlayerSkeleton)}
+              className={cn(
+                showPlayerSkeleton && 'bg-yellow-600 hover:bg-yellow-700'
+              )}
+            >
+              {showPlayerSkeleton ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
+              Player
+            </Button>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={viewMode === 'overlay' ? 'default' : 'outline'}
+              onClick={() => setViewMode('overlay')}
+              className={cn(
+                viewMode === 'overlay' && 'bg-[#F5A623] hover:bg-[#E89815]'
+              )}
+            >
+              <Layers className="w-4 h-4 mr-1" />
+              Overlay
+            </Button>
+
+            <Button
+              size="sm"
+              variant={viewMode === 'side-by-side' ? 'default' : 'outline'}
+              onClick={() => setViewMode('side-by-side')}
+              className={cn(
+                viewMode === 'side-by-side' && 'bg-[#F5A623] hover:bg-[#E89815]'
+              )}
+            >
+              <SplitSquareHorizontal className="w-4 h-4 mr-1" />
+              Side-by-Side
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-6 text-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-green-500 rounded-full" />
+          <span className="text-gray-400">Model Swing</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-yellow-500 rounded-full" />
+          <span className="text-gray-400">Your Swing</span>
+        </div>
+      </div>
+    </div>
+  );
+}

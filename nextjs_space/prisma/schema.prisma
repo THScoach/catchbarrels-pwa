@@ -74,6 +74,16 @@ model Video {
   videoUrl        String    // Mock URL for prototype
   thumbnailUrl    String?   // Mock thumbnail
   
+  // Video Processing for Joint Analysis
+  impactFrame     Int?      // Frame number where ball impact occurs
+  trimmedPath     String?   // S3 path to trimmed video (2s before/after impact)
+  fps             Float?    // Original video FPS (120-300 typically)
+  normalizedFps   Float     @default(60) // Normalized FPS for comparison (60 baseline)
+  
+  // Skeleton Data (JSON array of frame-by-frame joint coordinates)
+  skeletonData    Json?     // [{frame: 0, keypoints: [{x, y, z, visibility, name}, ...]}, ...]
+  skeletonExtracted Boolean @default(false)
+  
   // Analysis data - 4Bs Body Metrics (mock for prototype)
   analyzed        Boolean   @default(false)
   
@@ -528,12 +538,18 @@ model ModelVideo {
   playerLevel      String?  // "mlb", "college", "pro"
   playerHeight     Int?     // Height in inches for auto-calibration
   
+  // Video Processing
+  impactFrame      Int?     // Frame number where ball impact occurs (trimmed videos)
+  trimmedPath      String?  // S3 path to trimmed version (2s before/after impact)
+  fps              Int?     // Original video FPS (120-300 FPS typically)
+  normalizedFps    Float    @default(60) // Normalized FPS for comparison (60 baseline)
+  
   // Skeleton data for overlay (JSON format)
   skeletonData     Json?    // Frame-by-frame joint positions
+  skeletonExtracted Boolean @default(false)
   
   // Metadata
   duration         Int?     // Video duration in seconds
-  fps              Int?     // Frames per second
   
   active           Boolean  @default(true)
   uploadDate       DateTime @default(now())
