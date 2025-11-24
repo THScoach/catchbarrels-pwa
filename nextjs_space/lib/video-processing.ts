@@ -121,13 +121,13 @@ export function calculateTrimRange(
 }
 
 /**
- * Normalize skeleton data to target FPS (60 baseline)
+ * Normalize skeleton data to target FPS (120 baseline)
  * Interpolates or downsamples frames as needed
  */
 export function normalizeSkeletonData(
   skeletonData: any[],
   originalFps: number,
-  targetFps: number = 60
+  targetFps: number = 120
 ): any[] {
   if (originalFps === targetFps) {
     return skeletonData;

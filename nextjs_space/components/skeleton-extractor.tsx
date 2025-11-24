@@ -10,13 +10,16 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { AlertCircle, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { segmentPlayer, applyMaskToCanvas } from '@/lib/player-segmentation';
 
 interface SkeletonExtractorProps {
   videoId: string;
   videoUrl: string;
-  onComplete: (data: { skeletonData: any[]; fps: number }) => void;
+  onComplete: (data: { skeletonData: any[]; fps: number; isolatedFrames?: any[] }) => void;
   onError?: (error: Error) => void;
 }
 
@@ -48,6 +51,8 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>('Ready to extract skeleton');
   const [skeletonData, setSkeletonData] = useState<any[]>([]);
+  const [enablePlayerIsolation, setEnablePlayerIsolation] = useState(true);
+  const [isolatedFrames, setIsolatedFrames] = useState<any[]>([]);
 
   const extractSkeleton = async () => {
     if (!videoRef.current || !canvasRef.current) {
@@ -77,11 +82,15 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
       canvas.height = video.videoHeight;
 
       const extractedFrames: any[] = [];
-      const fps = 30; // Assume 30 FPS if not specified
+      const isolatedPlayerFrames: any[] = [];
+      // Extract at 120 FPS for maximum precision during contact zone
+      const fps = 120;
       let frameCount = 0;
       const totalFrames = Math.floor(video.duration * fps);
 
-      setStatus('Extracting skeleton from video...');
+      setStatus(enablePlayerIsolation 
+        ? 'Extracting skeleton + isolating player...' 
+        : 'Extracting skeleton from video...');
 
       // Initialize MediaPipe Pose
       const pose = new Pose({
@@ -106,7 +115,7 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
           video.onseeked = async () => {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            pose.onResults((results: any) => {
+            pose.onResults(async (results: any) => {
               if (results.poseLandmarks) {
                 const keypoints: MediaPipeKeypoint[] = results.poseLandmarks.map(
                   (landmark: any, idx: number) => ({
@@ -123,6 +132,20 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
                   timestamp: currentTime,
                   keypoints
                 });
+
+                // Player isolation (if enabled)
+                if (enablePlayerIsolation) {
+                  try {
+                    const segmentation = await segmentPlayer(canvas, keypoints);
+                    isolatedPlayerFrames.push({
+                      frame: frameCount,
+                      mask: segmentation.mask,
+                      bbox: segmentation.bbox
+                    });
+                  } catch (error) {
+                    console.warn('Player isolation failed for frame', frameCount, error);
+                  }
+                }
               }
 
               frameCount++;
@@ -142,11 +165,13 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
 
       setStatus('Processing complete!');
       setSkeletonData(extractedFrames);
+      setIsolatedFrames(isolatedPlayerFrames);
       
       // Call completion callback
       onComplete({
         skeletonData: extractedFrames,
-        fps
+        fps,
+        isolatedFrames: enablePlayerIsolation ? isolatedPlayerFrames : undefined
       });
 
       toast.success(`Extracted ${extractedFrames.length} frames of skeleton data`);
@@ -190,18 +215,48 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
       )}
 
       {!isProcessing && skeletonData.length === 0 && (
-        <Button
-          onClick={extractSkeleton}
-          className="w-full bg-[#F5A623] hover:bg-[#E89815] text-white"
-        >
-          Extract Skeleton Data
-        </Button>
+        <>
+          {/* Player Isolation Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#F5A623]" />
+              <div>
+                <Label htmlFor="player-isolation" className="text-sm font-medium cursor-pointer">
+                  Player Isolation
+                </Label>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Remove background for cleaner comparison
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="player-isolation"
+              checked={enablePlayerIsolation}
+              onCheckedChange={setEnablePlayerIsolation}
+            />
+          </div>
+
+          <Button
+            onClick={extractSkeleton}
+            className="w-full bg-[#F5A623] hover:bg-[#E89815] text-white"
+          >
+            Extract Skeleton Data {enablePlayerIsolation && '+ Isolate Player'}
+          </Button>
+        </>
       )}
 
       {skeletonData.length > 0 && (
-        <div className="flex items-center gap-2 text-green-500">
-          <CheckCircle2 className="w-5 h-5" />
-          <span>Skeleton extracted: {skeletonData.length} frames</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-green-500">
+            <CheckCircle2 className="w-5 h-5" />
+            <span>Skeleton extracted: {skeletonData.length} frames</span>
+          </div>
+          {isolatedFrames.length > 0 && (
+            <div className="flex items-center gap-2 text-[#F5A623] text-sm">
+              <Sparkles className="w-4 h-4" />
+              <span>Player isolated: {isolatedFrames.length} frames</span>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -12,9 +12,11 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { 
   Play, Pause, SkipBack, SkipForward, Eye, EyeOff,
-  Layers, SplitSquareHorizontal, Maximize2
+  Layers, SplitSquareHorizontal, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,10 +32,22 @@ interface SkeletonData {
   }>;
 }
 
+interface IsolatedFrame {
+  frame: number;
+  mask: {
+    width: number;
+    height: number;
+    data: Uint8ClampedArray;
+  };
+  bbox: { x: number; y: number; width: number; height: number };
+}
+
 interface SkeletonOverlayPlayerProps {
   videoUrl: string;
   playerSkeleton?: SkeletonData[] | null;
   modelSkeleton?: SkeletonData[] | null;
+  playerIsolation?: IsolatedFrame[] | null;
+  modelIsolation?: IsolatedFrame[] | null;
   impactFrame?: number | null;
   onTimeUpdate?: (currentTime: number, currentFrame: number) => void;
 }
@@ -53,6 +67,8 @@ export function SkeletonOverlayPlayer({
   videoUrl,
   playerSkeleton,
   modelSkeleton,
+  playerIsolation,
+  modelIsolation,
   impactFrame = 0,
   onTimeUpdate
 }: SkeletonOverlayPlayerProps) {
@@ -66,12 +82,46 @@ export function SkeletonOverlayPlayer({
   // Visibility toggles
   const [showPlayerSkeleton, setShowPlayerSkeleton] = useState(true);
   const [showModelSkeleton, setShowModelSkeleton] = useState(true);
+  const [showIsolation, setShowIsolation] = useState(false);
   
   // Display modes
   const [viewMode, setViewMode] = useState<'overlay' | 'side-by-side'>('overlay');
   
-  // Frame rate (60 FPS normalized)
-  const fps = 60;
+  // Frame rate (120 FPS normalized)
+  const fps = 120;
+  
+  // Check if isolation data is available
+  const hasIsolation = (playerIsolation && playerIsolation.length > 0) || 
+                       (modelIsolation && modelIsolation.length > 0);
+
+  /**
+   * Apply isolation mask to canvas
+   */
+  const applyIsolationMask = useCallback((
+    ctx: CanvasRenderingContext2D,
+    mask: Uint8ClampedArray,
+    width: number,
+    height: number,
+    darkBackground: boolean = true
+  ) => {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    
+    // Apply mask to alpha channel
+    for (let i = 0; i < mask.length; i++) {
+      if (darkBackground) {
+        // Darken background, keep foreground
+        if (mask[i] === 0) {
+          data[i * 4 + 3] = 50; // Semi-transparent background
+        }
+      } else {
+        // Transparent background, keep foreground
+        data[i * 4 + 3] = mask[i];
+      }
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+  }, []);
 
   /**
    * Draw skeleton on canvas
@@ -161,6 +211,14 @@ export function SkeletonOverlayPlayer({
       // Overlay mode: draw video once, both skeletons on top
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+      // Apply player isolation if enabled
+      if (showIsolation && playerIsolation) {
+        const isolationFrame = playerIsolation.find(f => f.frame === frame);
+        if (isolationFrame) {
+          applyIsolationMask(ctx, isolationFrame.mask.data, canvas.width, canvas.height, true);
+        }
+      }
+
       // Draw model skeleton (GREEN)
       if (showModelSkeleton && modelSkeleton) {
         const modelFrame = modelSkeleton.find(f => f.frame === frame);
@@ -235,7 +293,7 @@ export function SkeletonOverlayPlayer({
       ctx.fillText('⚾ IMPACT', canvas.width / 2 - 50, 40);
     }
 
-  }, [currentTime, fps, viewMode, showPlayerSkeleton, showModelSkeleton, playerSkeleton, modelSkeleton, impactFrame, drawSkeleton]);
+  }, [currentTime, fps, viewMode, showPlayerSkeleton, showModelSkeleton, showIsolation, playerSkeleton, modelSkeleton, playerIsolation, modelIsolation, impactFrame, drawSkeleton, applyIsolationMask]);
 
   /**
    * Handle video time updates
@@ -384,58 +442,77 @@ export function SkeletonOverlayPlayer({
         </div>
 
         {/* Skeleton Visibility & View Mode Controls */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant={showModelSkeleton ? 'default' : 'outline'}
-              onClick={() => setShowModelSkeleton(!showModelSkeleton)}
-              className={cn(
-                showModelSkeleton && 'bg-green-600 hover:bg-green-700'
-              )}
-            >
-              {showModelSkeleton ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
-              Model
-            </Button>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={showModelSkeleton ? 'default' : 'outline'}
+                onClick={() => setShowModelSkeleton(!showModelSkeleton)}
+                className={cn(
+                  showModelSkeleton && 'bg-green-600 hover:bg-green-700'
+                )}
+              >
+                {showModelSkeleton ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
+                Model
+              </Button>
 
-            <Button
-              size="sm"
-              variant={showPlayerSkeleton ? 'default' : 'outline'}
-              onClick={() => setShowPlayerSkeleton(!showPlayerSkeleton)}
-              className={cn(
-                showPlayerSkeleton && 'bg-yellow-600 hover:bg-yellow-700'
-              )}
-            >
-              {showPlayerSkeleton ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
-              Player
-            </Button>
+              <Button
+                size="sm"
+                variant={showPlayerSkeleton ? 'default' : 'outline'}
+                onClick={() => setShowPlayerSkeleton(!showPlayerSkeleton)}
+                className={cn(
+                  showPlayerSkeleton && 'bg-yellow-600 hover:bg-yellow-700'
+                )}
+              >
+                {showPlayerSkeleton ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
+                Player
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={viewMode === 'overlay' ? 'default' : 'outline'}
+                onClick={() => setViewMode('overlay')}
+                className={cn(
+                  viewMode === 'overlay' && 'bg-[#F5A623] hover:bg-[#E89815]'
+                )}
+              >
+                <Layers className="w-4 h-4 mr-1" />
+                Overlay
+              </Button>
+
+              <Button
+                size="sm"
+                variant={viewMode === 'side-by-side' ? 'default' : 'outline'}
+                onClick={() => setViewMode('side-by-side')}
+                className={cn(
+                  viewMode === 'side-by-side' && 'bg-[#F5A623] hover:bg-[#E89815]'
+                )}
+              >
+                <SplitSquareHorizontal className="w-4 h-4 mr-1" />
+                Side-by-Side
+              </Button>
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant={viewMode === 'overlay' ? 'default' : 'outline'}
-              onClick={() => setViewMode('overlay')}
-              className={cn(
-                viewMode === 'overlay' && 'bg-[#F5A623] hover:bg-[#E89815]'
-              )}
-            >
-              <Layers className="w-4 h-4 mr-1" />
-              Overlay
-            </Button>
-
-            <Button
-              size="sm"
-              variant={viewMode === 'side-by-side' ? 'default' : 'outline'}
-              onClick={() => setViewMode('side-by-side')}
-              className={cn(
-                viewMode === 'side-by-side' && 'bg-[#F5A623] hover:bg-[#E89815]'
-              )}
-            >
-              <SplitSquareHorizontal className="w-4 h-4 mr-1" />
-              Side-by-Side
-            </Button>
-          </div>
+          {/* Player Isolation Toggle */}
+          {hasIsolation && (
+            <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#F5A623]" />
+                <Label htmlFor="show-isolation" className="text-sm cursor-pointer">
+                  Player Isolation
+                </Label>
+              </div>
+              <Switch
+                id="show-isolation"
+                checked={showIsolation}
+                onCheckedChange={setShowIsolation}
+              />
+            </div>
+          )}
         </div>
       </div>
 
