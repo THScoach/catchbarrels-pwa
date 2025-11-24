@@ -60,6 +60,13 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onErro
   const [overlayOpacity, setOverlayOpacity] = useState(50); // 0-100
   const [loadingModel, setLoadingModel] = useState(false);
   
+  // Calibration state
+  const [calibrationMode, setCalibrationMode] = useState(false);
+  const [overlayScale, setOverlayScale] = useState(1.0); // 0.5 to 1.5
+  const [overlayOffsetX, setOverlayOffsetX] = useState(0); // -200 to 200
+  const [overlayOffsetY, setOverlayOffsetY] = useState(0); // -200 to 200
+  const [savingCalibration, setSavingCalibration] = useState(false);
+  
   const colors = ['#F5A623', '#EF4444', '#3B82F6', '#10B981', '#FFFFFF', '#F59E0B'];
   
   // Joint order for skeleton connections
@@ -83,6 +90,42 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onErro
       setLoadingModel(false);
     }
   }, [userHandedness]);
+
+  // Save calibration settings
+  const saveCalibration = async () => {
+    setSavingCalibration(true);
+    try {
+      const response = await fetch('/api/model-videos/calibration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scale: overlayScale,
+          offsetX: overlayOffsetX,
+          offsetY: overlayOffsetY,
+        }),
+      });
+      
+      if (response.ok) {
+        toast.success('Calibration saved!');
+        setCalibrationMode(false);
+      } else {
+        toast.error('Failed to save calibration');
+      }
+    } catch (error) {
+      console.error('Error saving calibration:', error);
+      toast.error('Failed to save calibration');
+    } finally {
+      setSavingCalibration(false);
+    }
+  };
+
+  // Reset calibration to defaults
+  const resetCalibration = () => {
+    setOverlayScale(1.0);
+    setOverlayOffsetX(0);
+    setOverlayOffsetY(0);
+    toast.info('Calibration reset to defaults');
+  };
 
   // Fetch model video when overlay is toggled
   useEffect(() => {
@@ -108,6 +151,24 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onErro
       modelVideoRef.current.playbackRate = playbackSpeed;
     }
   }, [isPlaying, currentTime, playbackSpeed, showModelOverlay]);
+
+  // Load user's calibration settings
+  useEffect(() => {
+    const loadCalibration = async () => {
+      try {
+        const response = await fetch('/api/model-videos/calibration');
+        if (response.ok) {
+          const data = await response.json();
+          setOverlayScale(data.scale ?? 1.0);
+          setOverlayOffsetX(data.offsetX ?? 0);
+          setOverlayOffsetY(data.offsetY ?? 0);
+        }
+      } catch (error) {
+        console.error('Failed to load calibration:', error);
+      }
+    };
+    loadCalibration();
+  }, []);
 
   // Initialize canvas size to match video
   useEffect(() => {
@@ -689,7 +750,9 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onErro
             className="absolute inset-0 w-full h-full pointer-events-none"
             style={{ 
               opacity: overlayOpacity / 100,
-              mixBlendMode: 'lighten' // Blend mode for better overlay visibility
+              mixBlendMode: 'lighten', // Blend mode for better overlay visibility
+              transform: `scale(${overlayScale}) translate(${overlayOffsetX}px, ${overlayOffsetY}px)`,
+              transformOrigin: 'center center',
             }}
             muted
           />
@@ -865,6 +928,80 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', onErro
                 className="w-full"
               />
               <div className="text-[9px] text-center text-gray-400">{overlayOpacity}%</div>
+              
+              {/* Calibration Toggle */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCalibrationMode(!calibrationMode)}
+                className="w-full mt-2 text-[10px]"
+              >
+                {calibrationMode ? '✓ Done' : '⚙️ Calibrate Fit'}
+              </Button>
+              
+              {/* Calibration Controls */}
+              {calibrationMode && (
+                <div className="space-y-3 pt-2 border-t border-gray-700">
+                  {/* Scale Control */}
+                  <div>
+                    <div className="text-[9px] text-gray-400 mb-1">Size: {Math.round(overlayScale * 100)}%</div>
+                    <Slider
+                      value={[overlayScale * 100]}
+                      onValueChange={(value) => setOverlayScale(value[0] / 100)}
+                      min={50}
+                      max={150}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  {/* Horizontal Position */}
+                  <div>
+                    <div className="text-[9px] text-gray-400 mb-1">↔️ Position: {overlayOffsetX}px</div>
+                    <Slider
+                      value={[overlayOffsetX + 200]}
+                      onValueChange={(value) => setOverlayOffsetX(value[0] - 200)}
+                      min={0}
+                      max={400}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  {/* Vertical Position */}
+                  <div>
+                    <div className="text-[9px] text-gray-400 mb-1">↕️ Position: {overlayOffsetY}px</div>
+                    <Slider
+                      value={[overlayOffsetY + 200]}
+                      onValueChange={(value) => setOverlayOffsetY(value[0] - 200)}
+                      min={0}
+                      max={400}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      onClick={resetCalibration}
+                      variant="outline"
+                      className="flex-1 text-[10px]"
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={saveCalibration}
+                      disabled={savingCalibration}
+                      className="flex-1 text-[10px] bg-[#F5A623] hover:bg-[#E89815]"
+                    >
+                      {savingCalibration ? '...' : 'Save'}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

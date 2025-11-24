@@ -42,6 +42,11 @@ model User {
   mentalApproach  String?   // "Aggressive", "Selective", "Balanced"
   confidenceLevel Int?      // 1-10
   
+  // Model Overlay Calibration
+  modelOverlayScale   Float? @default(1.0)
+  modelOverlayOffsetX Int?   @default(0)
+  modelOverlayOffsetY Int?   @default(0)
+  
   profileComplete Boolean   @default(false)
   
   createdAt       DateTime  @default(now())
