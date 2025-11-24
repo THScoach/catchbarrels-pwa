@@ -24,6 +24,13 @@ model User {
   membershipExpiresAt DateTime? // For subscription tracking
   lastWhopSync        DateTime? // Last time we synced with Whop
   
+  // Trial Membership Tracking (7-day free trial post-assessment)
+  trialTier           String?   // "athlete", "pro", "elite" - which tier trial
+  trialStartDate      DateTime? // When trial started
+  trialEndDate        DateTime? // When trial expires
+  trialUsed           Boolean   @default(false) // Has user already used their trial?
+  trialConvertedToPaid Boolean  @default(false) // Did they convert to paid?
+  
   // Profile data from onboarding
   dateOfBirth     DateTime?
   height          Int?      // inches
@@ -436,6 +443,14 @@ model Assessment {
   sweetSpotRate          Float?   // %
   hardHitRate            Float?   // % exit velo > 95mph
   lineDriverate          Float?   // % launch angle 10-25 degrees
+  
+  // === HIT TRAX LAUNCH MONITOR DATA (Ball Score) ===
+  ballFlightDistance     Float?   // Average distance in feet
+  ballFlightDistanceMax  Float?   // Max distance in feet
+  sprayAngle             Float?   // Average spray angle in degrees (-45 to +45)
+  ballScoreComposite     Float?   // Overall ball contact score (0-100)
+  hitTraxDataImported    Boolean  @default(false) // Was Hit Trax CSV imported?
+  hitTraxImportDate      DateTime? // When CSV was imported
   
   // === ASSESSMENT INSIGHTS ===
   overallGrade           String?  // "Elite", "Advanced", "Intermediate", "Developing"
