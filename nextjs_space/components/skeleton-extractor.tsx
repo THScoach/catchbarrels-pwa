@@ -205,17 +205,37 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
       </div>
 
       {isProcessing && (
-        <div className="space-y-2">
+        <div className="space-y-3 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              <Loader2 className="w-4 h-4 animate-spin text-[#F5A623]" />
+              <span>{status}</span>
+            </div>
+            <span className="text-xs font-mono text-gray-500">
+              {progress.toFixed(0)}%
+            </span>
+          </div>
           <Progress value={progress} className="h-2" />
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>{status}</span>
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>Processing at 120 FPS</span>
+            <span>{enablePlayerIsolation ? 'With Player Isolation' : 'Skeleton Only'}</span>
           </div>
         </div>
       )}
 
       {!isProcessing && skeletonData.length === 0 && (
         <>
+          {/* Tips Card */}
+          <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-700/30">
+            <h4 className="text-sm font-semibold text-blue-400 mb-2">💡 Swing Analysis Tips</h4>
+            <ul className="text-xs text-gray-300 space-y-1">
+              <li>• 120 FPS provides maximum precision for contact zone analysis</li>
+              <li>• Player isolation removes background distractions</li>
+              <li>• Extraction takes ~30-60 seconds depending on video length</li>
+              <li>• After extraction, compare your swing to pro models</li>
+            </ul>
+          </div>
+
           {/* Player Isolation Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg border border-gray-700">
             <div className="flex items-center gap-2">
@@ -238,7 +258,7 @@ export function SkeletonExtractor({ videoId, videoUrl, onComplete, onError }: Sk
 
           <Button
             onClick={extractSkeleton}
-            className="w-full bg-[#F5A623] hover:bg-[#E89815] text-white"
+            className="w-full bg-[#F5A623] hover:bg-[#E89815] text-white font-semibold"
           >
             Extract Skeleton Data {enablePlayerIsolation && '+ Isolate Player'}
           </Button>

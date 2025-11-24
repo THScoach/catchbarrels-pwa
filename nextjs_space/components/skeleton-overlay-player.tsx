@@ -16,9 +16,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { 
   Play, Pause, SkipBack, SkipForward, Eye, EyeOff,
-  Layers, SplitSquareHorizontal, Sparkles
+  Layers, SplitSquareHorizontal, Sparkles, Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { analyzeSwingBiomechanics, compareSwings } from '@/lib/biomechanical-analysis';
 
 interface SkeletonData {
   frame: number;
@@ -83,12 +84,16 @@ export function SkeletonOverlayPlayer({
   const [showPlayerSkeleton, setShowPlayerSkeleton] = useState(true);
   const [showModelSkeleton, setShowModelSkeleton] = useState(true);
   const [showIsolation, setShowIsolation] = useState(false);
+  const [showMetrics, setShowMetrics] = useState(false);
   
   // Display modes
   const [viewMode, setViewMode] = useState<'overlay' | 'side-by-side'>('overlay');
   
   // Frame rate (120 FPS normalized)
   const fps = 120;
+  
+  // Biomechanical metrics
+  const [currentMetrics, setCurrentMetrics] = useState<any>(null);
   
   // Check if isolation data is available
   const hasIsolation = (playerIsolation && playerIsolation.length > 0) || 
@@ -193,6 +198,7 @@ export function SkeletonOverlayPlayer({
 
   /**
    * Render frame - draw video and skeletons
+   * OPTIMIZED: Uses requestAnimationFrame for smooth rendering
    */
   const renderFrame = useCallback(() => {
     const video = videoRef.current;
@@ -201,6 +207,10 @@ export function SkeletonOverlayPlayer({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Enable image smoothing for better quality
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -527,6 +537,144 @@ export function SkeletonOverlayPlayer({
           <span className="text-gray-400">Your Swing</span>
         </div>
       </div>
+
+      {/* Biomechanical Metrics Panel */}
+      {playerSkeleton && modelSkeleton && impactFrame && (
+        <div className="space-y-3">
+          <Button
+            size="sm"
+            variant={showMetrics ? 'default' : 'outline'}
+            onClick={() => {
+              if (!showMetrics && !currentMetrics) {
+                // Calculate metrics once when first opened
+                const playerAnalysis = analyzeSwingBiomechanics(playerSkeleton, impactFrame, 'right');
+                const modelAnalysis = analyzeSwingBiomechanics(modelSkeleton, impactFrame, 'right');
+                const comparison = compareSwings(playerAnalysis, modelAnalysis);
+                
+                setCurrentMetrics({
+                  player: playerAnalysis,
+                  model: modelAnalysis,
+                  comparison
+                });
+              }
+              setShowMetrics(!showMetrics);
+            }}
+            className={cn(
+              'w-full',
+              showMetrics && 'bg-[#F5A623] hover:bg-[#E89815]'
+            )}
+          >
+            <Activity className="w-4 h-4 mr-2" />
+            {showMetrics ? 'Hide' : 'Show'} Swing Metrics
+          </Button>
+
+          {showMetrics && currentMetrics && (
+            <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-4 space-y-3">
+              <h4 className="text-sm font-semibold text-[#F5A623] flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Biomechanical Analysis
+              </h4>
+
+              {/* Bat Speed */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400">Bat Speed</span>
+                  <span className={cn(
+                    'font-semibold',
+                    currentMetrics.comparison.batSpeedDiff >= 0 ? 'text-green-400' : 'text-orange-400'
+                  )}>
+                    {currentMetrics.comparison.batSpeedDiff >= 0 ? '+' : ''}
+                    {currentMetrics.comparison.batSpeedDiff.toFixed(1)} px/s
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1 text-xs text-center p-2 bg-yellow-900/20 rounded border border-yellow-700/30">
+                    <div className="text-yellow-400">You</div>
+                    <div className="font-mono">{currentMetrics.player.batSpeed.batSpeed.toFixed(1)}</div>
+                  </div>
+                  <div className="flex-1 text-xs text-center p-2 bg-green-900/20 rounded border border-green-700/30">
+                    <div className="text-green-400">Model</div>
+                    <div className="font-mono">{currentMetrics.model.batSpeed.batSpeed.toFixed(1)}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hip Rotation */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400">Hip Rotation</span>
+                  <span className={cn(
+                    'font-semibold',
+                    Math.abs(currentMetrics.comparison.hipRotationDiff) < 10 ? 'text-green-400' : 'text-orange-400'
+                  )}>
+                    {currentMetrics.comparison.hipRotationDiff >= 0 ? '+' : ''}
+                    {currentMetrics.comparison.hipRotationDiff.toFixed(1)}°
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1 text-xs text-center p-2 bg-yellow-900/20 rounded border border-yellow-700/30">
+                    <div className="text-yellow-400">You</div>
+                    <div className="font-mono">{currentMetrics.player.hipRotation.rotationAngle.toFixed(1)}°</div>
+                  </div>
+                  <div className="flex-1 text-xs text-center p-2 bg-green-900/20 rounded border border-green-700/30">
+                    <div className="text-green-400">Model</div>
+                    <div className="font-mono">{currentMetrics.model.hipRotation.rotationAngle.toFixed(1)}°</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Front Knee Angle */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400">Front Knee Angle</span>
+                  <span className={cn(
+                    'font-semibold',
+                    Math.abs(currentMetrics.comparison.frontKneeDiff) < 15 ? 'text-green-400' : 'text-orange-400'
+                  )}>
+                    {currentMetrics.comparison.frontKneeDiff >= 0 ? '+' : ''}
+                    {currentMetrics.comparison.frontKneeDiff.toFixed(1)}°
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1 text-xs text-center p-2 bg-yellow-900/20 rounded border border-yellow-700/30">
+                    <div className="text-yellow-400">You</div>
+                    <div className="font-mono">{currentMetrics.player.frontKneeAngle.toFixed(1)}°</div>
+                  </div>
+                  <div className="flex-1 text-xs text-center p-2 bg-green-900/20 rounded border border-green-700/30">
+                    <div className="text-green-400">Model</div>
+                    <div className="font-mono">{currentMetrics.model.frontKneeAngle.toFixed(1)}°</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Elbow Angles */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400">Lead Elbow / Rear Elbow</span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1 text-xs text-center p-2 bg-yellow-900/20 rounded border border-yellow-700/30">
+                    <div className="text-yellow-400">You</div>
+                    <div className="font-mono">
+                      {currentMetrics.player.elbowAngles.leadElbow.toFixed(0)}° / {currentMetrics.player.elbowAngles.rearElbow.toFixed(0)}°
+                    </div>
+                  </div>
+                  <div className="flex-1 text-xs text-center p-2 bg-green-900/20 rounded border border-green-700/30">
+                    <div className="text-green-400">Model</div>
+                    <div className="font-mono">
+                      {currentMetrics.model.elbowAngles.leadElbow.toFixed(0)}° / {currentMetrics.model.elbowAngles.rearElbow.toFixed(0)}°
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 text-center pt-2 border-t border-gray-700">
+                Metrics calculated at impact frame {impactFrame}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
