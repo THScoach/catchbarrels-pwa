@@ -137,3 +137,67 @@ export type DateRange = {
   from: Date | undefined
   to: Date | undefined
 }
+
+// ============================================
+// JOINT DATA STRUCTURES (v1 - AI-Ready)
+// ============================================
+// Clean, normalized joint position data for swing analysis and AI coaching
+
+/**
+ * Single 2D joint position in video frame
+ * Coordinates are normalized (0-1) for camera-independent comparison
+ */
+export interface Joint2D {
+  name: string;          // e.g. 'left_hip', 'right_shoulder', 'left_wrist'
+  x: number;             // normalized 0-1 (0 = left edge, 1 = right edge)
+  y: number;             // normalized 0-1 (0 = top edge, 1 = bottom edge)
+  confidence?: number;   // 0-1 (MediaPipe confidence score)
+}
+
+/**
+ * All joints captured at a single point in time
+ * Represents one frame of skeleton data
+ */
+export interface FrameJoints {
+  t: number;             // time in seconds (or frame index if normalized)
+  joints: Joint2D[];     // array of all tracked joints for this frame
+}
+
+/**
+ * Complete joint series for an entire swing
+ * This is the primary data structure for joint-only comparison and AI analysis
+ */
+export interface SwingJointSeries {
+  swingId: string;                                          // Video ID this data belongs to
+  cameraAngle: 'face-on' | 'side' | 'dtl' | 'unknown';    // Camera angle (critical for comparison)
+  frames: FrameJoints[];                                    // Complete frame-by-frame joint data
+  impactFrame?: number;                                     // Index of impact frame (for syncing)
+  fps?: number;                                             // Original FPS
+  normalizedFps?: number;                                   // Normalized FPS (e.g., 60)
+  extractedAt?: Date;                                       // When skeleton was extracted
+  
+  // Metadata for future AI coaching
+  metadata?: {
+    playerHeight?: number;        // inches (for height normalization)
+    handedness?: 'right' | 'left'; // batting handedness
+    videoType?: string;            // 'Tee Work', 'Live BP', etc.
+    qualityScore?: number;         // 0-1 (overall joint detection quality)
+  };
+}
+
+/**
+ * Comparison result between two joint series
+ * Used for displaying differences and generating coaching feedback
+ */
+export interface JointComparisonResult {
+  referenceSwing: SwingJointSeries;
+  currentSwing: SwingJointSeries;
+  differences: {
+    jointName: string;
+    avgDifference: number;          // Average positional difference (pixels or normalized units)
+    maxDifference: number;          // Maximum difference across all frames
+    atFrame: number;                // Frame where max difference occurs
+  }[];
+  alignmentMethod: 'impact' | 'manual' | 'auto'; // How swings were time-aligned
+  cameraAnglesMatch: boolean;      // Critical validation flag
+}

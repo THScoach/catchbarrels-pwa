@@ -5,13 +5,15 @@ import { BottomNav } from '@/components/bottom-nav';
 import { ScoreCard } from '@/components/score-card';
 import { EnhancedVideoPlayer } from '@/components/enhanced-video-player';
 import { SkeletonExtractor } from '@/components/skeleton-extractor';
-import { SkeletonOverlayPlayer } from '@/components/skeleton-overlay-player';
+import { JointOverlayCompare } from '@/components/joint-overlay-compare';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
 import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
+import { convertToSwingJointSeries } from '@/lib/joint-utils';
+import { SwingJointSeries } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -25,12 +27,27 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
   const [loadingUrl, setLoadingUrl] = useState(true);
   const [videoError, setVideoError] = useState(false);
   
-  // Skeleton analysis state
+  // Skeleton analysis state (v2 - joint-only comparison)
   const [skeletonExtracted, setSkeletonExtracted] = useState(video?.skeletonExtracted || false);
-  const [playerSkeletonData, setPlayerSkeletonData] = useState(video?.skeletonData || null);
-  const [modelSkeletonData, setModelSkeletonData] = useState(null);
-  const [impactFrame, setImpactFrame] = useState(video?.impactFrame || null);
+  const [currentSwing, setCurrentSwing] = useState<SwingJointSeries | null>(null);
+  const [referenceSwing, setReferenceSwing] = useState<SwingJointSeries | null>(null);
   const [extractingSkeleton, setExtractingSkeleton] = useState(false);
+  
+  // Convert existing skeleton data to new format on mount
+  useEffect(() => {
+    if (video?.skeletonData && video?.skeletonExtracted) {
+      const converted = convertToSwingJointSeries(video.skeletonData, video.id, {
+        cameraAngle: video.cameraAngle as any || 'unknown',
+        impactFrame: video.impactFrame,
+        fps: video.fps,
+        normalizedFps: video.normalizedFps,
+        playerHeight: userHeight,
+        handedness: userHandedness,
+        videoType: video.videoType
+      });
+      setCurrentSwing(converted);
+    }
+  }, [video, userHeight, userHandedness]);
   
   // Sharing state
   const [isPublic, setIsPublic] = useState(video?.isPublic || false);
@@ -191,7 +208,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
     }
   };
 
-  // Handle skeleton extraction completion
+  // Handle skeleton extraction completion (v2 - joint-only)
   const handleSkeletonExtracted = async (data: { skeletonData: any[]; fps: number }) => {
     try {
       setExtractingSkeleton(true);
@@ -213,15 +230,25 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
 
       const result = await response.json();
       
-      setPlayerSkeletonData(result.video.skeletonData);
-      setImpactFrame(result.video.impactFrame);
+      // Convert to new SwingJointSeries format
+      const converted = convertToSwingJointSeries(result.video.skeletonData, video.id, {
+        cameraAngle: video.cameraAngle as any || 'unknown',
+        impactFrame: result.video.impactFrame,
+        fps: result.video.fps,
+        normalizedFps: result.video.normalizedFps,
+        playerHeight: userHeight,
+        handedness: userHandedness,
+        videoType: video.videoType
+      });
+      
+      setCurrentSwing(converted);
       setSkeletonExtracted(true);
 
       toast.success('Skeleton extracted successfully!', {
         description: `Impact detected at frame ${result.processing.impactDetection.impactFrame}`
       });
 
-      // Fetch matching model skeleton
+      // Fetch matching model skeleton for comparison
       if (userHandedness) {
         fetchModelSkeleton(userHandedness);
       }
@@ -234,7 +261,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
     }
   };
 
-  // Fetch model skeleton for comparison
+  // Fetch model skeleton for comparison (v2 - joint-only)
   const fetchModelSkeleton = async (handedness: string) => {
     try {
       const response = await fetch(`/api/model-videos/by-handedness/${handedness.toLowerCase()}`);
@@ -243,7 +270,21 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
       }
 
       const modelVideo = await response.json();
-      setModelSkeletonData(modelVideo.skeletonData);
+      
+      // Convert model skeleton to new format
+      if (modelVideo.modelVideo?.skeletonData) {
+        const converted = convertToSwingJointSeries(modelVideo.modelVideo.skeletonData, modelVideo.modelVideo.id, {
+          cameraAngle: video.cameraAngle as any || 'unknown',
+          impactFrame: modelVideo.modelVideo.impactFrame,
+          fps: modelVideo.modelVideo.fps,
+          normalizedFps: modelVideo.modelVideo.normalizedFps,
+          playerHeight: modelVideo.modelVideo.playerHeight,
+          handedness: modelVideo.modelVideo.handedness || handedness as any,
+          videoType: 'Pro Model'
+        });
+        setReferenceSwing(converted);
+        toast.success('Model swing loaded for comparison!');
+      }
 
     } catch (error) {
       console.error('Error fetching model skeleton:', error);
@@ -685,16 +726,15 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                     <span className="font-semibold">Skeleton Extracted!</span>
                   </div>
                   <p className="text-gray-300 text-sm">
-                    Your swing has been analyzed. Use the controls below to compare your skeleton (yellow) with a pro model (green).
+                    Your swing has been analyzed. Use the controls below to compare your joints (blue) with a reference swing (gray).
                   </p>
                 </div>
 
                 {videoUrl && (
-                  <SkeletonOverlayPlayer
+                  <JointOverlayCompare
+                    referenceSwing={referenceSwing}
+                    currentSwing={currentSwing}
                     videoUrl={videoUrl}
-                    playerSkeleton={playerSkeletonData}
-                    modelSkeleton={modelSkeletonData}
-                    impactFrame={impactFrame}
                   />
                 )}
 

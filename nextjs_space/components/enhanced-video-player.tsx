@@ -55,7 +55,9 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', userHe
   const [batPathPoints, setBatPathPoints] = useState<Point[]>([]);
   const [skeletonJoints, setSkeletonJoints] = useState<{[key: string]: Point}>({});
   
-  // Phase 3: Model Overlay state
+  // Phase 3: Model Overlay state (FEATURE FLAG: DISABLED - unstable)
+  // TODO: Re-enable after v2 joint-only overlay is stable
+  const ENABLE_VIDEO_OVERLAY = false; // Feature flag
   const [showModelOverlay, setShowModelOverlay] = useState(false);
   const [modelVideoUrl, setModelVideoUrl] = useState<string | null>(null);
   const [overlayOpacity, setOverlayOpacity] = useState(50); // 0-100
@@ -775,8 +777,8 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', userHe
           onError={onError}
         />
         
-        {/* Phase 3: Model Video Overlay */}
-        {showModelOverlay && modelVideoUrl && (
+        {/* Phase 3: Model Video Overlay (DISABLED - unstable, use joint-only overlay instead) */}
+        {ENABLE_VIDEO_OVERLAY && showModelOverlay && modelVideoUrl && (
           <video
             ref={modelVideoRef}
             src={modelVideoUrl}
@@ -929,126 +931,128 @@ export function EnhancedVideoPlayer({ videoUrl, userHandedness = 'right', userHe
           </Button>
         </div>
         
-        {/* Phase 3: Model Overlay Controls */}
-        <div className="border-t border-gray-700 pt-2 flex flex-col gap-1">
-          <div className="text-[10px] text-gray-400 px-1 mb-1">MODEL OVERLAY</div>
-          <Button
-            variant={showModelOverlay ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setShowModelOverlay(!showModelOverlay)}
-            className={showModelOverlay ? 'bg-[#F5A623] hover:bg-[#E89815]' : ''}
-            disabled={loadingModel}
-            title="Toggle Pro Model Overlay"
-          >
-            {loadingModel ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-            ) : showModelOverlay ? (
-              <Eye className="w-4 h-4" />
-            ) : (
-              <Users className="w-4 h-4" />
-            )}
-          </Button>
-          
-          {showModelOverlay && (
-            <div className="px-1 py-2 space-y-2">
-              <div className="text-[9px] text-gray-400">Opacity</div>
-              <Slider
-                value={[overlayOpacity]}
-                onValueChange={(value) => setOverlayOpacity(value[0])}
-                min={0}
-                max={100}
-                step={5}
-                className="w-full"
-              />
-              <div className="text-[9px] text-center text-gray-400">{overlayOpacity}%</div>
-              
-              {/* Calibration Toggle */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCalibrationMode(!calibrationMode)}
-                className="w-full mt-2 text-[10px]"
-              >
-                {calibrationMode ? '✓ Done' : '⚙️ Calibrate Fit'}
-              </Button>
-              
-              {/* Calibration Controls */}
-              {calibrationMode && (
-                <div className="space-y-3 pt-2 border-t border-gray-700">
-                  {/* Scale Control */}
-                  <div>
-                    <div className="text-[9px] text-gray-400 mb-1">Size: {Math.round(overlayScale * 100)}%</div>
-                    <Slider
-                      value={[overlayScale * 100]}
-                      onValueChange={(value) => setOverlayScale(value[0] / 100)}
-                      min={50}
-                      max={150}
-                      step={5}
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  {/* Horizontal Position */}
-                  <div>
-                    <div className="text-[9px] text-gray-400 mb-1">↔️ Position: {overlayOffsetX}px</div>
-                    <Slider
-                      value={[overlayOffsetX + 200]}
-                      onValueChange={(value) => setOverlayOffsetX(value[0] - 200)}
-                      min={0}
-                      max={400}
-                      step={5}
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  {/* Vertical Position */}
-                  <div>
-                    <div className="text-[9px] text-gray-400 mb-1">↕️ Position: {overlayOffsetY}px</div>
-                    <Slider
-                      value={[overlayOffsetY + 200]}
-                      onValueChange={(value) => setOverlayOffsetY(value[0] - 200)}
-                      min={0}
-                      max={400}
-                      step={5}
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  {/* Auto-Fit Button */}
-                  {userHeight && modelPlayerHeight && (
-                    <Button
-                      size="sm"
-                      onClick={autoCalibrate}
-                      className="w-full text-[10px] bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                    >
-                      ⚡ Auto-Fit to My Height
-                    </Button>
-                  )}
-                  
-                  {/* Action Buttons */}
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      onClick={resetCalibration}
-                      variant="outline"
-                      className="flex-1 text-[10px]"
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={saveCalibration}
-                      disabled={savingCalibration}
-                      className="flex-1 text-[10px] bg-[#F5A623] hover:bg-[#E89815]"
-                    >
-                      {savingCalibration ? '...' : 'Save'}
-                    </Button>
-                  </div>
-                </div>
+        {/* Phase 3: Model Overlay Controls (HIDDEN - feature disabled for stability) */}
+        {ENABLE_VIDEO_OVERLAY && (
+          <div className="border-t border-gray-700 pt-2 flex flex-col gap-1">
+            <div className="text-[10px] text-gray-400 px-1 mb-1">MODEL OVERLAY</div>
+            <Button
+              variant={showModelOverlay ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setShowModelOverlay(!showModelOverlay)}
+              className={showModelOverlay ? 'bg-[#F5A623] hover:bg-[#E89815]' : ''}
+              disabled={loadingModel}
+              title="Toggle Pro Model Overlay"
+            >
+              {loadingModel ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+              ) : showModelOverlay ? (
+                <Eye className="w-4 h-4" />
+              ) : (
+                <Users className="w-4 h-4" />
               )}
-            </div>
-          )}
-        </div>
+            </Button>
+            
+            {showModelOverlay && (
+              <div className="px-1 py-2 space-y-2">
+                <div className="text-[9px] text-gray-400">Opacity</div>
+                <Slider
+                  value={[overlayOpacity]}
+                  onValueChange={(value) => setOverlayOpacity(value[0])}
+                  min={0}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
+                <div className="text-[9px] text-center text-gray-400">{overlayOpacity}%</div>
+                
+                {/* Calibration Toggle */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCalibrationMode(!calibrationMode)}
+                  className="w-full mt-2 text-[10px]"
+                >
+                  {calibrationMode ? '✓ Done' : '⚙️ Calibrate Fit'}
+                </Button>
+                
+                {/* Calibration Controls */}
+                {calibrationMode && (
+                  <div className="space-y-3 pt-2 border-t border-gray-700">
+                    {/* Scale Control */}
+                    <div>
+                      <div className="text-[9px] text-gray-400 mb-1">Size: {Math.round(overlayScale * 100)}%</div>
+                      <Slider
+                        value={[overlayScale * 100]}
+                        onValueChange={(value) => setOverlayScale(value[0] / 100)}
+                        min={50}
+                        max={150}
+                        step={5}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    {/* Horizontal Position */}
+                    <div>
+                      <div className="text-[9px] text-gray-400 mb-1">↔️ Position: {overlayOffsetX}px</div>
+                      <Slider
+                        value={[overlayOffsetX + 200]}
+                        onValueChange={(value) => setOverlayOffsetX(value[0] - 200)}
+                        min={0}
+                        max={400}
+                        step={5}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    {/* Vertical Position */}
+                    <div>
+                      <div className="text-[9px] text-gray-400 mb-1">↕️ Position: {overlayOffsetY}px</div>
+                      <Slider
+                        value={[overlayOffsetY + 200]}
+                        onValueChange={(value) => setOverlayOffsetY(value[0] - 200)}
+                        min={0}
+                        max={400}
+                        step={5}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    {/* Auto-Fit Button */}
+                    {userHeight && modelPlayerHeight && (
+                      <Button
+                        size="sm"
+                        onClick={autoCalibrate}
+                        className="w-full text-[10px] bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      >
+                        ⚡ Auto-Fit to My Height
+                      </Button>
+                    )}
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        onClick={resetCalibration}
+                        variant="outline"
+                        className="flex-1 text-[10px]"
+                      >
+                        Reset
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={saveCalibration}
+                        disabled={savingCalibration}
+                        className="flex-1 text-[10px] bg-[#F5A623] hover:bg-[#E89815]"
+                      >
+                        {savingCalibration ? '...' : 'Save'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         
         <div className="border-t border-gray-700 pt-2 flex flex-col gap-1">
           <div className="flex gap-1">
