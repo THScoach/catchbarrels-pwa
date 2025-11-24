@@ -125,6 +125,11 @@ model Video {
   views           Int       @default(0) // Track views on shared videos
   sharedAt        DateTime? // When video was first made public
   
+  // OnForm 3D Integration (Future)
+  threeDSource    String?   // "onform" | null - where 3D data came from
+  threeDData      Json?     // 3D metrics from OnForm when available
+  cameraAngle     String?   // "face-on" | "side" | "overhead" - capture angle
+  
   uploadDate      DateTime  @default(now())
   
   // Relations

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BottomNav } from '@/components/bottom-nav';
 import { UploadErrorState } from '@/components/ui/error-state';
+import { OnFormImportPanel } from '@/components/onform/onform-import-panel';
 import { toast } from 'sonner';
 import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info, Link as LinkIcon, Camera, StopCircle, Zap } from 'lucide-react';
 
@@ -20,8 +21,7 @@ export function VideoUploadClient() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // OnForm import states
-  const [onformUrl, setOnformUrl] = useState<string>('');
-  const [importing, setImporting] = useState(false);
+  const [showOnFormPanel, setShowOnFormPanel] = useState(false);
 
   // Camera recording states
   const [recording, setRecording] = useState(false);
@@ -154,66 +154,6 @@ export function VideoUploadClient() {
     setError(null);
     setProgress(0);
     // Reset to allow new upload
-  };
-
-  const handleOnFormImport = async () => {
-    if (!onformUrl.trim()) {
-      setError('Please enter an OnForm share link');
-      return;
-    }
-
-    if (!videoType) {
-      setError('Please select a video type before importing');
-      return;
-    }
-
-    // Basic URL validation
-    if (!onformUrl.includes('getonform.com')) {
-      setError('Please enter a valid OnForm share link (e.g., https://link.getonform.com/view?id=...)');
-      return;
-    }
-
-    setImporting(true);
-    setError(null);
-    setProgress(0);
-
-    try {
-      const response = await fetch('/api/videos/import-onform', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          shareUrl: onformUrl,
-          videoType,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Import failed');
-      }
-
-      setSuccess(true);
-      toast.success('OnForm video imported!', {
-        description: 'Your swing is being analyzed. This may take a few moments.',
-      });
-
-      setTimeout(() => {
-        router.push('/video');
-        router.refresh();
-      }, 1500);
-
-    } catch (err) {
-      console.error('OnForm import error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to import OnForm video';
-      setError(errorMessage);
-      setImporting(false);
-      toast.error('Import failed', {
-        description: errorMessage,
-      });
-    }
   };
 
   // Camera Recording Functions
@@ -384,14 +324,10 @@ export function VideoUploadClient() {
           </button>
           <button
             onClick={() => {
-              setMode('onform');
+              setShowOnFormPanel(true);
               setError(null);
             }}
-            className={`flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg font-medium transition-all ${
-              mode === 'onform'
-                ? 'bg-[#F5A623] text-white'
-                : 'text-gray-400 hover:text-white'
-            }`}
+            className="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg font-medium transition-all text-gray-400 hover:text-white hover:bg-[#F5A623]/10"
           >
             <Zap className="w-5 h-5" />
             <span className="text-xs">OnForm</span>
@@ -434,7 +370,7 @@ export function VideoUploadClient() {
         )}
 
         {/* Video Type Selector */}
-        {!success && !uploading && !importing && (
+        {!success && !uploading && (
           <div className="mb-6">
             <label className="block text-white font-medium mb-2">
               Video Type <span className="text-red-400">*</span>
@@ -673,70 +609,18 @@ export function VideoUploadClient() {
           </div>
         )}
 
-        {/* OnForm Import Mode */}
-        {mode === 'onform' && (
-          <div className="bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-lg p-12">
-            {success ? (
-              <div className="space-y-4 text-center">
-                <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-                <p className="text-white text-lg">Import successful!</p>
-                <p className="text-gray-400">Analyzing your swing...</p>
-              </div>
-            ) : importing ? (
-              <div className="space-y-4 text-center">
-                <Loader2 className="w-16 h-16 text-[#F5A623] mx-auto animate-spin" />
-                <p className="text-white text-lg">Importing OnForm video...</p>
-                <p className="text-gray-400 text-sm">This may take a minute</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="text-center space-y-2">
-                  <LinkIcon className="w-16 h-16 text-[#F5A623] mx-auto" />
-                  <p className="text-white text-lg font-medium">Import from OnForm</p>
-                  <p className="text-gray-400 text-sm">
-                    Paste your OnForm share link to import swing videos
-                  </p>
-                </div>
-
-                <div className="space-y-4 max-w-lg mx-auto">
-                  <div>
-                    <label className="block text-white font-medium mb-2">
-                      OnForm Share Link <span className="text-red-400">*</span>
-                    </label>
-                    <input
-                      type="url"
-                      value={onformUrl}
-                      onChange={(e) => setOnformUrl(e.target.value)}
-                      placeholder="https://link.getonform.com/view?id=..."
-                      className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-[#F5A623] focus:outline-none focus:ring-2 focus:ring-[#F5A623]/20"
-                    />
-                    <p className="text-gray-400 text-xs mt-2">
-                      Get the share link from your OnForm video → Share → Copy Link
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={handleOnFormImport}
-                    disabled={!onformUrl.trim() || !videoType}
-                    className="w-full bg-[#F5A623] hover:bg-[#E89815] disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors"
-                  >
-                    Import Video
-                  </button>
-                </div>
-
-                <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 max-w-lg mx-auto">
-                  <h4 className="text-blue-300 font-medium mb-2">How to get an OnForm share link:</h4>
-                  <ol className="text-gray-300 text-sm space-y-1 list-decimal list-inside">
-                    <li>Open your video in OnForm app</li>
-                    <li>Tap the Share button</li>
-                    <li>Choose "Share via Email/Link"</li>
-                    <li>Copy the link and paste it here</li>
-                  </ol>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* OnForm Import Panel */}
+        <OnFormImportPanel
+          open={showOnFormPanel}
+          onOpenChange={setShowOnFormPanel}
+          onImported={(result) => {
+            toast.success('Video imported successfully!');
+            setTimeout(() => {
+              router.push('/video');
+              router.refresh();
+            }, 1500);
+          }}
+        />
 
         {/* Tips Section */}
         <div className="mt-6 bg-gray-800/30 border border-gray-700 rounded-lg p-4">
