@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, MicOff } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,10 +17,16 @@ interface Message {
 interface GoatyFeedbackBlockProps {
   messages: Message[];
   onSendMessage: (text: string) => void;
-  hasPreviousSwing?: boolean; // For "Compare to last swing" chip
+  hasPreviousSwing?: boolean;
+  isVisible?: boolean; // Control visibility via toggle
 }
 
-export function GoatyFeedbackBlock({ messages, onSendMessage, hasPreviousSwing = false }: GoatyFeedbackBlockProps) {
+export function GoatyFeedbackBlock({ 
+  messages, 
+  onSendMessage, 
+  hasPreviousSwing = false,
+  isVisible = true 
+}: GoatyFeedbackBlockProps) {
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
@@ -58,8 +64,10 @@ export function GoatyFeedbackBlock({ messages, onSendMessage, hasPreviousSwing =
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (isVisible) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isVisible]);
 
   const handleSend = () => {
     if (input.trim()) {
@@ -138,112 +146,109 @@ Keep it to 3 bullet points: better / same / worse.`
     setInput(fullPrompt);
   };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.4 }}
-    >
-      <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700 p-4">
-        {/* Header */}
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-white mb-1">
-            AI Coach
-          </h3>
-          <p className="text-sm text-gray-400">
-            Ask about your swing, get personalized feedback
-          </p>
-        </div>
+  if (!isVisible) return null;
 
-        {/* Message area */}
-        <div className="mb-4 max-h-[300px] overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-          {messages.length === 0 && (
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-              <p className="text-sm text-blue-200">
-                👋 Hey! I'm your AI baseball coach. I've analyzed your swing. 
-                Want to know more about your results or how to improve? 
-                Tap a question below or ask me anything!
-              </p>
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: 'auto' }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700 p-4">
+          {/* Header */}
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-white mb-1">
+              Ask GOATY
+            </h3>
+            <p className="text-sm text-gray-400">
+              Get direct feedback on your swing
+            </p>
+          </div>
+
+          {/* Response area - only show if there are messages */}
+          {messages.length > 0 && (
+            <div className="mb-4 max-h-[300px] overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+              {messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`p-3 rounded-lg ${
+                    msg.role === 'user'
+                      ? 'bg-orange-500/20 border border-orange-500/30 ml-8'
+                      : 'bg-gray-700/50 border border-gray-600 mr-8'
+                  }`}
+                >
+                  <p className="text-sm text-gray-200 whitespace-pre-wrap">{msg.content}</p>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
           )}
-          
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`p-3 rounded-lg ${
-                msg.role === 'user'
-                  ? 'bg-orange-500/20 border border-orange-500/30 ml-8'
-                  : 'bg-gray-700/50 border border-gray-600 mr-8'
+
+          {/* Quick Action Chips */}
+          <div className="mb-4">
+            <p className="text-xs text-gray-400 mb-2">Quick Questions:</p>
+            <div className="flex flex-wrap gap-2">
+              {quickPrompts.map((prompt, idx) => (
+                <Badge
+                  key={idx}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-orange-500/20 border-orange-500/30 text-orange-300 text-xs px-2 py-1"
+                  onClick={() => handleQuickPrompt(prompt.fullPrompt)}
+                >
+                  {prompt.label}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Multiline Text Input */}
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your question or instructions for GOATY about this swing or drill…"
+            className="mb-3 min-h-[80px] bg-gray-900/50 border-gray-600 text-white placeholder:text-gray-500 resize-none"
+          />
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Send Text
+            </Button>
+            <Button
+              onClick={handleVoiceRecord}
+              variant="outline"
+              className={`flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 ${
+                isRecording ? 'bg-red-500/20 border-red-500/50 text-red-300' : ''
               }`}
             >
-              <p className="text-sm text-gray-200 whitespace-pre-wrap">{msg.content}</p>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Quick Action Chips */}
-        <div className="mb-4">
-          <p className="text-xs text-gray-400 mb-2">Quick Questions:</p>
-          <div className="flex flex-wrap gap-2">
-            {quickPrompts.map((prompt, idx) => (
-              <Badge
-                key={idx}
-                variant="outline"
-                className="cursor-pointer hover:bg-orange-500/20 border-orange-500/30 text-orange-300 text-xs px-2 py-1"
-                onClick={() => handleQuickPrompt(prompt.fullPrompt)}
-              >
-                {prompt.label}
-              </Badge>
-            ))}
+              {isRecording ? (
+                <>
+                  <MicOff className="w-4 h-4 mr-2 animate-pulse" />
+                  Stop Recording
+                </>
+              ) : (
+                <>
+                  <Mic className="w-4 h-4 mr-2" />
+                  Record Voice
+                </>
+              )}
+            </Button>
           </div>
-        </div>
 
-        {/* Multiline Text Input */}
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your question here..."
-          className="mb-3 min-h-[80px] bg-gray-900/50 border-gray-600 text-white placeholder:text-gray-500 resize-none"
-        />
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim()}
-            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium"
-          >
-            <Send className="w-4 h-4 mr-2" />
-            Send Text
-          </Button>
-          <Button
-            onClick={handleVoiceRecord}
-            variant="outline"
-            className={`flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 ${
-              isRecording ? 'bg-red-500/20 border-red-500/50 text-red-300' : ''
-            }`}
-          >
-            {isRecording ? (
-              <>
-                <MicOff className="w-4 h-4 mr-2 animate-pulse" />
-                Stop Recording
-              </>
-            ) : (
-              <>
-                <Mic className="w-4 h-4 mr-2" />
-                Record Voice
-              </>
-            )}
-          </Button>
-        </div>
-
-        {isRecording && (
-          <p className="text-xs text-red-300 mt-2 text-center animate-pulse">
-            🎙️ Listening... Speak now!
-          </p>
-        )}
-      </Card>
-    </motion.div>
+          {isRecording && (
+            <p className="text-xs text-red-300 mt-2 text-center animate-pulse">
+              🎙️ Listening... Speak now!
+            </p>
+          )}
+        </Card>
+      </motion.div>
+    </AnimatePresence>
   );
 }

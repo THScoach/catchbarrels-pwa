@@ -83,6 +83,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
   // Player reflection and GOATY chat state
   const [playerReflection, setPlayerReflection] = useState('');
   const [goatyMessages, setGoatyMessages] = useState<Array<{role: 'system' | 'user' | 'assistant', content: string}>>([]);
+  const [isGoatyVisible, setIsGoatyVisible] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
 
   // Fetch signed URL for video playback
@@ -796,6 +797,21 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                         }}
                       />
 
+                      {/* Ask GOATY Toggle */}
+                      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg mb-4">
+                        <div>
+                          <label htmlFor="goaty-toggle" className="text-sm font-semibold text-white cursor-pointer">
+                            Ask GOATY
+                          </label>
+                          <p className="text-xs text-gray-400">Get direct feedback on this swing</p>
+                        </div>
+                        <Switch
+                          id="goaty-toggle"
+                          checked={isGoatyVisible}
+                          onCheckedChange={setIsGoatyVisible}
+                        />
+                      </div>
+
                       {/* Mini Dashboard Strip */}
                       <MiniDashboardStrip
                         biggestFix={`${biggestFix.name} \u2013 ${biggestFix.detail}`}
@@ -837,6 +853,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                         messages={goatyMessages}
                         onSendMessage={handleSendGoatyMessage}
                         hasPreviousSwing={!!video.sessionId}
+                        isVisible={isGoatyVisible}
                       />
 
                       {/* Drill Card */}
