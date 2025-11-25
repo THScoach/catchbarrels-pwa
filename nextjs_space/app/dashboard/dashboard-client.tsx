@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { StatCardSkeleton, VideoCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
-import { mapEngineMetricsFromScores } from '@/lib/engine-metrics-config';
+import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores } from '@/lib/engine-metrics-config';
 
 export function DashboardClient({ 
   user, 
@@ -199,28 +199,20 @@ export function DashboardClient({
           <p className="text-sm text-gray-400 mb-4">Motion (Timing) • Stability • Sequencing</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ScoreCard
-              title="Anchor"
+              title="ANCHOR (Feet & Ground)"
               score={scores.anchor}
               icon="⚓"
-              description="Lower Body"
+              description="How well you use the ground to stay balanced and create power"
               color="blue"
-              subCategories={[
-                { 
-                  name: 'Motion (40%)', 
-                  score: Math.round(((scores.anchorSubs?.stance || 0) + (scores.anchorSubs?.weightShift || 0)) / 2), 
-                  description: 'Load→Launch timing, stride timing'
-                },
-                { 
-                  name: 'Stability (40%)', 
-                  score: Math.round(((scores.anchorSubs?.groundConnection || 0) + (scores.anchorSubs?.lowerBodyMechanics || 0)) / 2), 
-                  description: 'Knee angles, head stability'
-                },
-                { 
-                  name: 'Sequencing (20%)', 
-                  score: scores.anchorSubs?.lowerBodyMechanics || 0, 
-                  description: 'Pelvis initiates movement'
-                },
-              ]}
+              detailedMetrics={mapAnchorMetricsFromScores({
+                anchorMotion: Math.round(((scores.anchorSubs?.stance || 0) + (scores.anchorSubs?.weightShift || 0)) / 2),
+                anchorStability: Math.round(((scores.anchorSubs?.groundConnection || 0) + (scores.anchorSubs?.lowerBodyMechanics || 0)) / 2),
+                anchorSequencing: scores.anchorSubs?.lowerBodyMechanics || 0,
+                anchorStance: scores.anchorSubs?.stance || 0,
+                anchorWeightShift: scores.anchorSubs?.weightShift || 0,
+                anchorGroundConnection: scores.anchorSubs?.groundConnection || 0,
+                anchorLowerBodyMechanics: scores.anchorSubs?.lowerBodyMechanics || 0
+              })}
             />
             <ScoreCard
               title="ENGINE (Hips & Shoulders)"

@@ -1,5 +1,5 @@
 /**
- * ENGINE Metrics Configuration
+ * BARRELS Metrics Configuration (ANCHOR + ENGINE + WHIP)
  * Kid-friendly language for 8th grade / HS hitters with GOAT pattern guidance
  */
 
@@ -110,6 +110,95 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
 };
 
 /**
+ * ANCHOR (Feet & Ground) - How well you use the ground to stay balanced and create power
+ */
+export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
+  // MOTION (40%) - How your feet and legs move
+  loadIntoBackLeg: {
+    name: 'Load Into Back Leg',
+    what_it_is: 'How well you sink into your back leg before you start the swing.',
+    why_it_matters: 'Loading your back leg stores energy like a coiled spring, ready to explode.',
+    goat_pattern: 'In GOAT swings, the back knee flexes and the back hip loads down and back, not just shifting weight.',
+    category: 'motion',
+    weight: 33
+  },
+  
+  strideMove: {
+    name: 'Stride Move',
+    what_it_is: 'How smooth and controlled your step or stride is toward the pitcher.',
+    why_it_matters: 'A controlled stride helps you stay balanced and on-time.',
+    goat_pattern: 'In GOAT swings, the stride is smooth and controlled, not too big or rushed, landing soft.',
+    category: 'motion',
+    weight: 33
+  },
+  
+  weightShift: {
+    name: 'Weight Shift',
+    what_it_is: 'How well your weight moves from your back leg into your front leg as you swing.',
+    why_it_matters: 'Great swings transfer energy from back to front, not staying stuck on the back side.',
+    goat_pattern: 'In GOAT swings, the weight flows smoothly forward as the swing happens, driving through the ball.',
+    category: 'motion',
+    weight: 34
+  },
+  
+  // STABILITY (40%) - How balanced and strong your base is
+  headBalance: {
+    name: 'Head Balance',
+    what_it_is: 'How steady your head stays while your body moves around it.',
+    why_it_matters: 'A steady head means better vision and more consistent contact.',
+    goat_pattern: 'In GOAT swings, the head stays level and quiet, not dipping or pulling off the ball.',
+    category: 'stability',
+    weight: 33
+  },
+  
+  baseWidth: {
+    name: 'Base Width',
+    what_it_is: 'How strong and athletic your stance is—feet not too close, not too wide.',
+    why_it_matters: 'A good base lets you generate power and stay balanced through the swing.',
+    goat_pattern: 'In GOAT swings, the feet are shoulder-width or slightly wider, giving a strong, athletic foundation.',
+    category: 'stability',
+    weight: 33
+  },
+  
+  frontSideBrace: {
+    name: 'Front Side Brace',
+    what_it_is: 'How firm your front leg and front side are at and after contact.',
+    why_it_matters: 'A firm front side blocks your forward momentum and lets your body rotate hard.',
+    goat_pattern: 'In GOAT swings, the front leg straightens and firms up at contact, not collapsing or soft.',
+    category: 'stability',
+    weight: 34
+  },
+  
+  // SEQUENCING (20%) - Order and timing of lower body movement
+  loadStrideTimingAnchor: {
+    name: 'Load → Stride Timing',
+    what_it_is: 'How well your load into the back leg flows into your stride toward the pitcher.',
+    why_it_matters: 'Shows how smoothly your lower body starts the swing sequence.',
+    goat_pattern: 'In GOAT swings, the load and stride feel connected, not jerky or separated.',
+    category: 'sequencing',
+    weight: 33
+  },
+  
+  groundUpStart: {
+    name: 'Ground-Up Start',
+    what_it_is: 'Whether your swing starts from the ground and legs instead of just the hands.',
+    why_it_matters: 'Power comes from the ground up—legs first, then everything else.',
+    goat_pattern: 'In GOAT swings, you can see the legs drive first, then the hips, then the torso and arms.',
+    category: 'sequencing',
+    weight: 33
+  },
+  
+  anchorSequence: {
+    name: 'Anchor Sequence',
+    what_it_is: 'The overall order of how your feet, legs, and weight shift work together.',
+    why_it_matters: 'Summarizes how well your lower body foundation is working.',
+    goat_pattern: 'GOAT swings show a clear pattern: load → stride → drive from the ground.',
+    category: 'sequencing',
+    weight: 34
+  }
+};
+
+/**
  * Calculate grade and color based on score (0-100)
  */
 export function getGradeFromScore(score: number | null): { grade: MetricGrade; color: 'green' | 'yellow' | 'red' | 'gray' } {
@@ -189,6 +278,78 @@ export function mapEngineMetricsFromScores(scores: any): MetricValue[] {
       ...ENGINE_METRICS.engineSequence,
       value: engineSequencing,
       ...getGradeFromScore(engineSequencing)
+    }
+  ];
+  
+  return metrics;
+}
+
+/**
+ * Map existing database fields to ANCHOR metrics
+ * This allows us to use existing data while introducing new UI
+ */
+export function mapAnchorMetricsFromScores(scores: any): MetricValue[] {
+  // Extract relevant scores
+  const anchorMotion = scores?.anchorMotion || 0;
+  const anchorStability = scores?.anchorStability || 0;
+  const anchorSequencing = scores?.anchorSequencing || 0;
+  const anchorStance = scores?.anchorStance || 0;
+  const anchorWeightShift = scores?.anchorWeightShift || 0;
+  const anchorGroundConnection = scores?.anchorGroundConnection || 0;
+  const anchorLowerBodyMechanics = scores?.anchorLowerBodyMechanics || 0;
+  
+  // For now, map existing scores to the 9 metrics
+  // In the future, these will be calculated individually in swing-analyzer.ts
+  const metrics: MetricValue[] = [
+    // MOTION (40%)
+    {
+      ...ANCHOR_METRICS.loadIntoBackLeg,
+      value: anchorStance,
+      ...getGradeFromScore(anchorStance)
+    },
+    {
+      ...ANCHOR_METRICS.strideMove,
+      value: Math.round(anchorMotion * 0.5),
+      ...getGradeFromScore(Math.round(anchorMotion * 0.5))
+    },
+    {
+      ...ANCHOR_METRICS.weightShift,
+      value: anchorWeightShift,
+      ...getGradeFromScore(anchorWeightShift)
+    },
+    
+    // STABILITY (40%)
+    {
+      ...ANCHOR_METRICS.headBalance,
+      value: Math.round(anchorStability * 0.35),
+      ...getGradeFromScore(Math.round(anchorStability * 0.35))
+    },
+    {
+      ...ANCHOR_METRICS.baseWidth,
+      value: Math.round(anchorGroundConnection * 0.5),
+      ...getGradeFromScore(Math.round(anchorGroundConnection * 0.5))
+    },
+    {
+      ...ANCHOR_METRICS.frontSideBrace,
+      value: Math.round(anchorStability * 0.35),
+      ...getGradeFromScore(Math.round(anchorStability * 0.35))
+    },
+    
+    // SEQUENCING (20%)
+    {
+      ...ANCHOR_METRICS.loadStrideTimingAnchor,
+      value: Math.round(anchorSequencing * 0.4),
+      ...getGradeFromScore(Math.round(anchorSequencing * 0.4))
+    },
+    {
+      ...ANCHOR_METRICS.groundUpStart,
+      value: Math.round(anchorLowerBodyMechanics * 0.6),
+      ...getGradeFromScore(Math.round(anchorLowerBodyMechanics * 0.6))
+    },
+    {
+      ...ANCHOR_METRICS.anchorSequence,
+      value: anchorSequencing,
+      ...getGradeFromScore(anchorSequencing)
     }
   ];
   

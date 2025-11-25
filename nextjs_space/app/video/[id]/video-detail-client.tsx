@@ -19,7 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { mapEngineMetricsFromScores } from '@/lib/engine-metrics-config';
+import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores } from '@/lib/engine-metrics-config';
 import { ProgressCharts } from '@/components/progress-charts';
 
 export function VideoDetailClient({ video, previousScores, personalBests, userHeight, userHandedness }: any) {
@@ -753,28 +753,20 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                   <p className="text-sm text-gray-400 mb-4">Motion (Timing) • Stability • Sequencing</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <ScoreCard 
-                      title="Anchor" 
+                      title="ANCHOR (Feet & Ground)" 
                       score={video.anchor} 
                       icon="⚓" 
-                      description="Lower Body" 
+                      description="How well you use the ground to stay balanced and create power" 
                       color="blue"
-                      subCategories={[
-                        { 
-                          name: 'Motion (40%)', 
-                          score: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2), 
-                          description: 'Load→Launch timing, stride timing'
-                        },
-                        { 
-                          name: 'Stability (40%)', 
-                          score: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2), 
-                          description: 'Knee angles, head stability'
-                        },
-                        { 
-                          name: 'Sequencing (20%)', 
-                          score: video.anchorLowerBodyMechanics || 0, 
-                          description: 'Pelvis initiates movement'
-                        },
-                      ]}
+                      detailedMetrics={mapAnchorMetricsFromScores({
+                        anchorMotion: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2),
+                        anchorStability: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2),
+                        anchorSequencing: video.anchorLowerBodyMechanics || 0,
+                        anchorStance: video.anchorStance || 0,
+                        anchorWeightShift: video.anchorWeightShift || 0,
+                        anchorGroundConnection: video.anchorGroundConnection || 0,
+                        anchorLowerBodyMechanics: video.anchorLowerBodyMechanics || 0
+                      })}
                     />
                     <ScoreCard 
                       title="ENGINE (Hips & Shoulders)" 

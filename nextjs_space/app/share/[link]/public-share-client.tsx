@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, Share2, TrendingUp, User, Award, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScoreCard } from '@/components/score-card';
-import { mapEngineMetricsFromScores } from '@/lib/engine-metrics-config';
+import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores } from '@/lib/engine-metrics-config';
 
 interface PublicShareClientProps {
   video: any;
@@ -164,28 +164,20 @@ export default function PublicShareClient({ video }: PublicShareClientProps) {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {video.anchor && (
                       <ScoreCard
-                        title="Anchor"
+                        title="ANCHOR (Feet & Ground)"
                         score={video.anchor}
                         icon="⚓"
-                        description="Lower Body"
+                        description="How well you use the ground to stay balanced and create power"
                         color="blue"
-                        subCategories={[
-                          { 
-                            name: 'Motion (40%)', 
-                            score: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2), 
-                            description: 'Load→Launch timing'
-                          },
-                          { 
-                            name: 'Stability (40%)', 
-                            score: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2), 
-                            description: 'Knee angles, head stability'
-                          },
-                          { 
-                            name: 'Sequencing (20%)', 
-                            score: video.anchorLowerBodyMechanics || 0, 
-                            description: 'Pelvis initiates'
-                          }
-                        ].filter(s => s.score > 0)}
+                        detailedMetrics={mapAnchorMetricsFromScores({
+                          anchorMotion: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2),
+                          anchorStability: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2),
+                          anchorSequencing: video.anchorLowerBodyMechanics || 0,
+                          anchorStance: video.anchorStance || 0,
+                          anchorWeightShift: video.anchorWeightShift || 0,
+                          anchorGroundConnection: video.anchorGroundConnection || 0,
+                          anchorLowerBodyMechanics: video.anchorLowerBodyMechanics || 0
+                        })}
                       />
                     )}
                     
