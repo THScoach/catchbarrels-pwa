@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, Share2, TrendingUp, User, Award, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScoreCard } from '@/components/score-card';
+import { mapEngineMetricsFromScores } from '@/lib/engine-metrics-config';
 
 interface PublicShareClientProps {
   video: any;
@@ -190,28 +191,19 @@ export default function PublicShareClient({ video }: PublicShareClientProps) {
                     
                     {video.engine && (
                       <ScoreCard
-                        title="Engine"
+                        title="ENGINE (Hips & Shoulders)"
                         score={video.engine}
                         icon="🔄"
-                        description="Trunk/Core"
+                        description="How well your hips and shoulders work together to create power"
                         color="green"
-                        subCategories={[
-                          { 
-                            name: 'Motion (40%)', 
-                            score: Math.round(((video.engineHipRotation || 0) + (video.engineCorePower || 0)) / 2), 
-                            description: 'Pelvis→Torso timing'
-                          },
-                          { 
-                            name: 'Stability (40%)', 
-                            score: video.engineSeparation || 0, 
-                            description: 'X-Factor consistency'
-                          },
-                          { 
-                            name: 'Sequencing (20%)', 
-                            score: video.engineTorsoMechanics || 0, 
-                            description: 'Pelvis→Torso order'
-                          }
-                        ].filter(s => s.score > 0)}
+                        detailedMetrics={mapEngineMetricsFromScores({
+                          engineMotion: Math.round(((video.engineHipRotation || 0) + (video.engineCorePower || 0)) / 2),
+                          engineStability: video.engineSeparation || 0,
+                          engineSequencing: video.engineTorsoMechanics || 0,
+                          engineHipRotation: video.engineHipRotation || 0,
+                          engineTorsoMechanics: video.engineTorsoMechanics || 0,
+                          engineCorePower: video.engineCorePower || 0
+                        })}
                       />
                     )}
                     

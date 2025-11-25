@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { StatCardSkeleton, VideoCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
+import { mapEngineMetricsFromScores } from '@/lib/engine-metrics-config';
 
 export function DashboardClient({ 
   user, 
@@ -222,28 +223,19 @@ export function DashboardClient({
               ]}
             />
             <ScoreCard
-              title="Engine"
+              title="ENGINE (Hips & Shoulders)"
               score={scores.engine}
               icon="🔄"
-              description="Trunk/Core"
+              description="How well your hips and shoulders work together to create power"
               color="green"
-              subCategories={[
-                { 
-                  name: 'Motion (40%)', 
-                  score: Math.round(((scores.engineSubs?.hipRotation || 0) + (scores.engineSubs?.corePower || 0)) / 2), 
-                  description: 'Pelvis→Torso gap timing'
-                },
-                { 
-                  name: 'Stability (40%)', 
-                  score: scores.engineSubs?.separation || 0, 
-                  description: 'X-Factor, spine tilt consistency'
-                },
-                { 
-                  name: 'Sequencing (20%)', 
-                  score: scores.engineSubs?.torsoMechanics || 0, 
-                  description: 'Pelvis→Torso order correct'
-                },
-              ]}
+              detailedMetrics={mapEngineMetricsFromScores({
+                engineMotion: Math.round(((scores.engineSubs?.hipRotation || 0) + (scores.engineSubs?.corePower || 0)) / 2),
+                engineStability: scores.engineSubs?.separation || 0,
+                engineSequencing: scores.engineSubs?.torsoMechanics || 0,
+                engineHipRotation: scores.engineSubs?.hipRotation || 0,
+                engineTorsoMechanics: scores.engineSubs?.torsoMechanics || 0,
+                engineCorePower: scores.engineSubs?.corePower || 0
+              })}
             />
             <ScoreCard
               title="Whip"
