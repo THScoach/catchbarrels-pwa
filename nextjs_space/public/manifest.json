@@ -1,27 +1,27 @@
 {
-  "name": "BARRELS Baseball Training",
+  "name": "BARRELS - Catch Some Barrels",
   "short_name": "BARRELS",
   "description": "AI-Powered Baseball Swing Analysis & Training",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#1a2332",
-  "theme_color": "#F5A623",
+  "background_color": "#0D0D0D",
+  "theme_color": "#F5B942",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/barrels-logo-512.png",
+      "src": "/barrels-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/barrels-logo-512.png",
+      "src": "/barrels-icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/barrels-logo-512.png",
+      "src": "/barrels-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

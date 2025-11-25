@@ -6,12 +6,13 @@ import { useSession } from 'next-auth/react';
 import { Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CoachRickDrawer } from './coach-rick-drawer';
+import Image from 'next/image';
 
-interface GoatyHeaderProps {
+interface BarrelsHeaderProps {
   activeTab?: 'dashboard' | 'new-lesson' | 'history';
 }
 
-export default function GoatyHeader({ activeTab }: GoatyHeaderProps) {
+export default function BarrelsHeader({ activeTab }: BarrelsHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session } = useSession() || {};
@@ -37,29 +38,35 @@ export default function GoatyHeader({ activeTab }: GoatyHeaderProps) {
 
   return (
     <>
-      {/* GOATY Header Card */}
+      {/* BARRELS Header Card */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="bg-gradient-to-r from-[#1a2332] to-[#0f1621] border-b border-[#2a3f5f] sticky top-0 z-20"
+        className="bg-gradient-to-r from-barrels-black-light to-barrels-black border-b border-barrels-black-lighter sticky top-0 z-20"
       >
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            {/* Left Side - GOAT Icon + Title + Subtitle */}
+            {/* Left Side - BARRELS Logo + Title + Tagline */}
             <div className="flex items-center space-x-3">
-              {/* GOAT Mascot Icon */}
-              <div className="text-5xl" role="img" aria-label="GOAT mascot">
-                🐐
+              {/* BARRELS Logo Icon */}
+              <div className="relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0">
+                <Image
+                  src="/barrels-icon.png"
+                  alt="BARRELS Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
               
-              {/* Title and Subtitle */}
+              {/* Title and Tagline */}
               <div className="flex flex-col">
-                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
-                  Train with GOATY
+                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-barrels-gold to-barrels-gold-light bg-clip-text text-transparent">
+                  BARRELS
                 </h1>
-                <p className="text-sm md:text-base text-gray-400">
-                  Let's unleash your inner GOAT, {firstName}!
+                <p className="text-xs md:text-sm text-barrels-neutral-gray">
+                  Catch Some Barrels, {firstName}!
                 </p>
               </div>
             </div>
@@ -67,10 +74,10 @@ export default function GoatyHeader({ activeTab }: GoatyHeaderProps) {
             {/* Right Side - Menu Icon */}
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="p-2 rounded-lg bg-[#1a2332] hover:bg-[#2a3f5f] border border-[#2a3f5f] hover:border-[#3a5f7f] transition-all duration-200"
+              className="p-2 rounded-lg bg-barrels-black-light hover:bg-barrels-black-lighter border border-barrels-black-lighter hover:border-barrels-blue transition-all duration-200"
               aria-label="Open menu"
             >
-              <Menu className="h-6 w-6 text-gray-300" />
+              <Menu className="h-6 w-6 text-barrels-neutral" />
             </button>
           </div>
         </div>
@@ -81,7 +88,7 @@ export default function GoatyHeader({ activeTab }: GoatyHeaderProps) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-[#0f1621] border-b border-[#2a3f5f] sticky top-[88px] md:top-[96px] z-10"
+        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[88px] md:top-[96px] z-10"
       >
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="grid grid-cols-3 gap-2">
@@ -94,17 +101,18 @@ export default function GoatyHeader({ activeTab }: GoatyHeaderProps) {
                   className={`
                     relative px-4 py-3 rounded-lg font-semibold text-sm md:text-base
                     transition-all duration-300 ease-in-out
-                    ${isActive
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-2 border-orange-400 shadow-lg shadow-orange-500/30'
-                      : 'bg-[#1a2332] text-gray-400 border border-[#2a3f5f] hover:bg-[#2a3f5f] hover:text-gray-200 hover:border-[#3a5f7f]'
+                    ${
+                      isActive
+                        ? 'bg-gradient-to-r from-barrels-gold to-barrels-gold-light text-barrels-black border-2 border-barrels-gold-dark shadow-lg shadow-barrels-gold/30'
+                        : 'bg-barrels-black-light text-barrels-neutral-gray border border-barrels-black-lighter hover:bg-barrels-black-lighter hover:text-barrels-neutral hover:border-barrels-blue'
                     }
                   `}
                 >
-                  {/* Active tab indicator line */}
+                  {/* Active tab indicator */}
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 opacity-20"
+                      className="absolute inset-0 rounded-lg bg-gradient-to-r from-barrels-gold to-barrels-gold-light opacity-20"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}

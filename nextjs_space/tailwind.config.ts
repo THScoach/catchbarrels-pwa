@@ -1,5 +1,6 @@
 
 import type { Config } from 'tailwindcss';
+import { barrelsColors } from './lib/barrels-theme';
 
 const config: Config = {
   darkMode: ['class'],
@@ -11,6 +12,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // BARRELS Brand Colors
+        ...barrelsColors,
+        
+        // Shadcn UI System Colors
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

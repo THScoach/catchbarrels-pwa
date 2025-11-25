@@ -160,7 +160,7 @@ Keep it to 3 bullet points: better / same / worse.`
           {/* Header */}
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white mb-1">
-              Ask GOATY
+              Ask Coach
             </h3>
             <p className="text-sm text-gray-400">
               Get direct feedback on your swing
@@ -207,7 +207,7 @@ Keep it to 3 bullet points: better / same / worse.`
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your question or instructions for GOATY about this swing or drill…"
+            placeholder="Type your question or instructions for Coach about this swing or drill…"
             className="mb-3 min-h-[80px] bg-gray-900/50 border-gray-600 text-white placeholder:text-gray-500 resize-none"
           />
 
