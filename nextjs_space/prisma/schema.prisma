@@ -159,6 +159,8 @@ model TrainingSession {
   
   sessionName     String?   // Optional custom name (e.g., "Morning Practice")
   location        String?   // Where the session took place
+  lessonFocus     String?   // What the athlete is working on this lesson (for AI context)
+  videoType       String?   // Type of swings in this lesson (swing, drill, etc.)
   
   createdAt       DateTime  @default(now())
   endedAt         DateTime? // null = session is active, non-null = session ended
