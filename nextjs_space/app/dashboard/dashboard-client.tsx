@@ -7,10 +7,12 @@ import { Upload, TrendingUp, Play, ChevronRight, FileText, Menu } from 'lucide-r
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { BottomNav } from '@/components/bottom-nav'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import BarrelsHeader from '@/components/barrels-header'
 import { CoachRickDrawer } from '@/components/coach-rick-drawer'
+import { Tile, TileHeader } from '@/components/ui/tile'
+import { PrimaryButton, SecondaryButton } from '@/components/ui/barrels-button'
+import { Pill } from '@/components/ui/pill'
+import { ScoreItem, ScoreGrid } from '@/components/ui/score-item'
 
 interface DashboardClientProps {
   user: any
@@ -42,9 +44,9 @@ export default function DashboardClient({
   const alternateDrills = recommendedDrills?.slice(1, 4) || []
 
   return (
-    <div className="min-h-screen bg-barrels-black pb-24">
+    <div className="min-h-screen bg-barrels-bg pb-24">
       {/* BARRELS Header with Logo */}
-      <header className="px-4 pt-4 pb-3 border-b border-barrels-black-lighter bg-gradient-to-r from-barrels-black-light to-barrels-black">
+      <header className="px-4 pt-4 pb-3 border-b border-barrels-border bg-gradient-to-r from-barrels-surface to-barrels-bg">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <img 
             src="/barrels-logo-transparent.png" 
@@ -55,10 +57,10 @@ export default function DashboardClient({
           {/* Menu Button */}
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="p-2 rounded-lg bg-barrels-black-light hover:bg-barrels-black-lighter border border-barrels-black-lighter hover:border-barrels-blue transition-all duration-200"
+            className="p-2 rounded-lg bg-barrels-surface hover:bg-barrels-border border border-barrels-border hover:border-barrels-blue transition-all duration-200"
             aria-label="Open menu"
           >
-            <Menu className="h-6 w-6 text-barrels-neutral" />
+            <Menu className="h-6 w-6 text-barrels-text" />
           </button>
         </div>
       </header>
@@ -73,7 +75,7 @@ export default function DashboardClient({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="relative bg-gradient-to-br from-barrels-gold/20 via-barrels-gold-light/20 to-barrels-gold/10 border-2 border-barrels-gold/40 rounded-3xl p-12 shadow-2xl overflow-hidden"
+          className="relative bg-gradient-to-br from-barrels-gold/20 via-barrels-gold-soft/20 to-barrels-gold/10 border-2 border-barrels-gold/40 rounded-3xl p-12 shadow-2xl overflow-hidden"
         >
           {/* Background gradient accent */}
           <div className="absolute inset-0 bg-gradient-to-tr from-barrels-gold-dark/10 to-transparent pointer-events-none" />
@@ -81,10 +83,10 @@ export default function DashboardClient({
           <div className="relative z-10">
             {/* Title */}
             <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-barrels-gold to-barrels-gold-light bg-clip-text text-transparent uppercase tracking-wide mb-2">
+              <h2 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-barrels-gold to-barrels-gold-soft bg-clip-text text-transparent uppercase tracking-wide mb-2">
                 BARREL Score
               </h2>
-              <p className="text-sm text-barrels-neutral-gray">Your Overall Swing Performance</p>
+              <p className="text-sm text-barrels-muted">Your Overall Swing Performance</p>
             </div>
 
             {/* Large centered score */}
@@ -93,7 +95,7 @@ export default function DashboardClient({
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-9xl md:text-[12rem] font-black bg-gradient-to-br from-barrels-gold to-barrels-gold-light bg-clip-text text-transparent drop-shadow-2xl leading-none"
+                className="text-9xl md:text-[12rem] font-black bg-gradient-to-br from-barrels-gold to-barrels-gold-soft bg-clip-text text-transparent drop-shadow-2xl leading-none"
               >
                 {scores?.barrel || '—'}
               </motion.div>
@@ -101,12 +103,12 @@ export default function DashboardClient({
 
             {/* Progress bar */}
             {scores?.barrel > 0 && (
-              <div className="w-full bg-barrels-black-lighter/50 rounded-full h-4 mb-6 overflow-hidden">
+              <div className="w-full bg-barrels-border/50 rounded-full h-4 mb-6 overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${scores.barrel}%` }}
                   transition={{ duration: 1, delay: 0.4 }}
-                  className="h-4 rounded-full bg-gradient-to-r from-barrels-gold to-barrels-gold-light shadow-lg shadow-barrels-gold/30"
+                  className="h-4 rounded-full bg-gradient-to-r from-barrels-gold to-barrels-gold-soft shadow-lg shadow-barrels-gold/30"
                 />
               </div>
             )}
@@ -114,17 +116,17 @@ export default function DashboardClient({
             {/* Mini sub-scores */}
             {scores?.barrel > 0 && (
               <div className="flex gap-3 justify-center text-sm">
-                <div className="bg-barrels-blue/20 rounded-xl px-4 py-3 text-center border border-barrels-blue/30 flex-1 max-w-[100px]">
-                  <div className="text-barrels-blue-light font-semibold text-xs mb-1">ANCHOR</div>
-                  <div className="text-white font-black text-xl">{scores.anchor || 0}</div>
+                <div className="bg-barrels-surface rounded-xl px-4 py-3 text-center border border-barrels-border flex-1 max-w-[100px]">
+                  <div className="text-barrels-gold font-semibold text-xs mb-1">ANCHOR</div>
+                  <div className="text-barrels-text font-black text-xl">{scores.anchor || 0}</div>
                 </div>
-                <div className="bg-barrels-gold/20 rounded-xl px-4 py-3 text-center border border-barrels-gold/30 flex-1 max-w-[100px]">
-                  <div className="text-barrels-gold-light font-semibold text-xs mb-1">ENGINE</div>
-                  <div className="text-white font-black text-xl">{scores.engine || 0}</div>
+                <div className="bg-barrels-gold/10 rounded-xl px-4 py-3 text-center border border-barrels-gold/30 flex-1 max-w-[100px]">
+                  <div className="text-barrels-gold-soft font-semibold text-xs mb-1">ENGINE</div>
+                  <div className="text-barrels-text font-black text-xl">{scores.engine || 0}</div>
                 </div>
-                <div className="bg-barrels-black-lighter/40 rounded-xl px-4 py-3 text-center border border-barrels-neutral-gray/30 flex-1 max-w-[100px]">
-                  <div className="text-barrels-neutral-silver font-semibold text-xs mb-1">WHIP</div>
-                  <div className="text-white font-black text-xl">{scores.whip || 0}</div>
+                <div className="bg-barrels-surface rounded-xl px-4 py-3 text-center border border-barrels-border flex-1 max-w-[100px]">
+                  <div className="text-barrels-gold font-semibold text-xs mb-1">WHIP</div>
+                  <div className="text-barrels-text font-black text-xl">{scores.whip || 0}</div>
                 </div>
               </div>
             )}
@@ -139,37 +141,31 @@ export default function DashboardClient({
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
           {/* Anchor Tile */}
-          <Card className="bg-gradient-to-br from-barrels-blue/10 to-barrels-blue-light/10 border-barrels-blue/30 p-6 text-center">
-            <div className="text-barrels-blue-light text-sm font-semibold uppercase tracking-wide mb-2">
-              Anchor
-            </div>
-            <div className="text-4xl md:text-5xl font-black text-white mb-2">
+          <Tile className="p-6 text-center">
+            <Pill label="Anchor" variant="gold" className="mb-3" />
+            <div className="text-4xl md:text-5xl font-black text-barrels-text mb-2">
               {scores?.anchor || '—'}
             </div>
-            <p className="text-xs text-barrels-neutral-gray">Stability & ground control</p>
-          </Card>
+            <p className="text-xs text-barrels-muted">Stability & ground control</p>
+          </Tile>
 
           {/* Engine Tile */}
-          <Card className="bg-gradient-to-br from-barrels-gold/10 to-barrels-gold-light/10 border-barrels-gold/30 p-6 text-center">
-            <div className="text-barrels-gold-light text-sm font-semibold uppercase tracking-wide mb-2">
-              Engine
-            </div>
-            <div className="text-4xl md:text-5xl font-black text-white mb-2">
+          <Tile className="bg-gradient-to-br from-barrels-gold/5 to-barrels-surface border-barrels-gold/20 p-6 text-center">
+            <Pill label="Engine" variant="gold" className="mb-3" />
+            <div className="text-4xl md:text-5xl font-black text-barrels-text mb-2">
               {scores?.engine || '—'}
             </div>
-            <p className="text-xs text-barrels-neutral-gray">Hip & shoulder sequence</p>
-          </Card>
+            <p className="text-xs text-barrels-muted">Hip & shoulder sequence</p>
+          </Tile>
 
           {/* Whip Tile */}
-          <Card className="bg-gradient-to-br from-barrels-black-light/80 to-barrels-black-lighter/60 border-barrels-neutral-gray/20 p-6 text-center">
-            <div className="text-barrels-neutral-silver text-sm font-semibold uppercase tracking-wide mb-2">
-              Whip
-            </div>
-            <div className="text-4xl md:text-5xl font-black text-white mb-2">
+          <Tile className="p-6 text-center">
+            <Pill label="Whip" variant="gold" className="mb-3" />
+            <div className="text-4xl md:text-5xl font-black text-barrels-text mb-2">
               {scores?.whip || '—'}
             </div>
-            <p className="text-xs text-barrels-neutral-gray">Barrel speed & direction</p>
-          </Card>
+            <p className="text-xs text-barrels-muted">Barrel speed & direction</p>
+          </Tile>
         </motion.div>
 
         {/* BARRELS-Style Coaching Text Block */}
@@ -178,27 +174,27 @@ export default function DashboardClient({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
         >
-          <Card className="bg-gradient-to-br from-barrels-black-light/80 to-barrels-black-lighter/60 border-barrels-neutral-gray/20 p-6">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-barrels-gold/20 flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="w-5 h-5 text-barrels-gold-light" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white mb-1">Your Current Focus</h3>
-                <p className="text-xs text-barrels-neutral-gray">Based on your latest assessment</p>
-              </div>
-            </div>
+          <Tile>
+            <TileHeader 
+              title="Your Current Focus"
+              subtitle="Based on your latest assessment"
+              action={
+                <div className="w-10 h-10 rounded-full bg-barrels-gold/20 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-barrels-gold" />
+                </div>
+              }
+            />
             
             {coachingText ? (
-              <div className="text-barrels-neutral text-sm leading-relaxed whitespace-pre-wrap">
+              <div className="text-barrels-text text-sm leading-relaxed whitespace-pre-wrap">
                 {coachingText}
               </div>
             ) : (
-              <div className="text-barrels-neutral-gray text-sm italic">
+              <div className="text-barrels-muted text-sm italic">
                 Complete your first assessment to receive personalized coaching guidance.
               </div>
             )}
-          </Card>
+          </Tile>
         </motion.div>
 
         {/* Recommended Work (Drills) Section */}
@@ -208,47 +204,40 @@ export default function DashboardClient({
           transition={{ duration: 0.4, delay: 0.4 }}
           className="space-y-4"
         >
-          <h3 className="text-xl font-bold text-white">Recommended Work</h3>
+          <h3 className="text-xl font-bold text-barrels-text">Recommended Work</h3>
           
           {primaryDrill ? (
             <>
               {/* Primary Drill */}
-              <Card className="bg-gradient-to-br from-barrels-gold/10 to-barrels-gold-light/10 border-barrels-gold/30 p-6">
-                <div className="flex items-start gap-3 mb-3">
+              <Tile className="bg-gradient-to-br from-barrels-gold/5 to-barrels-surface border-barrels-gold/20">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-barrels-gold/20 flex items-center justify-center flex-shrink-0">
-                    <Play className="w-5 h-5 text-barrels-gold-light" />
+                    <Play className="w-5 h-5 text-barrels-gold" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-lg font-bold text-white mb-1">{primaryDrill.name}</h4>
-                    <p className="text-sm text-barrels-neutral-gray">
+                    <h4 className="text-lg font-bold text-barrels-text mb-1">{primaryDrill.name}</h4>
+                    <p className="text-sm text-barrels-muted">
                       {primaryDrill.primaryPurpose || primaryDrill.description || 'Recommended drill for your current focus'}
                     </p>
                   </div>
                 </div>
                 <Link href={`/drills/${primaryDrill.id}`}>
-                  <Button 
-                    className="w-full bg-barrels-gold hover:bg-barrels-gold-light text-white font-semibold"
-                  >
+                  <PrimaryButton icon={ChevronRight}>
                     View Drill Details
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
+                  </PrimaryButton>
                 </Link>
-              </Card>
+              </Tile>
 
               {/* Alternate Drills */}
               {alternateDrills.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm text-barrels-neutral-gray font-medium">Alternate Drills:</p>
+                  <p className="text-sm text-barrels-muted font-medium">Alternate Drills:</p>
                   <div className="flex flex-wrap gap-2">
                     {alternateDrills.map((drill: any) => (
                       <Link key={drill.id} href={`/drills/${drill.id}`}>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="bg-barrels-black-light/50 border-barrels-black-lighter hover:border-barrels-gold/50 text-barrels-neutral hover:text-white"
-                        >
+                        <SecondaryButton className="w-auto">
                           {drill.name}
-                        </Button>
+                        </SecondaryButton>
                       </Link>
                     ))}
                   </div>
@@ -256,11 +245,11 @@ export default function DashboardClient({
               )}
             </>
           ) : (
-            <Card className="bg-barrels-black-light/30 border-barrels-black-lighter p-6 text-center">
-              <p className="text-barrels-neutral-gray text-sm mb-4">
+            <Tile className="text-center">
+              <p className="text-barrels-muted text-sm mb-4">
                 No drills recommended yet. Complete your first assessment to get personalized drill recommendations.
               </p>
-            </Card>
+            </Tile>
           )}
         </motion.div>
 
@@ -271,25 +260,16 @@ export default function DashboardClient({
           transition={{ duration: 0.4, delay: 0.5 }}
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          <Link href="/lesson/new" className="block">
-            <Button 
-              size="lg"
-              className="w-full bg-gradient-to-r from-barrels-gold to-barrels-gold-light hover:from-barrels-gold-light hover:to-barrels-gold-dark text-white font-bold text-base h-14"
-            >
-              <Upload className="mr-2 h-5 w-5" />
+          <Link href="/lesson/new">
+            <PrimaryButton icon={Upload} className="h-14 text-base">
               Start New Lesson
-            </Button>
+            </PrimaryButton>
           </Link>
           
-          <Link href="/assessments/new" className="block">
-            <Button 
-              size="lg"
-              variant="outline"
-              className="w-full bg-barrels-black-light/50 border-barrels-black-lighter hover:border-barrels-gold/50 hover:bg-barrels-black-lighter text-white font-bold text-base h-14"
-            >
-              <FileText className="mr-2 h-5 w-5" />
+          <Link href="/assessments/new">
+            <SecondaryButton icon={FileText} className="w-full h-14 text-base">
               View Full Report
-            </Button>
+            </SecondaryButton>
           </Link>
         </motion.div>
 

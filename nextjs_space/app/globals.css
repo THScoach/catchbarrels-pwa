@@ -57,68 +57,69 @@
  
 @layer base {
   :root {
-    /* BARRELS Brand Theme - Default (Dark Mode) */
-    /* Colors sampled from final.png banner */
-    --background: 0 0% 0%; /* #000000 - Pure Black */
+    /* BARRELS Official Design System */
+    /* Philosophy: Dark backgrounds, gold accents, blue actions, white text */
+    
+    --background: 213 48% 3%; /* #05070B - Midnight black */
     --foreground: 0 0% 100%; /* #FFFFFF - White */
 
-    --card: 0 0% 10.2%; /* #1A1A1A - Light Black */
+    --card: 218 44% 4.9%; /* #0B0F17 - Surface */
     --card-foreground: 0 0% 100%;
  
-    --popover: 0 0% 10.2%;
+    --popover: 218 44% 4.9%;
     --popover-foreground: 0 0% 100%;
  
-    --primary: 41 78% 61%; /* #E8B14E - Electric Gold from final.png */
-    --primary-foreground: 0 0% 0%; /* Pure black text on gold */
+    --primary: 44 100% 62%; /* #FFC93C - Electric Gold */
+    --primary-foreground: 213 48% 3%; /* Dark bg text on gold */
  
-    --secondary: 203 75% 57%; /* #3B9FE8 - Electric Blue */
+    --secondary: 218 100% 57%; /* #2979FF - Action Blue */
     --secondary-foreground: 0 0% 100%;
  
-    --muted: 0 0% 16.5%; /* #2A2A2A - Lighter Black */
-    --muted-foreground: 0 0% 62.7%; /* #A0A0A0 - Gray */
+    --muted: 213 38% 12%; /* #1F2933 - Border gray */
+    --muted-foreground: 218 10% 71%; /* #B0B6C3 - Muted text */
  
-    --accent: 203 75% 57%; /* #3B9FE8 - Electric Blue */
+    --accent: 218 100% 57%; /* #2979FF - Action Blue */
     --accent-foreground: 0 0% 100%;
  
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84.2% 60.2%; /* #EF4444 - Danger */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 16.5%; /* #2A2A2A */
-    --input: 0 0% 16.5%;
-    --ring: 41 78% 61%; /* Gold ring from final.png */
+    --border: 213 38% 12%; /* #1F2933 - Border */
+    --input: 213 38% 12%;
+    --ring: 44 100% 62%; /* Gold ring */
  
-    --radius: 0.5rem;
+    --radius: 1rem; /* 16px for rounded-2xl default */
   }
  
   .dark {
-    /* Dark mode uses same BARRELS theme */
-    --background: 0 0% 0%; /* #000000 - Pure Black */
+    /* Dark mode uses same BARRELS theme (app is dark-first) */
+    --background: 213 48% 3%; /* #05070B */
     --foreground: 0 0% 100%;
  
-    --card: 0 0% 10.2%;
+    --card: 218 44% 4.9%; /* #0B0F17 */
     --card-foreground: 0 0% 100%;
  
-    --popover: 0 0% 10.2%;
+    --popover: 218 44% 4.9%;
     --popover-foreground: 0 0% 100%;
  
-    --primary: 41 78% 61%; /* #E8B14E - Electric Gold from final.png */
-    --primary-foreground: 0 0% 0%;
+    --primary: 44 100% 62%; /* #FFC93C */
+    --primary-foreground: 213 48% 3%;
  
-    --secondary: 203 75% 57%; /* #3B9FE8 - Electric Blue */
+    --secondary: 218 100% 57%; /* #2979FF */
     --secondary-foreground: 0 0% 100%;
  
-    --muted: 0 0% 16.5%;
-    --muted-foreground: 0 0% 62.7%;
+    --muted: 213 38% 12%;
+    --muted-foreground: 218 10% 71%;
  
-    --accent: 203 75% 57%;
+    --accent: 218 100% 57%;
     --accent-foreground: 0 0% 100%;
  
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
  
-    --border: 0 0% 16.5%;
-    --input: 0 0% 16.5%;
-    --ring: 41 78% 61%;
+    --border: 213 38% 12%;
+    --input: 213 38% 12%;
+    --ring: 44 100% 62%;
   }
 }
  
