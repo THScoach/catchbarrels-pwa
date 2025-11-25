@@ -255,7 +255,8 @@ function calculateAggregatedMetrics(swings: any[]) {
     // Load-to-launch duration (broad band around 150-220ms)
     Math.max(0, 100 - Math.abs(avg(loadToLaunches) - 185) / 1.5), // Ideal ~150-220ms, center at 185ms
     // Pelvis initiation timing (is it starting the motion at the right time?)
-    Math.max(0, 100 - Math.abs(avg(pelvisPeakTimings) + 100) / 2), // Pelvis peaks ~100-120ms before impact
+    // NOTE: pelvisPeakTimings are POSITIVE values (ms before impact), so ideal is 100-120ms
+    Math.max(0, 100 - Math.abs(avg(pelvisPeakTimings) - 110) / 2), // Pelvis peaks ~100-120ms before impact, center at 110ms
     // Stride timing consistency (foot plant timing)
     consistencyScore(loadToLaunches), // Consistent load-to-launch timing
   ].filter(v => !isNaN(v) && v > 0));
@@ -272,7 +273,7 @@ function calculateAggregatedMetrics(swings: any[]) {
   // Sequencing (20%): Pelvis is first in sequence order
   const anchorSequencing = avg([
     avg(sequenceOrderScores) * 1.2, // Pelvis should be first
-    Math.max(0, 100 - Math.abs(avg(pelvisPeakTimings) + 100) / 2), // Pelvis peaks ~100ms before impact
+    Math.max(0, 100 - Math.abs(avg(pelvisPeakTimings) - 110) / 2), // Pelvis peaks ~100-120ms before impact, center at 110ms
   ].filter(v => !isNaN(v) && v > 0));
   
   const anchorScore = (
@@ -287,7 +288,8 @@ function calculateAggregatedMetrics(swings: any[]) {
     // Pelvis-to-torso gap timing (ideal 30-50ms)
     Math.max(0, 100 - Math.abs(avg(pelvisToTorsoGaps) - 40) / 1.5), // Ideal ~30-50ms gap, center at 40ms
     // Torso peak timing relative to impact (should be ~60-80ms before impact)
-    Math.max(0, 100 - Math.abs(avg(torsoPeakTimings) + 70) / 2), // Ideal ~60-80ms before impact
+    // NOTE: torsoPeakTimings are POSITIVE values (ms before impact)
+    Math.max(0, 100 - Math.abs(avg(torsoPeakTimings) - 70) / 2), // Ideal ~60-80ms before impact, center at 70ms
     // Rotation initiation timing (pelvis timing consistency)
     consistencyScore(pelvisPeakTimings), // Consistent pelvis initiation
   ].filter(v => !isNaN(v) && v > 0));
@@ -322,7 +324,8 @@ function calculateAggregatedMetrics(swings: any[]) {
     // Arm-to-bat gap timing (ideal 30-50ms)
     Math.max(0, 100 - Math.abs(avg(armToBatGaps) - 40) / 1.5), // Ideal ~30-50ms, center at 40ms
     // Bat peak timing at/near impact (should be close to 0ms from impact)
-    Math.max(0, 100 - Math.abs(avg(batPeakTimings)) / 2), // Bat peaks at/near impact (0ms ± 20ms)
+    // NOTE: batPeakTimings are POSITIVE values, but should be very small (0-20ms before impact)
+    Math.max(0, 100 - Math.abs(avg(batPeakTimings) - 0) / 2), // Bat peaks at/near impact (0ms ± 20ms)
     // Timing gap consistency
     consistencyScore(torsoToArmGaps),
   ].filter(v => !isNaN(v) && v > 0));
