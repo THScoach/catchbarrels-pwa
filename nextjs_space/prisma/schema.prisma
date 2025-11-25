@@ -67,12 +67,16 @@ model User {
   s2Reports       S2CognitionReport[] @relation("UserS2Reports")
   hittraxSessions HitTraxSession[] @relation("UserHitTraxSessions")
   onTheBallHistory PlayerOnTheBallHistory[] @relation("UserOnTheBallHistory")
+  trainingSessions TrainingSession[] @relation("UserTrainingSessions")
 }
 
 model Video {
   id              String    @id @default(uuid())
   userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  sessionId       String?   // Optional - links video to a training session
+  session         TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   
   title           String    @default("My Swing")
   videoType       String?   // "Tee Work", "Front Toss", "Live BP", "Game Swings", "Cage Work", "Other"
@@ -145,6 +149,25 @@ model Video {
   
   @@index([userId, uploadDate])
   @@index([isPublic, sharedAt]) // For community feed queries
+  @@index([sessionId, uploadDate]) // For session-grouped queries
+}
+
+model TrainingSession {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation("UserTrainingSessions", fields: [userId], references: [id], onDelete: Cascade)
+  
+  sessionName     String?   // Optional custom name (e.g., "Morning Practice")
+  location        String?   // Where the session took place
+  
+  createdAt       DateTime  @default(now())
+  endedAt         DateTime? // null = session is active, non-null = session ended
+  
+  // Relations
+  videos          Video[]   // All swings/videos in this session
+  
+  @@index([userId, createdAt])
+  @@index([userId, endedAt]) // For querying active vs completed sessions
 }
 
 model Drill {
