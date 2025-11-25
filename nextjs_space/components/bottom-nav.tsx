@@ -3,17 +3,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Video, BookOpen, Users, User } from 'lucide-react';
+import { Home, Upload, History, TrendingUp, User } from 'lucide-react';
 import { triggerHaptic } from '@/lib/mobile-utils';
 
 export function BottomNav() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: '/dashboard', icon: Home, label: 'Home' },
-    { href: '/video', icon: Video, label: 'Video' },
-    { href: '/community', icon: Users, label: 'Community' },
-    { href: '/library', icon: BookOpen, label: 'Library' },
+    { href: '/dashboard', icon: Home, label: 'Dashboard' },
+    { href: '/video/upload', icon: Upload, label: 'New Lesson' },
+    { href: '/video', icon: History, label: 'History' },
+    { href: '/progress', icon: TrendingUp, label: 'Progress' },
     { href: '/profile', icon: User, label: 'Profile' },
   ];
 

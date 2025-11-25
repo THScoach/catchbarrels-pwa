@@ -1,16 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, Plus } from 'lucide-react'
+import { MessageCircle, Upload, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { ScoreCard } from '@/components/score-card'
 import { BottomNav } from '@/components/bottom-nav'
 import { CoachRickDrawer } from '@/components/coach-rick-drawer'
-import { NewLessonModal } from '@/components/new-lesson-modal'
-import { StatCardSkeleton, VideoCardSkeleton, Skeleton } from '@/components/ui/skeleton'
+import { StatCardSkeleton, VideoCardSkeleton } from '@/components/ui/skeleton'
 import {
   calculateProgress,
   formatProgressChange,
@@ -40,37 +39,6 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter()
   const [isCoachRickOpen, setIsCoachRickOpen] = useState(false)
-  const [isNewLessonModalOpen, setIsNewLessonModalOpen] = useState(false)
-  const [activeLesson, setActiveLesson] = useState<any>(null)
-  const [isLoadingLesson, setIsLoadingLesson] = useState(true)
-
-  // Fetch active lesson on mount
-  useEffect(() => {
-    const fetchActiveLesson = async () => {
-      try {
-        const response = await fetch('/api/sessions/active')
-        if (response.ok) {
-          const data = await response.json()
-          setActiveLesson(data.activeSession)
-        }
-      } catch (error) {
-        console.error('Error fetching active lesson:', error)
-      } finally {
-        setIsLoadingLesson(false)
-      }
-    }
-    fetchActiveLesson()
-  }, [])
-
-  const handleStartNewLesson = () => {
-    setIsNewLessonModalOpen(true)
-  }
-
-  const handleContinueLesson = () => {
-    if (activeLesson?.id) {
-      router.push(`/sessions/${activeLesson.id}`)
-    }
-  }
 
   const recentVideos = videos?.slice(0, 3) || []
 
@@ -101,60 +69,6 @@ export default function DashboardClient({
       </div>
 
       <div className="p-4 space-y-6">
-        {/* Active Lesson Section */}
-        {isLoadingLesson ? (
-          <Skeleton className="h-32 w-full rounded-xl" />
-        ) : activeLesson ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20 rounded-xl p-4"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-medium text-green-400">Active Lesson</span>
-                </div>
-                <h3 className="text-white font-semibold mb-1">
-                  {activeLesson.sessionName || 'Current Lesson'}
-                </h3>
-                {activeLesson.lessonFocus && (
-                  <p className="text-sm text-gray-400 mb-2 line-clamp-2">
-                    Focus: {activeLesson.lessonFocus}
-                  </p>
-                )}
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span>{activeLesson.swingCount || 0} swings</span>
-                  {activeLesson.avgScore && (
-                    <span>Avg: {Math.round(activeLesson.avgScore)}/100</span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={handleContinueLesson}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                Continue
-              </button>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={handleStartNewLesson}
-            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl p-6 text-left transition-all transform hover:scale-[1.02]"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold mb-1">Start New Lesson</h3>
-                <p className="text-white/80 text-sm">Set your focus and begin analyzing swings</p>
-              </div>
-              <Plus className="h-8 w-8" />
-            </div>
-          </motion.button>
-        )}
 
         {/* 4Bs Scores */}
         <div className="space-y-3">
@@ -205,7 +119,7 @@ export default function DashboardClient({
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-white">Recent Swings</h2>
             <Link
-              href="/sessions"
+              href="/video"
               className="text-sm text-orange-400 hover:text-orange-300"
             >
               View All
@@ -279,12 +193,12 @@ export default function DashboardClient({
           ) : (
             <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-8 text-center">
               <p className="text-gray-400 mb-4">No swings analyzed yet</p>
-              <button
-                onClick={handleStartNewLesson}
-                className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+              <Link
+                href="/video/upload"
+                className="inline-block px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
               >
-                Start Your First Lesson
-              </button>
+                Upload Your First Swing
+              </Link>
             </div>
           )}
         </div>
@@ -298,12 +212,6 @@ export default function DashboardClient({
         isOpen={isCoachRickOpen}
         onClose={() => setIsCoachRickOpen(false)}
         context={{ pageType: 'dashboard' }}
-      />
-
-      {/* New Lesson Modal */}
-      <NewLessonModal
-        isOpen={isNewLessonModalOpen}
-        onClose={() => setIsNewLessonModalOpen(false)}
       />
     </div>
   )

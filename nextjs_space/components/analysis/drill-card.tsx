@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { Play, CheckCircle2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
@@ -72,15 +71,6 @@ export function DrillCard({ drill }: DrillCardProps) {
             </div>
           ))}
         </div>
-
-        {/* Action Button */}
-        <Button
-          variant="outline"
-          className="w-full mt-4 border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400"
-        >
-          <Play className="w-4 h-4 mr-2" />
-          Watch Full Demo
-        </Button>
       </Card>
     </motion.div>
   );

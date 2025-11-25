@@ -1,18 +1,15 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { BottomNav } from '@/components/bottom-nav';
 import { UploadErrorState } from '@/components/ui/error-state';
 import { OnFormImportPanel } from '@/components/onform/onform-import-panel';
 import { toast } from 'sonner';
-import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info, Zap, Target } from 'lucide-react';
+import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info, Zap } from 'lucide-react';
 
 export function VideoUploadClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const sessionId = searchParams?.get('sessionId');
-  const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [mode, setMode] = useState<'upload' | 'onform'>('upload');
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -25,16 +22,6 @@ export function VideoUploadClient() {
   
   // OnForm import states
   const [showOnFormPanel, setShowOnFormPanel] = useState(false);
-
-  // Fetch session info if sessionId is provided
-  useEffect(() => {
-    if (sessionId) {
-      fetch(`/api/sessions/${sessionId}`)
-        .then((res) => res.json())
-        .then((data) => setSessionInfo(data.session))
-        .catch((err) => console.error('Error fetching session info:', err));
-    }
-  }, [sessionId]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,11 +64,6 @@ export function VideoUploadClient() {
       const formData = new FormData();
       formData.append('video', selectedFile);
       formData.append('videoType', videoType);
-      
-      // Add sessionId if we're uploading to a lesson
-      if (sessionId) {
-        formData.append('sessionId', sessionId);
-      }
 
       // Upload with progress tracking
       const xhr = new XMLHttpRequest();
@@ -169,24 +151,7 @@ export function VideoUploadClient() {
     return (
       <div className="min-h-screen bg-[#1a2332] pb-20">
         <div className="p-6 max-w-2xl mx-auto">
-          {sessionInfo ? (
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Target className="w-5 h-5 text-orange-500" />
-                <h1 className="text-2xl font-bold text-white">Add Swing to Lesson</h1>
-              </div>
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-3">
-                <p className="text-sm text-gray-400">
-                  <span className="text-white font-medium">{sessionInfo.sessionName || 'Current Lesson'}</span>
-                  {sessionInfo.lessonFocus && (
-                    <span className="block text-xs mt-1">Focus: {sessionInfo.lessonFocus}</span>
-                  )}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <h1 className="text-2xl font-bold text-white mb-6">New Analysis</h1>
-          )}
+          <h1 className="text-2xl font-bold text-white mb-6">New Analysis</h1>
           <UploadErrorState onRetry={handleRetry} />
         </div>
         <BottomNav />
@@ -197,24 +162,7 @@ export function VideoUploadClient() {
   return (
     <div className="min-h-screen bg-[#1a2332] pb-20">
       <div className="p-6 max-w-2xl mx-auto">
-        {sessionInfo ? (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="w-5 h-5 text-orange-500" />
-              <h1 className="text-2xl font-bold text-white">Add Swing to Lesson</h1>
-            </div>
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-3">
-              <p className="text-sm text-gray-400">
-                <span className="text-white font-medium">{sessionInfo.sessionName || 'Current Lesson'}</span>
-                {sessionInfo.lessonFocus && (
-                  <span className="block text-xs mt-1">Focus: {sessionInfo.lessonFocus}</span>
-                )}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <h1 className="text-2xl font-bold text-white mb-6">New Analysis</h1>
-        )}
+        <h1 className="text-2xl font-bold text-white mb-6">New Analysis</h1>
 
         {/* Mode Switcher Tabs */}
         <div className="mb-6 grid grid-cols-2 gap-2 p-1 bg-gray-800/50 rounded-lg">
