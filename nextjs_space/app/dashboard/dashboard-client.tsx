@@ -114,14 +114,14 @@ export default function DashboardClient({
               <div className="flex gap-3 justify-center text-sm">
                 <div className="bg-barrels-blue/20 rounded-xl px-4 py-3 text-center border border-barrels-blue/30 flex-1 max-w-[100px]">
                   <div className="text-barrels-blue-light font-semibold text-xs mb-1">ANCHOR</div>
-                  <div className="text-barrels-neutral-white font-black text-xl">{scores.anchor || 0}</div>
+                  <div className="text-white font-black text-xl">{scores.anchor || 0}</div>
                 </div>
                 <div className="bg-barrels-gold/20 rounded-xl px-4 py-3 text-center border border-barrels-gold/30 flex-1 max-w-[100px]">
                   <div className="text-barrels-gold-light font-semibold text-xs mb-1">ENGINE</div>
                   <div className="text-white font-black text-xl">{scores.engine || 0}</div>
                 </div>
-                <div className="bg-barrels-gold/20 rounded-xl px-4 py-3 text-center border border-barrels-gold/30 flex-1 max-w-[100px]">
-                  <div className="text-barrels-gold-light font-semibold text-xs mb-1">WHIP</div>
+                <div className="bg-barrels-black-lighter/40 rounded-xl px-4 py-3 text-center border border-barrels-neutral-gray/30 flex-1 max-w-[100px]">
+                  <div className="text-barrels-neutral-silver font-semibold text-xs mb-1">WHIP</div>
                   <div className="text-white font-black text-xl">{scores.whip || 0}</div>
                 </div>
               </div>
@@ -138,7 +138,7 @@ export default function DashboardClient({
         >
           {/* Anchor Tile */}
           <Card className="bg-gradient-to-br from-barrels-blue/10 to-barrels-blue-light/10 border-barrels-blue/30 p-6 text-center">
-            <div className="text-blue-400 text-sm font-semibold uppercase tracking-wide mb-2">
+            <div className="text-barrels-blue-light text-sm font-semibold uppercase tracking-wide mb-2">
               Anchor
             </div>
             <div className="text-4xl md:text-5xl font-black text-white mb-2">
@@ -148,8 +148,8 @@ export default function DashboardClient({
           </Card>
 
           {/* Engine Tile */}
-          <Card className="bg-gradient-to-br from-barrels-blue/10 to-barrels-blue-light/10 border-barrels-blue/30 p-6 text-center">
-            <div className="text-barrels-blue-light text-sm font-semibold uppercase tracking-wide mb-2">
+          <Card className="bg-gradient-to-br from-barrels-gold/10 to-barrels-gold-light/10 border-barrels-gold/30 p-6 text-center">
+            <div className="text-barrels-gold-light text-sm font-semibold uppercase tracking-wide mb-2">
               Engine
             </div>
             <div className="text-4xl md:text-5xl font-black text-white mb-2">
@@ -159,8 +159,8 @@ export default function DashboardClient({
           </Card>
 
           {/* Whip Tile */}
-          <Card className="bg-gradient-to-br from-barrels-gold/10 to-barrels-gold-light/10 border-barrels-gold/30 p-6 text-center">
-            <div className="text-barrels-gold-light text-sm font-semibold uppercase tracking-wide mb-2">
+          <Card className="bg-gradient-to-br from-barrels-black-light/80 to-barrels-black-lighter/60 border-barrels-neutral-gray/20 p-6 text-center">
+            <div className="text-barrels-neutral-silver text-sm font-semibold uppercase tracking-wide mb-2">
               Whip
             </div>
             <div className="text-4xl md:text-5xl font-black text-white mb-2">
@@ -176,10 +176,10 @@ export default function DashboardClient({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
         >
-          <Card className="bg-gradient-to-br from-barrels-blue/10 to-barrels-blue-light/10 border-barrels-blue/30 p-6">
+          <Card className="bg-gradient-to-br from-barrels-black-light/80 to-barrels-black-lighter/60 border-barrels-neutral-gray/20 p-6">
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-barrels-blue/20 flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="w-5 h-5 text-barrels-blue-light" />
+              <div className="w-10 h-10 rounded-full bg-barrels-gold/20 flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-5 h-5 text-barrels-gold-light" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white mb-1">Your Current Focus</h3>
