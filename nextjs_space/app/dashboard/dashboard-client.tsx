@@ -21,6 +21,10 @@ interface DashboardClientProps {
     anchor: number
     engine: number
     whip: number
+    barrelDelta?: number  // Change vs last session
+    anchorDelta?: number
+    engineDelta?: number
+    whipDelta?: number
   }
   coachingText: string | null
   recommendedDrills: any[]
@@ -70,22 +74,16 @@ export default function DashboardClient({
 
       <main className="p-4 space-y-6 max-w-4xl mx-auto pt-4 mt-4">
 
-        {/* Hero BARREL Score - Redesigned with Compliance Gauge */}
+        {/* Hero BARREL Score - Two Column Layout */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="relative rounded-[20px] p-6 shadow-2xl overflow-hidden"
-          style={{ backgroundColor: '#05070B' }}
+          className="rounded-2xl bg-barrels-surface border border-barrels-border p-4 md:p-5 text-barrels-text"
         >
-          <div className="space-y-6">
-            {/* Title - Left aligned */}
-            <h2 className="text-lg font-semibold" style={{ color: '#F5F5F5' }}>
-              BARRELS Score
-            </h2>
-
-            {/* Circular Compliance Gauge */}
-            <div className="flex items-center justify-center py-4">
+          <div className="flex gap-4 md:gap-6 items-stretch">
+            {/* LEFT: Circular BARREL Score Gauge */}
+            <div className="flex-1 flex flex-col items-center justify-center">
               <div className="relative flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
                 {/* SVG Circular Ring */}
                 <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -104,7 +102,7 @@ export default function DashboardClient({
                     cy="50"
                     r="40"
                     fill="none"
-                    stroke="url(#complianceGradient)"
+                    stroke="url(#barrelsGradient)"
                     strokeWidth="12"
                     strokeLinecap="round"
                     strokeDasharray={`${2 * Math.PI * 40}`}
@@ -115,125 +113,162 @@ export default function DashboardClient({
                     transition={{ duration: 1.8, delay: 0.2, ease: "easeOut" }}
                   />
                   <defs>
-                    <linearGradient id="complianceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient id="barrelsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FFC93C" />
                       <stop offset="100%" stopColor="#FFD54A" />
                     </linearGradient>
                   </defs>
                 </svg>
                 
-                {/* Center text */}
+                {/* Center text - Score only, no percentage */}
                 <div className="flex flex-col items-center justify-center">
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.6, delay: 0.3 }}
-                    className="text-5xl font-bold leading-none mb-1"
+                    className="text-5xl md:text-6xl font-bold leading-none"
                     style={{ color: '#FFFFFF' }}
                   >
-                    {scores?.barrel || 0}%
+                    {scores?.barrel || 0}
                   </motion.div>
-                  <div className="text-sm font-medium" style={{ color: '#B0B6C3' }}>
-                    Compliance
+                  <div className="mt-1 text-xs text-barrels-muted uppercase tracking-wide">
+                    Score
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Sub-scores - Horizontal Row */}
-            {scores?.barrel > 0 && (
-              <div className="grid grid-cols-3 gap-3 px-2">
-                {/* Engine */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.5 }}
-                  className="text-center"
-                >
-                  <div className="text-lg font-semibold mb-0.5" style={{ color: '#FFFFFF' }}>
-                    {scores.engine}%
-                  </div>
-                  <div className="text-xs font-medium" style={{ color: '#B0B6C3' }}>
-                    Engine
-                  </div>
-                  {/* Mini progress bar */}
-                  <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#2E3440' }}>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${scores.engine}%` }}
-                      transition={{ duration: 1, delay: 0.7 }}
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: '#FFC93C' }}
-                    />
-                  </div>
-                </motion.div>
-
-                {/* Anchor */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
+              {/* Delta indicator below circle */}
+              {scores?.barrel > 0 && scores?.barrelDelta !== undefined && (
+                <motion.p
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.6 }}
-                  className="text-center"
+                  className={
+                    "mt-3 text-xs font-medium " +
+                    (scores.barrelDelta >= 0 ? "text-emerald-400" : "text-red-400")
+                  }
                 >
-                  <div className="text-lg font-semibold mb-0.5" style={{ color: '#FFFFFF' }}>
-                    {scores.anchor}%
-                  </div>
-                  <div className="text-xs font-medium" style={{ color: '#B0B6C3' }}>
+                  {scores.barrelDelta >= 0 ? "▲" : "▼"} {Math.abs(scores.barrelDelta)} pts since last session
+                </motion.p>
+              )}
+            </div>
+
+            {/* RIGHT: Stacked Anchor/Engine/Whip Mini-Cards */}
+            <div className="w-40 md:w-48 flex flex-col space-y-2">
+              {/* Anchor Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.4 }}
+                className="flex items-center justify-between rounded-xl bg-white/3 border border-barrels-border px-3 py-2"
+              >
+                <div>
+                  <p className="text-[11px] text-barrels-muted uppercase tracking-wide">
                     Anchor
+                  </p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-semibold text-white">
+                      {scores?.anchor || 0}
+                    </span>
+                    <span className="text-[10px] text-barrels-muted uppercase tracking-wide">
+                      Score
+                    </span>
                   </div>
-                  {/* Mini progress bar */}
-                  <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#2E3440' }}>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${scores.anchor}%` }}
-                      transition={{ duration: 1, delay: 0.8 }}
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: '#FFC93C' }}
-                    />
-                  </div>
-                </motion.div>
+                </div>
 
-                {/* Whip */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.7 }}
-                  className="text-center"
-                >
-                  <div className="text-lg font-semibold mb-0.5" style={{ color: '#FFFFFF' }}>
-                    {scores.whip}%
+                {scores?.anchorDelta !== undefined && (
+                  <div className="flex flex-col items-end">
+                    <span
+                      className={
+                        "text-[11px] font-semibold " +
+                        (scores.anchorDelta >= 0 ? "text-emerald-400" : "text-red-400")
+                      }
+                    >
+                      {scores.anchorDelta >= 0 ? "▲" : "▼"} {Math.abs(scores.anchorDelta)} pts
+                    </span>
+                    <span className="text-[10px] text-barrels-muted">
+                      vs last
+                    </span>
                   </div>
-                  <div className="text-xs font-medium" style={{ color: '#B0B6C3' }}>
+                )}
+              </motion.div>
+
+              {/* Engine Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.5 }}
+                className="flex items-center justify-between rounded-xl bg-white/3 border border-barrels-border px-3 py-2"
+              >
+                <div>
+                  <p className="text-[11px] text-barrels-muted uppercase tracking-wide">
+                    Engine
+                  </p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-semibold text-white">
+                      {scores?.engine || 0}
+                    </span>
+                    <span className="text-[10px] text-barrels-muted uppercase tracking-wide">
+                      Score
+                    </span>
+                  </div>
+                </div>
+
+                {scores?.engineDelta !== undefined && (
+                  <div className="flex flex-col items-end">
+                    <span
+                      className={
+                        "text-[11px] font-semibold " +
+                        (scores.engineDelta >= 0 ? "text-emerald-400" : "text-red-400")
+                      }
+                    >
+                      {scores.engineDelta >= 0 ? "▲" : "▼"} {Math.abs(scores.engineDelta)} pts
+                    </span>
+                    <span className="text-[10px] text-barrels-muted">
+                      vs last
+                    </span>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Whip Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
+                className="flex items-center justify-between rounded-xl bg-white/3 border border-barrels-border px-3 py-2"
+              >
+                <div>
+                  <p className="text-[11px] text-barrels-muted uppercase tracking-wide">
                     Whip
+                  </p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-semibold text-white">
+                      {scores?.whip || 0}
+                    </span>
+                    <span className="text-[10px] text-barrels-muted uppercase tracking-wide">
+                      Score
+                    </span>
                   </div>
-                  {/* Mini progress bar */}
-                  <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#2E3440' }}>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${scores.whip}%` }}
-                      transition={{ duration: 1, delay: 0.9 }}
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: '#FFC93C' }}
-                    />
-                  </div>
-                </motion.div>
-              </div>
-            )}
+                </div>
 
-            {/* CTA Button - See Your Progress */}
-            <motion.button
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.8 }}
-              onClick={() => router.push('/lesson/history')}
-              className="w-full h-12 rounded-full font-semibold text-base transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-              style={{ 
-                backgroundColor: '#2979FF',
-                color: '#FFFFFF'
-              }}
-            >
-              See Your Progress
-            </motion.button>
+                {scores?.whipDelta !== undefined && (
+                  <div className="flex flex-col items-end">
+                    <span
+                      className={
+                        "text-[11px] font-semibold " +
+                        (scores.whipDelta >= 0 ? "text-emerald-400" : "text-red-400")
+                      }
+                    >
+                      {scores.whipDelta >= 0 ? "▲" : "▼"} {Math.abs(scores.whipDelta)} pts
+                    </span>
+                    <span className="text-[10px] text-barrels-muted">
+                      vs last
+                    </span>
+                  </div>
+                )}
+              </motion.div>
+            </div>
           </div>
         </motion.div>
 

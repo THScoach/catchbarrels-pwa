@@ -35,12 +35,16 @@ export default async function DashboardPage() {
     ? Math.round(((latestAssessment.anchorScore || 0) + (latestAssessment.engineScore || 0) + (latestAssessment.whipScore || 0)) / 3)
     : 0;
 
-  // TEMPORARY: Mock data for preview
+  // TEMPORARY: Mock data for preview with delta values
   const scores = {
-    barrel: 85,  // Mock: Overall BARREL Score
-    anchor: 82,  // Mock: Anchor (Feet & Ground) Score
-    engine: 88,  // Mock: Engine (Hips & Shoulders) Score
-    whip: 85,    // Mock: Whip (Arms & Bat) Score
+    barrel: 85,         // Mock: Overall BARREL Score (leaderboard metric)
+    anchor: 82,         // Mock: Anchor (Feet & Ground) Score
+    engine: 88,         // Mock: Engine (Hips & Shoulders) Score
+    whip: 85,           // Mock: Whip (Arms & Bat) Score
+    barrelDelta: 3,     // Mock: +3 pts since last session
+    anchorDelta: -1,    // Mock: -1 pt since last session
+    engineDelta: 2,     // Mock: +2 pts since last session
+    whipDelta: 1,       // Mock: +1 pt since last session
   };
 
   // PRODUCTION: Use real data from assessment
@@ -49,6 +53,10 @@ export default async function DashboardPage() {
   //   anchor: latestAssessment?.anchorScore ? Math.round(latestAssessment.anchorScore) : 0,
   //   engine: latestAssessment?.engineScore ? Math.round(latestAssessment.engineScore) : 0,
   //   whip: latestAssessment?.whipScore ? Math.round(latestAssessment.whipScore) : 0,
+  //   barrelDelta: 0,  // Calculate from previous assessment
+  //   anchorDelta: 0,
+  //   engineDelta: 0,
+  //   whipDelta: 0,
   // };
 
   // Extract coaching text from assessment
