@@ -20,7 +20,17 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores, mapWhipMetricsFromScores } from '@/lib/engine-metrics-config';
-import { ProgressCharts } from '@/components/progress-charts';
+import dynamic from 'next/dynamic';
+
+// Dynamic import with ssr: false to avoid chunk loading issues with recharts
+const ProgressCharts = dynamic(() => import('@/components/progress-charts').then(mod => ({ default: mod.ProgressCharts })), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-12">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+    </div>
+  ),
+});
 
 export function VideoDetailClient({ video, previousScores, personalBests, userHeight, userHandedness }: any) {
   const [activeTab, setActiveTab] = useState<'analysis' | 'coach' | 'skeleton' | 'progress'>('analysis');
