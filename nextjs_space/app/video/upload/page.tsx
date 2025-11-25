@@ -7,7 +7,7 @@ export default async function VideoUploadPage() {
   const session = await getServerSession(authOptions);
   
   if (!session) {
-    redirect('/welcome');
+    redirect('/auth/login');
   }
 
   return <VideoUploadClient />;

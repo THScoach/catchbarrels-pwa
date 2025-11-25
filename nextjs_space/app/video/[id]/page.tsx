@@ -8,7 +8,7 @@ export default async function VideoDetailPage({ params }: { params: { id: string
   const session = await getServerSession(authOptions);
   
   if (!session) {
-    redirect('/welcome');
+    redirect('/auth/login');
   }
 
   const video = await prisma.video.findUnique({

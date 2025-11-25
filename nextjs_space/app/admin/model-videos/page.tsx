@@ -9,7 +9,7 @@ export default async function ModelVideosAdminPage() {
   const session = await getServerSession(authOptions);
   
   if (!session) {
-    redirect('/welcome');
+    redirect('/auth/login');
   }
 
   // Fetch existing model videos
