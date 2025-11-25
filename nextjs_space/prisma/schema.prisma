@@ -68,6 +68,7 @@ model User {
   hittraxSessions HitTraxSession[] @relation("UserHitTraxSessions")
   onTheBallHistory PlayerOnTheBallHistory[] @relation("UserOnTheBallHistory")
   trainingSessions TrainingSession[] @relation("UserTrainingSessions")
+  playerLessons    PlayerLesson[] @relation("UserPlayerLessons")
 }
 
 model Video {
@@ -77,6 +78,9 @@ model Video {
   
   sessionId       String?   // Optional - links video to a training session
   session         TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  
+  playerLessonId  String?   // Optional - links video to a GOATY Player Lesson
+  playerLesson    PlayerLesson? @relation("PlayerLessonVideos", fields: [playerLessonId], references: [id], onDelete: SetNull)
   
   title           String    @default("My Swing")
   videoType       String?   // "Tee Work", "Front Toss", "Live BP", "Game Swings", "Cage Work", "Other"
@@ -170,6 +174,47 @@ model TrainingSession {
   
   @@index([userId, createdAt])
   @@index([userId, endedAt]) // For querying active vs completed sessions
+}
+
+// GOATY Player Lesson System - Core unit for player training
+enum PlayerLessonStatus {
+  ACTIVE      // Lesson is in progress
+  COMPLETED   // Lesson finished and saved
+  ARCHIVED    // Old lesson archived
+}
+
+model PlayerLesson {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation("UserPlayerLessons", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Lesson Configuration
+  goal            String?   // "Timing", "Anchor Stability", "Engine Sequencing", "Whip Direction", etc.
+  notes           String?   @db.Text // What the player is working on today
+  status          PlayerLessonStatus @default(ACTIVE)
+  
+  // Lesson-Level Metrics (Averages across all swings in this lesson)
+  lessonBarrelScore   Float?
+  lessonAnchorScore   Float?
+  lessonEngineScore   Float?
+  lessonWhipScore     Float?
+  
+  // GOATY Recommendations for this lesson
+  coachRecommendation String?   @db.Text // Personalized coaching text
+  drillRecommendations Json?    // Array of drill IDs or drill objects
+  
+  // Metadata
+  swingCount      Int       @default(0) // Number of swings/videos in this lesson
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime? // When lesson was marked complete
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  videos          Video[]   @relation("PlayerLessonVideos") // All swings in this lesson
+  
+  @@index([userId, createdAt])
+  @@index([userId, status])
+  @@index([userId, completedAt])
 }
 
 model Drill {

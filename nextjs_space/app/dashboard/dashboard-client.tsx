@@ -1,15 +1,14 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { MessageCircle, Upload, TrendingUp, Play, ChevronRight, FileText } from 'lucide-react'
+import { Upload, TrendingUp, Play, ChevronRight, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { BottomNav } from '@/components/bottom-nav'
-import { CoachRickDrawer } from '@/components/coach-rick-drawer'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import GoatyHeader from '@/components/goaty-header'
 
 interface DashboardClientProps {
   user: any
@@ -34,7 +33,6 @@ export default function DashboardClient({
   membershipInfo,
 }: DashboardClientProps) {
   const router = useRouter()
-  const [isCoachRickOpen, setIsCoachRickOpen] = useState(false)
 
   // Primary drill is the first in the list
   const primaryDrill = recommendedDrills?.[0]
@@ -42,27 +40,10 @@ export default function DashboardClient({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Welcome, {user?.name || 'Athlete'}</h1>
-            {latestAssessmentDate && (
-              <p className="text-gray-400 text-sm mt-1">
-                Last Assessment: {format(new Date(latestAssessmentDate), 'MMM d, yyyy')}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={() => setIsCoachRickOpen(true)}
-            className="p-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 transition-colors"
-          >
-            <MessageCircle className="h-6 w-6 text-purple-400" />
-          </button>
-        </div>
-      </div>
+      {/* GOATY Header with Navigation */}
+      <GoatyHeader activeTab="dashboard" />
 
-      <div className="p-4 space-y-6 max-w-4xl mx-auto">
+      <div className="p-4 space-y-6 max-w-4xl mx-auto mt-6">
 
         {/* Hero BARREL Score */}
         <motion.div
@@ -177,7 +158,7 @@ export default function DashboardClient({
           <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border-purple-500/30 p-6">
             <div className="flex items-start gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-5 h-5 text-purple-400" />
+                <TrendingUp className="w-5 h-5 text-purple-400" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white mb-1">Your Current Focus</h3>
@@ -267,13 +248,13 @@ export default function DashboardClient({
           transition={{ duration: 0.4, delay: 0.5 }}
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          <Link href="/video/upload" className="block">
+          <Link href="/lesson/new" className="block">
             <Button 
               size="lg"
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-base h-14"
             >
               <Upload className="mr-2 h-5 w-5" />
-              Start New Analysis
+              Start New Lesson
             </Button>
           </Link>
           
@@ -293,13 +274,6 @@ export default function DashboardClient({
 
       {/* Bottom Navigation */}
       <BottomNav />
-
-      {/* Coach Rick Drawer */}
-      <CoachRickDrawer
-        isOpen={isCoachRickOpen}
-        onClose={() => setIsCoachRickOpen(false)}
-        context={{ pageType: 'dashboard' }}
-      />
     </div>
   )
 }
