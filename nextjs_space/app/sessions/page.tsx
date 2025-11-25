@@ -1,66 +1,60 @@
-
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/db';
-import SessionsClient from './sessions-client';
+import SessionsHistoryClient from './sessions-history-client';
 
-/**
- * Sessions Page - Organize videos by training sessions
- * Shows a list of training sessions with the ability to create new ones
- */
-export default async function SessionsPage() {
+export default async function SessionsHistoryPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user) {
+  if (!session?.user?.id) {
     redirect('/auth/login');
   }
 
-  const userId = (session.user as any).id;
-
-  // Fetch user's videos grouped by upload date (simulated sessions)
-  const videos = await prisma.video.findMany({
-    where: { userId },
-    orderBy: { uploadDate: 'desc' },
-    select: {
-      id: true,
-      title: true,
-      videoType: true,
-      source: true,
-      uploadDate: true,
-      analyzed: true,
-      overallScore: true,
-      anchor: true,
-      engine: true,
-      whip: true,
+  // Fetch all training sessions for the user
+  const trainingSessions = await prisma.trainingSession.findMany({
+    where: {
+      userId: session.user.id,
+    },
+    include: {
+      videos: {
+        select: {
+          id: true,
+          overallScore: true,
+          analyzed: true,
+        },
+      },
+      _count: {
+        select: { videos: true },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
     },
   });
 
-  // Group videos by date as "sessions"
-  const sessionsByDate: { [key: string]: any[] } = {};
-  videos.forEach((video) => {
-    const dateKey = new Date(video.uploadDate).toLocaleDateString();
-    if (!sessionsByDate[dateKey]) {
-      sessionsByDate[dateKey] = [];
-    }
-    sessionsByDate[dateKey].push(video);
+  // Calculate average scores for each session
+  const sessionsWithStats = trainingSessions.map((trainingSession) => {
+    const analyzedVideos = trainingSession.videos.filter(
+      (v) => v.analyzed && v.overallScore
+    );
+    const avgScore = analyzedVideos.length > 0
+      ? Math.round(
+          analyzedVideos.reduce((sum, v) => sum + (v.overallScore || 0), 0) /
+            analyzedVideos.length
+        )
+      : null;
+
+    return {
+      id: trainingSession.id,
+      sessionName: trainingSession.sessionName,
+      location: trainingSession.location,
+      createdAt: trainingSession.createdAt,
+      endedAt: trainingSession.endedAt,
+      swingCount: trainingSession._count.videos,
+      avgScore,
+    };
   });
 
-  const sessions = Object.entries(sessionsByDate).map(([date, videos]) => ({
-    id: date.replace(/\//g, '-'),
-    date: new Date(videos[0].uploadDate),
-    title: `Training Session - ${date}`,
-    videoCount: videos.length,
-    videos,
-    avgScore: videos.filter(v => v.analyzed && v.overallScore).length > 0
-      ? Math.round(
-          videos
-            .filter(v => v.analyzed && v.overallScore)
-            .reduce((sum, v) => sum + (v.overallScore || 0), 0) /
-            videos.filter(v => v.analyzed && v.overallScore).length
-        )
-      : null,
-  }));
-
-  return <SessionsClient sessions={sessions} userId={userId} />;
+  return <SessionsHistoryClient sessions={sessionsWithStats} user={session.user} />;
 }

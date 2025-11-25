@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const videoFile = formData.get('video') as File;
     const videoType = formData.get('videoType') as string;
+    const sessionId = formData.get('sessionId') as string | null;
 
     if (!videoFile) {
       return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
     const video = await prisma.video.create({
       data: {
         userId: (session.user as any).id,
+        sessionId: sessionId || null, // Optional - links video to training session
         title: videoFile.name.replace(/\.[^/.]+$/, ''), // Remove file extension
         videoType: videoType,
         videoUrl: cloudStoragePath, // Store S3 key

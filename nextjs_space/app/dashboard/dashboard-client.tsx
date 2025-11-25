@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { buttonVariants } from '@/lib/animations';
-import { Video as VideoIcon, TrendingUp, Target, Upload, Play, Calendar, Clock, Award, Home, History, MessageCircle, X, Send, Mic, Loader2 } from 'lucide-react';
+import { Video as VideoIcon, TrendingUp, Target, Upload, Play, Calendar, Clock, Award, Home, History, MessageCircle, X, Send, Mic, Loader2, PlayCircle } from 'lucide-react';
 import { ScoreCard } from '@/components/score-card';
 import { BottomNav } from '@/components/bottom-nav';
 import Link from 'next/link';
@@ -30,6 +31,8 @@ export function DashboardClient({
 }: any) {
   const [isLoading, setIsLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [activeSession, setActiveSession] = useState<any>(null);
+  const [loadingSession, setLoadingSession] = useState(true);
   const [chatMessages, setChatMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -38,7 +41,28 @@ export function DashboardClient({
   ]);
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [creatingSession, setCreatingSession] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // Fetch active session on mount
+  useEffect(() => {
+    const fetchActiveSession = async () => {
+      try {
+        const response = await fetch('/api/sessions/active');
+        if (response.ok) {
+          const data = await response.json();
+          setActiveSession(data.activeSession);
+        }
+      } catch (error) {
+        console.error('Error fetching active session:', error);
+      } finally {
+        setLoadingSession(false);
+      }
+    };
+
+    fetchActiveSession();
+  }, []);
 
   useEffect(() => {
     // Simulate smooth loading transition
@@ -54,6 +78,27 @@ export function DashboardClient({
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages, isChatOpen]);
+
+  const handleStartNewSession = async () => {
+    setCreatingSession(true);
+    try {
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) throw new Error('Failed to create session');
+
+      const data = await response.json();
+      toast.success('New session started!');
+      router.push(`/sessions/${data.session.id}`);
+    } catch (error) {
+      console.error('Error creating session:', error);
+      toast.error('Failed to start new session');
+      setCreatingSession(false);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!chatInput.trim() || isSending) return;
@@ -204,6 +249,53 @@ export function DashboardClient({
               <span className="text-white font-medium text-sm">History</span>
             </Link>
           </motion.div>
+        </motion.div>
+
+        {/* Session Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="space-y-3"
+        >
+          <h2 className="text-lg font-semibold text-white">Training Sessions</h2>
+          
+          {/* Start New Session Button */}
+          <Button
+            onClick={handleStartNewSession}
+            disabled={creatingSession}
+            className="w-full bg-gradient-to-r from-[#F5A623] to-[#E89815] hover:from-[#E89815] hover:to-[#D68710] text-white py-6 text-lg font-semibold"
+          >
+            {creatingSession ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Starting Session...
+              </>
+            ) : (
+              <>
+                <PlayCircle className="w-5 h-5 mr-2" />
+                Start New Session
+              </>
+            )}
+          </Button>
+
+          {/* Resume Active Session Button */}
+          {!loadingSession && activeSession && (
+            <Link href={`/sessions/${activeSession.id}`}>
+              <Button
+                variant="outline"
+                className="w-full bg-gray-800/50 border-gray-700 hover:bg-gray-800 text-white py-6 text-lg font-semibold"
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Resume Current Session ({activeSession.swingCount} swings)
+              </Button>
+            </Link>
+          )}
+
+          {/* Session Loading State */}
+          {loadingSession && (
+            <Skeleton className="h-16 w-full rounded-lg" />
+          )}
         </motion.div>
 
         {/* Overall BARREL Score */}

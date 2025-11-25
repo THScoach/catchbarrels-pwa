@@ -104,6 +104,7 @@ async function handleFileImport(request: NextRequest, userId: string) {
     const video = await prisma.video.create({
       data: {
         userId,
+        sessionId: sessionId || null, // Optional - links video to training session
         title: videoFile.name.replace(/\.[^/.]+$/, ''),
         videoType,
         source: 'onform',
@@ -223,6 +224,7 @@ async function handleLinkImport(request: NextRequest, userId: string) {
     const video = await prisma.video.create({
       data: {
         userId,
+        sessionId: sessionId || null, // Optional - links video to training session
         title: `OnForm Import ${new Date().toLocaleDateString()}`,
         videoType,
         source: 'onform',
