@@ -96,7 +96,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
             >
               <Card className="bg-gray-800/50 border-gray-700 p-6">
                 <label className="block text-white font-semibold mb-3">
-                  <Target className="inline h-5 w-5 mr-2 text-orange-400" />
+                  <Target className="inline h-5 w-5 mr-2 text-barrels-gold" />
                   Lesson Goal (Optional)
                 </label>
                 <Select value={goal} onValueChange={setGoal}>
@@ -122,7 +122,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
             >
               <Card className="bg-gray-800/50 border-gray-700 p-6">
                 <label className="block text-white font-semibold mb-3">
-                  <FileText className="inline h-5 w-5 mr-2 text-orange-400" />
+                  <FileText className="inline h-5 w-5 mr-2 text-barrels-gold" />
                   Lesson Notes (Optional)
                 </label>
                 <Textarea
@@ -144,7 +144,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
                 size="lg"
                 onClick={handleStartLesson}
                 disabled={isCreating}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-lg h-16"
+                className="w-full bg-gradient-to-r from-barrels-gold to-barrels-gold-light hover:from-barrels-gold-light hover:to-barrels-gold text-barrels-black font-bold text-lg h-16"
               >
                 <Play className="mr-2 h-6 w-6" />
                 {isCreating ? 'Starting...' : 'Start Lesson!'}
@@ -163,7 +163,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
                 <div>
                   <h2 className="text-3xl font-bold text-white mb-1">Active Lesson</h2>
                   {activeLesson.goal && (
-                    <p className="text-orange-400 font-semibold">
+                    <p className="text-barrels-gold font-semibold">
                       Focus: {activeLesson.goal.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                     </p>
                   )}
@@ -182,7 +182,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
               transition={{ duration: 0.4, delay: 0.1 }}
             >
               <Card className="bg-gray-800/50 border-gray-700 p-8 text-center">
-                <Upload className="h-16 w-16 mx-auto mb-4 text-orange-400" />
+                <Upload className="h-16 w-16 mx-auto mb-4 text-barrels-gold" />
                 <h3 className="text-xl font-bold text-white mb-2">
                   {activeLesson.swingCount === 0 ? 'Upload your first swing' : 'Add another swing'}
                 </h3>
@@ -192,7 +192,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
                 <Button
                   size="lg"
                   onClick={() => router.push(`/video/upload?lessonId=${activeLesson.id}`)}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold"
+                  className="bg-gradient-to-r from-barrels-gold to-barrels-gold-light hover:from-barrels-gold-light hover:to-barrels-gold text-barrels-black font-bold"
                 >
                   <Upload className="mr-2 h-5 w-5" />
                   Upload Video
@@ -209,7 +209,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
               >
                 <h3 className="text-xl font-bold text-white mb-4">Lesson Averages</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Card className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 border-orange-500/40 p-4">
+                  <Card className="bg-gradient-to-br from-barrels-gold/20 to-barrels-gold-light/10 border-barrels-gold/40 p-4">
                     <p className="text-gray-300 text-sm mb-1">BARREL</p>
                     <p className="text-4xl font-bold text-white">
                       {activeLesson.lessonBarrelScore?.toFixed(0) || '—'}
@@ -227,7 +227,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
                       {activeLesson.lessonEngineScore?.toFixed(0) || '—'}
                     </p>
                   </Card>
-                  <Card className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 border-orange-500/40 p-4">
+                  <Card className="bg-gradient-to-br from-barrels-gold/20 to-barrels-gold-light/10 border-barrels-gold/40 p-4">
                     <p className="text-gray-300 text-sm mb-1">Whip</p>
                     <p className="text-4xl font-bold text-white">
                       {activeLesson.lessonWhipScore?.toFixed(0) || '—'}
@@ -248,7 +248,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
                 size="lg"
                 variant="outline"
                 onClick={handleEndLesson}
-                className="w-full bg-gray-800/50 border-gray-600 hover:border-orange-500/50 hover:bg-gray-800 text-white font-bold text-lg h-14"
+                className="w-full bg-gray-800/50 border-gray-600 hover:border-barrels-gold/50 hover:bg-gray-800 text-white font-bold text-lg h-14"
               >
                 <FileText className="mr-2 h-5 w-5" />
                 End Lesson & Save
