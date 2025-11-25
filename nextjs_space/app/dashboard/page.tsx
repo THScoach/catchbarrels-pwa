@@ -35,15 +35,28 @@ export default async function DashboardPage() {
     ? Math.round(((latestAssessment.anchorScore || 0) + (latestAssessment.engineScore || 0) + (latestAssessment.whipScore || 0)) / 3)
     : 0;
 
+  // TEMPORARY: Mock data for preview
   const scores = {
-    barrel: barrelScore,
-    anchor: latestAssessment?.anchorScore ? Math.round(latestAssessment.anchorScore) : 0,
-    engine: latestAssessment?.engineScore ? Math.round(latestAssessment.engineScore) : 0,
-    whip: latestAssessment?.whipScore ? Math.round(latestAssessment.whipScore) : 0,
+    barrel: 85,  // Mock: Overall BARREL Score
+    anchor: 82,  // Mock: Anchor (Feet & Ground) Score
+    engine: 88,  // Mock: Engine (Hips & Shoulders) Score
+    whip: 85,    // Mock: Whip (Arms & Bat) Score
   };
 
+  // PRODUCTION: Use real data from assessment
+  // const scores = {
+  //   barrel: barrelScore,
+  //   anchor: latestAssessment?.anchorScore ? Math.round(latestAssessment.anchorScore) : 0,
+  //   engine: latestAssessment?.engineScore ? Math.round(latestAssessment.engineScore) : 0,
+  //   whip: latestAssessment?.whipScore ? Math.round(latestAssessment.whipScore) : 0,
+  // };
+
   // Extract coaching text from assessment
-  const coachingText = latestAssessment?.coachNotes || null;
+  // TEMPORARY: Mock coaching text for preview
+  const coachingText = "Great progress on your swing mechanics! Your engine score shows strong hip rotation. Focus on maintaining your anchor foundation through contact - this will help stabilize your bat path and improve barrel control. Keep working on staying connected through the hitting zone.";
+  
+  // PRODUCTION: Use real data from assessment
+  // const coachingText = latestAssessment?.coachNotes || null;
 
   // Parse recommended drills from assessment (stored as JSON array)
   let recommendedDrills: any[] = [];
