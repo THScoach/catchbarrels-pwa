@@ -38,22 +38,23 @@ export default function BarrelsHeader({ activeTab }: BarrelsHeaderProps) {
 
   return (
     <>
-      {/* Simplified Top Bar - Icon and Menu Only */}
+      {/* Top Bar - Full BARRELS Logo and Menu */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="bg-gradient-to-r from-barrels-black-light to-barrels-black border-b border-barrels-black-lighter sticky top-0 z-20"
       >
-        <div className="max-w-4xl mx-auto px-4 py-3">
+        <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            {/* Left Side - Small Icon Only (subtle) */}
-            <div className="relative w-8 h-8 flex-shrink-0 opacity-60">
+            {/* Left Side - Full BARRELS Logo */}
+            <div className="relative h-12 w-auto">
               <Image
-                src="/barrels-icon.png"
+                src="/barrels-logo-transparent.png"
                 alt="BARRELS"
-                fill
-                className="object-contain"
+                height={48}
+                width={250}
+                className="object-contain object-left"
                 priority
               />
             </div>
@@ -70,34 +71,12 @@ export default function BarrelsHeader({ activeTab }: BarrelsHeaderProps) {
         </div>
       </motion.div>
 
-      {/* BARRELS Logo Header - Full transparent logo */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.05 }}
-        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[60px] z-15"
-      >
-        <div className="max-w-4xl mx-auto px-4 flex items-center h-24">
-          {/* Left-aligned transparent logo */}
-          <div className="relative h-14 w-auto">
-            <Image
-              src="/barrels-logo-transparent.png"
-              alt="BARRELS"
-              height={56}
-              width={300}
-              className="object-contain object-left"
-              priority
-            />
-          </div>
-        </div>
-      </motion.div>
-
       {/* Three-Tab Navigation Bar */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[156px] z-10"
+        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[80px] z-10"
       >
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="grid grid-cols-3 gap-2">
