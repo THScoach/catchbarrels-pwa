@@ -38,37 +38,24 @@ export default function BarrelsHeader({ activeTab }: BarrelsHeaderProps) {
 
   return (
     <>
-      {/* BARRELS Header Card */}
+      {/* Simplified Top Bar - Icon and Menu Only */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="bg-gradient-to-r from-barrels-black-light to-barrels-black border-b border-barrels-black-lighter sticky top-0 z-20"
       >
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            {/* Left Side - BARRELS Logo + Title + Tagline */}
-            <div className="flex items-center space-x-3">
-              {/* BARRELS Logo Icon */}
-              <div className="relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0">
-                <Image
-                  src="/barrels-icon.png"
-                  alt="BARRELS Logo"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
-              
-              {/* Title and Tagline */}
-              <div className="flex flex-col">
-                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-barrels-gold to-barrels-gold-light bg-clip-text text-transparent">
-                  BARRELS
-                </h1>
-                <p className="text-xs md:text-sm text-barrels-neutral-gray">
-                  Catch Some Barrels, {firstName}!
-                </p>
-              </div>
+            {/* Left Side - Small Icon Only (subtle) */}
+            <div className="relative w-8 h-8 flex-shrink-0 opacity-60">
+              <Image
+                src="/barrels-icon.png"
+                alt="BARRELS"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
 
             {/* Right Side - Menu Icon */}
@@ -88,7 +75,7 @@ export default function BarrelsHeader({ activeTab }: BarrelsHeaderProps) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[88px] md:top-[96px] z-10"
+        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[60px] z-10"
       >
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="grid grid-cols-3 gap-2">
