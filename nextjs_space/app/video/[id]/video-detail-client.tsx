@@ -19,9 +19,13 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { mapEngineMetricsFromScores } from '@/lib/engine-metrics-config';
+import { ProgressCharts } from '@/components/progress-charts';
 
 export function VideoDetailClient({ video, previousScores, personalBests, userHeight, userHandedness }: any) {
-  const [activeTab, setActiveTab] = useState<'analysis' | 'coach' | 'skeleton'>('analysis');
+  const [activeTab, setActiveTab] = useState<'analysis' | 'coach' | 'skeleton' | 'progress'>('analysis');
+  const [assessmentHistory, setAssessmentHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [coachFeedback, setCoachFeedback] = useState(video?.coachFeedback || '');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -220,6 +224,31 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
       setLoadingFeedback(false);
     }
   };
+
+  // Fetch assessment history for progress tracking
+  const fetchAssessmentHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const response = await fetch('/api/assessments/progress');
+      if (!response.ok) {
+        throw new Error('Failed to fetch assessment history');
+      }
+      const data = await response.json();
+      setAssessmentHistory(data.assessments || []);
+    } catch (error) {
+      console.error('Error fetching assessment history:', error);
+      setAssessmentHistory([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  // Load assessment history when progress tab is selected
+  useEffect(() => {
+    if (activeTab === 'progress' && assessmentHistory.length === 0) {
+      fetchAssessmentHistory();
+    }
+  }, [activeTab]);
 
   // Handle skeleton extraction completion (v2 - joint-only)
   const handleSkeletonExtracted = async (data: { skeletonData: any[]; fps: number }) => {
@@ -581,6 +610,16 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
           >
             Coach Rick AI
           </button>
+          <button
+            onClick={() => setActiveTab('progress')}
+            className={`pb-3 px-1 border-b-2 transition-colors ${
+              activeTab === 'progress'
+                ? 'border-[#F5A623] text-white'
+                : 'border-transparent text-gray-400'
+            }`}
+          >
+            📈 Progress
+          </button>
         </div>
 
         {activeTab === 'analysis' ? (
@@ -738,28 +777,12 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                       ]}
                     />
                     <ScoreCard 
-                      title="Engine" 
+                      title="ENGINE (Hips & Shoulders)" 
                       score={video.engine} 
                       icon="🔄" 
-                      description="Trunk/Core" 
+                      description="How well your hips and shoulders work together to create power" 
                       color="green"
-                      subCategories={[
-                        { 
-                          name: 'Motion (40%)', 
-                          score: Math.round(((video.engineHipRotation || 0) + (video.engineCorePower || 0)) / 2), 
-                          description: 'Pelvis→Torso gap timing'
-                        },
-                        { 
-                          name: 'Stability (40%)', 
-                          score: video.engineSeparation || 0, 
-                          description: 'X-Factor, spine tilt consistency'
-                        },
-                        { 
-                          name: 'Sequencing (20%)', 
-                          score: video.engineTorsoMechanics || 0, 
-                          description: 'Pelvis→Torso order correct'
-                        },
-                      ]}
+                      detailedMetrics={mapEngineMetricsFromScores(video)}
                     />
                     <ScoreCard 
                       title="Whip" 
@@ -867,7 +890,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
               </div>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'coach' ? (
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-12 h-12 bg-[#F5A623] rounded-full flex items-center justify-center">
@@ -904,7 +927,18 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
               </div>
             )}
           </div>
-        )}
+        ) : activeTab === 'progress' ? (
+          <div className="space-y-6">
+            {loadingHistory ? (
+              <div className="text-center py-12">
+                <Loader2 className="w-12 h-12 text-[#F5A623] mx-auto mb-4 animate-spin" />
+                <p className="text-white text-lg">Loading progress data...</p>
+              </div>
+            ) : (
+              <ProgressCharts assessments={assessmentHistory} />
+            )}
+          </div>
+        ) : null}
       </div>
 
       <BottomNav />
