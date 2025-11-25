@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
 import { Upload, TrendingUp, Play, ChevronRight, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
@@ -43,26 +42,6 @@ export default function DashboardClient({
     <div className="min-h-screen bg-barrels-black pb-24">
       {/* BARRELS Header with Navigation */}
       <BarrelsHeader activeTab="dashboard" />
-
-      {/* Hero Banner */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        className="w-full bg-barrels-black-light border-b border-barrels-black-lighter"
-      >
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden">
-            <Image
-              src="/banner.png"
-              alt="BARRELS - Catch Some Barrels"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-        </div>
-      </motion.div>
 
       <div className="p-4 space-y-6 max-w-4xl mx-auto mt-6">
 

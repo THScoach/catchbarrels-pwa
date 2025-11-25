@@ -70,12 +70,34 @@ export default function BarrelsHeader({ activeTab }: BarrelsHeaderProps) {
         </div>
       </motion.div>
 
+      {/* BARRELS Logo Header - Full transparent logo */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.05 }}
+        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[60px] z-15"
+      >
+        <div className="max-w-4xl mx-auto px-4 flex items-center h-24">
+          {/* Left-aligned transparent logo */}
+          <div className="relative h-14 w-auto">
+            <Image
+              src="/barrels-logo-transparent.png"
+              alt="BARRELS"
+              height={56}
+              width={300}
+              className="object-contain object-left"
+              priority
+            />
+          </div>
+        </div>
+      </motion.div>
+
       {/* Three-Tab Navigation Bar */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[60px] z-10"
+        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[156px] z-10"
       >
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="grid grid-cols-3 gap-2">
