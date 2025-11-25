@@ -75,7 +75,7 @@ export default function DashboardClient({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="relative bg-gradient-to-br from-barrels-gold/20 via-barrels-gold-soft/20 to-barrels-gold/10 border-2 border-barrels-gold/40 rounded-3xl p-12 shadow-2xl overflow-hidden"
+          className="relative bg-gradient-to-br from-barrels-gold/20 via-barrels-gold-soft/20 to-barrels-gold/10 border-2 border-barrels-gold/40 rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden"
         >
           {/* Background gradient accent */}
           <div className="absolute inset-0 bg-gradient-to-tr from-barrels-gold-dark/10 to-transparent pointer-events-none" />
@@ -89,83 +89,96 @@ export default function DashboardClient({
               <p className="text-sm text-barrels-muted">Your Overall Swing Performance</p>
             </div>
 
-            {/* Large centered score */}
-            <div className="flex items-center justify-center mb-8">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-9xl md:text-[12rem] font-black bg-gradient-to-br from-barrels-gold to-barrels-gold-soft bg-clip-text text-transparent drop-shadow-2xl leading-none"
-              >
-                {scores?.barrel || '—'}
-              </motion.div>
-            </div>
-
-            {/* Progress bar */}
-            {scores?.barrel > 0 && (
-              <div className="w-full bg-barrels-border/50 rounded-full h-4 mb-6 overflow-hidden">
+            {/* Main Score Layout - Score with Ring + Vertical Stacked Metrics */}
+            <div className="flex items-center justify-center gap-8 md:gap-12">
+              {/* Large centered score with ring */}
+              <div className="relative flex items-center justify-center">
+                {/* Circular progress ring */}
+                <svg className="absolute inset-0 w-48 h-48 md:w-64 md:h-64 -rotate-90" viewBox="0 0 100 100">
+                  {/* Background ring */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    className="text-barrels-border/30"
+                  />
+                  {/* Progress ring */}
+                  <motion.circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    fill="none"
+                    stroke="url(#goldGradient)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 42}`}
+                    initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
+                    animate={{ 
+                      strokeDashoffset: 2 * Math.PI * 42 * (1 - (scores?.barrel || 0) / 100) 
+                    }}
+                    transition={{ duration: 1.5, delay: 0.3 }}
+                  />
+                  <defs>
+                    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FFC93C" />
+                      <stop offset="100%" stopColor="#F8E16A" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                
+                {/* Score number */}
                 <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${scores.barrel}%` }}
-                  transition={{ duration: 1, delay: 0.4 }}
-                  className="h-4 rounded-full bg-gradient-to-r from-barrels-gold to-barrels-gold-soft shadow-lg shadow-barrels-gold/30"
-                />
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="text-6xl md:text-7xl font-black bg-gradient-to-br from-barrels-gold to-barrels-gold-soft bg-clip-text text-transparent drop-shadow-2xl leading-none"
+                >
+                  {scores?.barrel || '—'}
+                </motion.div>
               </div>
-            )}
 
-            {/* Mini sub-scores */}
-            {scores?.barrel > 0 && (
-              <div className="flex gap-3 justify-center text-sm">
-                <div className="bg-barrels-surface rounded-xl px-4 py-3 text-center border border-barrels-border flex-1 max-w-[100px]">
-                  <div className="text-barrels-gold font-semibold text-xs mb-1">ANCHOR</div>
-                  <div className="text-barrels-text font-black text-xl">{scores.anchor || 0}</div>
+              {/* Vertically stacked metric scores */}
+              {scores?.barrel > 0 && (
+                <div className="flex flex-col gap-3">
+                  {/* Anchor */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.4 }}
+                    className="flex items-center gap-3 bg-barrels-surface/50 border border-barrels-border rounded-xl px-4 py-2"
+                  >
+                    <Pill label="Anchor" variant="gold" className="text-[10px] px-2 py-0.5" />
+                    <div className="text-2xl font-black text-barrels-text">{scores.anchor || 0}</div>
+                  </motion.div>
+
+                  {/* Engine */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 }}
+                    className="flex items-center gap-3 bg-barrels-gold/10 border border-barrels-gold/30 rounded-xl px-4 py-2"
+                  >
+                    <Pill label="Engine" variant="gold" className="text-[10px] px-2 py-0.5" />
+                    <div className="text-2xl font-black text-barrels-text">{scores.engine || 0}</div>
+                  </motion.div>
+
+                  {/* Whip */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.6 }}
+                    className="flex items-center gap-3 bg-barrels-surface/50 border border-barrels-border rounded-xl px-4 py-2"
+                  >
+                    <Pill label="Whip" variant="gold" className="text-[10px] px-2 py-0.5" />
+                    <div className="text-2xl font-black text-barrels-text">{scores.whip || 0}</div>
+                  </motion.div>
                 </div>
-                <div className="bg-barrels-gold/10 rounded-xl px-4 py-3 text-center border border-barrels-gold/30 flex-1 max-w-[100px]">
-                  <div className="text-barrels-gold-soft font-semibold text-xs mb-1">ENGINE</div>
-                  <div className="text-barrels-text font-black text-xl">{scores.engine || 0}</div>
-                </div>
-                <div className="bg-barrels-surface rounded-xl px-4 py-3 text-center border border-barrels-border flex-1 max-w-[100px]">
-                  <div className="text-barrels-gold font-semibold text-xs mb-1">WHIP</div>
-                  <div className="text-barrels-text font-black text-xl">{scores.whip || 0}</div>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </motion.div>
-
-        {/* Secondary Tiles - Anchor, Engine, Whip */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-        >
-          {/* Anchor Tile */}
-          <Tile className="p-6 text-center">
-            <Pill label="Anchor" variant="gold" className="mb-3" />
-            <div className="text-4xl md:text-5xl font-black text-barrels-text mb-2">
-              {scores?.anchor || '—'}
-            </div>
-            <p className="text-xs text-barrels-muted">Stability & ground control</p>
-          </Tile>
-
-          {/* Engine Tile */}
-          <Tile className="bg-gradient-to-br from-barrels-gold/5 to-barrels-surface border-barrels-gold/20 p-6 text-center">
-            <Pill label="Engine" variant="gold" className="mb-3" />
-            <div className="text-4xl md:text-5xl font-black text-barrels-text mb-2">
-              {scores?.engine || '—'}
-            </div>
-            <p className="text-xs text-barrels-muted">Hip & shoulder sequence</p>
-          </Tile>
-
-          {/* Whip Tile */}
-          <Tile className="p-6 text-center">
-            <Pill label="Whip" variant="gold" className="mb-3" />
-            <div className="text-4xl md:text-5xl font-black text-barrels-text mb-2">
-              {scores?.whip || '—'}
-            </div>
-            <p className="text-xs text-barrels-muted">Barrel speed & direction</p>
-          </Tile>
         </motion.div>
 
         {/* BARRELS-Style Coaching Text Block */}
