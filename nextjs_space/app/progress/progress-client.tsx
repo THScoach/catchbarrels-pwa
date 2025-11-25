@@ -9,37 +9,20 @@ import { ChartSkeleton, StatCardSkeleton, Skeleton } from '@/components/ui/skele
 import { EmptyState } from '@/components/ui/empty-state';
 import { TrendingUp } from 'lucide-react';
 
-const LineChart = dynamic(
-  () => import('recharts').then((mod) => mod.LineChart),
-  { ssr: false }
-);
-const Line = dynamic(
-  () => import('recharts').then((mod) => mod.Line),
-  { ssr: false }
-);
-const XAxis = dynamic(
-  () => import('recharts').then((mod) => mod.XAxis),
-  { ssr: false }
-);
-const YAxis = dynamic(
-  () => import('recharts').then((mod) => mod.YAxis),
-  { ssr: false }
-);
-const CartesianGrid = dynamic(
-  () => import('recharts').then((mod) => mod.CartesianGrid),
-  { ssr: false }
-);
-const Tooltip = dynamic(
-  () => import('recharts').then((mod) => mod.Tooltip),
-  { ssr: false }
-);
-const ResponsiveContainer = dynamic(
-  () => import('recharts').then((mod) => mod.ResponsiveContainer),
-  { ssr: false }
-);
-const Legend = dynamic(
-  () => import('recharts').then((mod) => mod.Legend),
-  { ssr: false }
+// Dynamic import with ssr: false to avoid chunk loading issues with recharts
+const ProgressPageChart = dynamic(
+  () => import('@/components/progress-page-chart').then(mod => ({ default: mod.ProgressPageChart })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-700 rounded w-48 mb-4"></div>
+          <div className="h-80 bg-gray-700/50 rounded"></div>
+        </div>
+      </div>
+    ),
+  }
 );
 
 export function ProgressClient({ progress }: any) {
@@ -98,73 +81,7 @@ export function ProgressClient({ progress }: any) {
 
         {chartData?.length > 0 ? (
           <div className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-gray-800/50 border border-gray-700 rounded-lg p-6"
-            >
-              <h2 className="text-white font-semibold mb-4">Body Metrics Score Trends</h2>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis
-                      dataKey="date"
-                      stroke="#9ca3af"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <YAxis
-                      stroke="#9ca3af"
-                      style={{ fontSize: '12px' }}
-                      domain={[0, 100]}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1f2937',
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
-                        color: '#fff',
-                      }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    <Line
-                      type="monotone"
-                      dataKey="Anchor (Lower Body)"
-                      stroke="#F5A623"
-                      strokeWidth={3}
-                      dot={{ r: 5, fill: '#F5A623' }}
-                      activeDot={{ r: 7 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Engine (Trunk/Core)"
-                      stroke="#4CAF50"
-                      strokeWidth={3}
-                      dot={{ r: 5, fill: '#4CAF50' }}
-                      activeDot={{ r: 7 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Whip (Arms & Bat)"
-                      stroke="#9C27B0"
-                      strokeWidth={3}
-                      dot={{ r: 5, fill: '#9C27B0' }}
-                      activeDot={{ r: 7 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Overall"
-                      stroke="#FF9800"
-                      strokeWidth={3}
-                      strokeDasharray="5 5"
-                      dot={{ r: 5, fill: '#FF9800' }}
-                      activeDot={{ r: 7 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </motion.div>
+            <ProgressPageChart chartData={chartData} />
 
             {/* Stats Summary */}
             <motion.div
