@@ -26,7 +26,7 @@ export function AnalysisResultsCard({ scores }: AnalysisResultsCardProps) {
           Analysis Results
         </h2>
 
-        {/* Center: Big GOAT Circle */}
+        {/* Center: Big BARREL Circle */}
         <div className="flex flex-col items-center mb-6">
           <div className="relative">
             {/* Circular progress ring */}
@@ -62,7 +62,7 @@ export function AnalysisResultsCard({ scores }: AnalysisResultsCardProps) {
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <Trophy className="w-6 h-6 text-orange-500 mb-1" />
               <span className="text-3xl font-bold text-white">{scores.goat}</span>
-              <span className="text-xs text-gray-400">GOAT</span>
+              <span className="text-xs text-gray-400">BARREL</span>
             </div>
           </div>
         </div>

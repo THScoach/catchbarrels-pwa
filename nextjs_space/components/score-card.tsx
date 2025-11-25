@@ -400,7 +400,7 @@ export function ScoreCard({
 }
 
 /**
- * MetricDetailCard - Renders individual metric with kid-friendly explanations and GOAT pattern
+ * MetricDetailCard - Renders individual metric with kid-friendly explanations and BARREL pattern
  */
 function MetricDetailCard({
   metric,
@@ -489,7 +489,7 @@ function MetricDetailCard({
         {metric.why_it_matters}
       </p>
 
-      {/* GOAT pattern - highlighted */}
+      {/* BARREL pattern - highlighted */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -500,7 +500,7 @@ function MetricDetailCard({
           <Trophy className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5 animate-pulse-slow" />
           <div>
             <p className="text-xs md:text-sm font-bold text-amber-200 mb-1.5 flex items-center gap-1">
-              🏆 GOAT Pattern
+              🏆 BARREL Pattern
             </p>
             <p className="text-xs md:text-sm text-amber-50/90 leading-relaxed">
               {metric.goat_pattern}

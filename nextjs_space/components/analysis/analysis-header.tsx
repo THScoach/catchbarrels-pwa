@@ -36,14 +36,14 @@ export function AnalysisHeader({ player, session, scores }: AnalysisHeaderProps)
           <p className="text-xs text-gray-500 mt-0.5">{session.date}</p>
         </div>
 
-        {/* Right: GOAT + Chips */}
+        {/* Right: BARREL + Chips */}
         <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          {/* GOAT Score */}
-          <div className="flex items-center gap-2 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border border-orange-500/30 rounded-lg px-3 py-1.5">
-            <Trophy className="w-4 h-4 text-orange-500" />
+          {/* BARREL Score */}
+          <div className="flex items-center gap-2 bg-gradient-to-r from-barrels-gold/20 to-barrels-gold-light/20 border border-barrels-gold/30 rounded-lg px-3 py-1.5">
+            <Trophy className="w-4 h-4 text-barrels-gold" />
             <div className="flex flex-col items-end">
-              <span className="text-xs text-orange-300 font-medium leading-none">GOAT</span>
-              <span className="text-xl font-bold text-orange-500 leading-none">{scores.goat}</span>
+              <span className="text-xs text-barrels-gold-light font-medium leading-none">BARREL</span>
+              <span className="text-xl font-bold text-barrels-gold leading-none">{scores.goat}</span>
               <span className="text-[10px] text-gray-400 leading-none">/100</span>
             </div>
           </div>
@@ -52,7 +52,7 @@ export function AnalysisHeader({ player, session, scores }: AnalysisHeaderProps)
           <div className="flex items-center gap-1.5">
             <Badge 
               variant="outline" 
-              className="text-[11px] px-2 py-0.5 bg-orange-500/10 border-orange-500/30 text-orange-400"
+              className="text-[11px] px-2 py-0.5 bg-barrels-gold/10 border-barrels-gold/30 text-barrels-gold-light"
             >
               ANCHOR {scores.anchor}
             </Badge>

@@ -1,6 +1,6 @@
 /**
  * BARRELS Metrics Configuration (ANCHOR + ENGINE + WHIP)
- * Kid-friendly language for 8th grade / HS hitters with GOAT pattern guidance
+ * Kid-friendly language for 8th grade / HS hitters with BARREL pattern guidance
  */
 
 export type MetricGrade = 'A' | 'B' | 'C' | 'D' | 'F' | 'Good' | 'OK' | 'Needs Work';
@@ -29,7 +29,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
     name: 'Hip Turn',
     what_it_is: 'How much your hips turn during the swing.',
     why_it_matters: 'Strong hip turn drives power from the ground up.',
-    goat_pattern: 'In GOAT swings, the hips get all the way through toward the pitcher by contact, not stuck facing home plate.',
+    goat_pattern: 'In BARREL swings, the hips get all the way through toward the pitcher by contact, not stuck facing home plate.',
     category: 'motion',
     weight: 40
   },
@@ -38,7 +38,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
     name: 'Shoulder Turn',
     what_it_is: 'How much your shoulders and chest turn.',
     why_it_matters: 'Your shoulders carry power from your hips into your arms and bat.',
-    goat_pattern: 'In GOAT swings, the back shoulder really comes through the ball, not just the arms swinging.',
+    goat_pattern: 'In BARREL swings, the back shoulder really comes through the ball, not just the arms swinging.',
     category: 'motion',
     weight: 30
   },
@@ -47,7 +47,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
     name: 'Hip–Shoulder Stretch',
     what_it_is: 'How much your hips start to open while your shoulders stay back—the stretch you feel across your core.',
     why_it_matters: 'That stretch works like a pulled rubber band and helps snap the bat through the zone.',
-    goat_pattern: 'In GOAT swings, the hips fire first while the chest stays back for a split second, then the chest launches like a whip.',
+    goat_pattern: 'In BARREL swings, the hips fire first while the chest stays back for a split second, then the chest launches like a whip.',
     category: 'motion',
     weight: 30
   },
@@ -57,7 +57,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
     name: 'Posture Control',
     what_it_is: 'Keeping your body in a strong, balanced position throughout the swing.',
     why_it_matters: 'Good posture means better balance and more consistent contact.',
-    goat_pattern: 'In GOAT swings, the head stays about the same height while the lower body works underneath.',
+    goat_pattern: 'In BARREL swings, the head stays about the same height while the lower body works underneath.',
     category: 'stability',
     weight: 35
   },
@@ -66,7 +66,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
     name: 'Shoulder Finish',
     what_it_is: 'How your shoulders rotate and finish after hitting the ball.',
     why_it_matters: 'Too little turn kills power; too much turn makes you spin off the ball.',
-    goat_pattern: 'In GOAT swings, the shoulders finish turned toward the pitcher but still "on" the ball, not flying open toward the dugout.',
+    goat_pattern: 'In BARREL swings, the shoulders finish turned toward the pitcher but still "on" the ball, not flying open toward the dugout.',
     category: 'stability',
     weight: 35
   },
@@ -75,7 +75,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
     name: 'Back Leg Support',
     what_it_is: 'How well your back leg pushes and supports your body\'s rotation.',
     why_it_matters: 'A strong back leg lets you drive the ground and keep your swing stable.',
-    goat_pattern: 'In GOAT swings, the back leg stays strong and drives the ground instead of the back knee just collapsing.',
+    goat_pattern: 'In BARREL swings, the back leg stays strong and drives the ground instead of the back knee just collapsing.',
     category: 'stability',
     weight: 30
   },
@@ -85,7 +85,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
     name: 'Hips First',
     what_it_is: 'Starting your swing with your hips before your shoulders.',
     why_it_matters: 'Great swings go hips → shoulders → arms → bat.',
-    goat_pattern: 'In GOAT swings, the hips clearly win the race and the shoulders chase a split second later.',
+    goat_pattern: 'In BARREL swings, the hips clearly win the race and the shoulders chase a split second later.',
     category: 'sequencing',
     weight: 30
   },
@@ -94,7 +94,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
     name: 'Hips‑to‑Shoulders Timing',
     what_it_is: 'The smooth, powerful hand-off of energy from your hips to your shoulders.',
     why_it_matters: 'Shows how cleanly you pass power from hips to shoulders.',
-    goat_pattern: 'In GOAT swings, it looks like a smooth wave—hips fire, then shoulders catch and go, not everything jerking at once.',
+    goat_pattern: 'In BARREL swings, it looks like a smooth wave—hips fire, then shoulders catch and go, not everything jerking at once.',
     category: 'sequencing',
     weight: 40
   },
@@ -103,7 +103,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
     name: 'Engine Sequence',
     what_it_is: 'The overall order and flow of your hips and shoulders working together.',
     why_it_matters: 'Summarizes how well your "engine" is working.',
-    goat_pattern: 'GOAT swings almost always show a clean chain: hips → shoulders → bat.',
+    goat_pattern: 'BARREL swings almost always show a clean chain: hips → shoulders → bat.',
     category: 'sequencing',
     weight: 30
   }
@@ -118,7 +118,7 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
     name: 'Load Into Back Leg',
     what_it_is: 'How well you sink into your back leg before you start the swing.',
     why_it_matters: 'Loading your back leg stores energy like a coiled spring, ready to explode.',
-    goat_pattern: 'In GOAT swings, the back knee flexes and the back hip loads down and back, not just shifting weight.',
+    goat_pattern: 'In BARREL swings, the back knee flexes and the back hip loads down and back, not just shifting weight.',
     category: 'motion',
     weight: 33
   },
@@ -127,7 +127,7 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
     name: 'Stride Move',
     what_it_is: 'How smooth and controlled your step or stride is toward the pitcher.',
     why_it_matters: 'A controlled stride helps you stay balanced and on-time.',
-    goat_pattern: 'In GOAT swings, the stride is smooth and controlled, not too big or rushed, landing soft.',
+    goat_pattern: 'In BARREL swings, the stride is smooth and controlled, not too big or rushed, landing soft.',
     category: 'motion',
     weight: 33
   },
@@ -136,7 +136,7 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
     name: 'Weight Shift',
     what_it_is: 'How well your weight moves from your back leg into your front leg as you swing.',
     why_it_matters: 'Great swings transfer energy from back to front, not staying stuck on the back side.',
-    goat_pattern: 'In GOAT swings, the weight flows smoothly forward as the swing happens, driving through the ball.',
+    goat_pattern: 'In BARREL swings, the weight flows smoothly forward as the swing happens, driving through the ball.',
     category: 'motion',
     weight: 34
   },
@@ -146,7 +146,7 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
     name: 'Head Balance',
     what_it_is: 'How steady your head stays while your body moves around it.',
     why_it_matters: 'A steady head means better vision and more consistent contact.',
-    goat_pattern: 'In GOAT swings, the head stays level and quiet, not dipping or pulling off the ball.',
+    goat_pattern: 'In BARREL swings, the head stays level and quiet, not dipping or pulling off the ball.',
     category: 'stability',
     weight: 33
   },
@@ -155,7 +155,7 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
     name: 'Base Width',
     what_it_is: 'How strong and athletic your stance is—feet not too close, not too wide.',
     why_it_matters: 'A good base lets you generate power and stay balanced through the swing.',
-    goat_pattern: 'In GOAT swings, the feet are shoulder-width or slightly wider, giving a strong, athletic foundation.',
+    goat_pattern: 'In BARREL swings, the feet are shoulder-width or slightly wider, giving a strong, athletic foundation.',
     category: 'stability',
     weight: 33
   },
@@ -164,7 +164,7 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
     name: 'Front Side Brace',
     what_it_is: 'How firm your front leg and front side are at and after contact.',
     why_it_matters: 'A firm front side blocks your forward momentum and lets your body rotate hard.',
-    goat_pattern: 'In GOAT swings, the front leg straightens and firms up at contact, not collapsing or soft.',
+    goat_pattern: 'In BARREL swings, the front leg straightens and firms up at contact, not collapsing or soft.',
     category: 'stability',
     weight: 34
   },
@@ -174,7 +174,7 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
     name: 'Load → Stride Timing',
     what_it_is: 'How well your load into the back leg flows into your stride toward the pitcher.',
     why_it_matters: 'Shows how smoothly your lower body starts the swing sequence.',
-    goat_pattern: 'In GOAT swings, the load and stride feel connected, not jerky or separated.',
+    goat_pattern: 'In BARREL swings, the load and stride feel connected, not jerky or separated.',
     category: 'sequencing',
     weight: 33
   },
@@ -183,7 +183,7 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
     name: 'Ground-Up Start',
     what_it_is: 'Whether your swing starts from the ground and legs instead of just the hands.',
     why_it_matters: 'Power comes from the ground up—legs first, then everything else.',
-    goat_pattern: 'In GOAT swings, you can see the legs drive first, then the hips, then the torso and arms.',
+    goat_pattern: 'In BARREL swings, you can see the legs drive first, then the hips, then the torso and arms.',
     category: 'sequencing',
     weight: 33
   },
@@ -192,7 +192,7 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
     name: 'Anchor Sequence',
     what_it_is: 'The overall order of how your feet, legs, and weight shift work together.',
     why_it_matters: 'Summarizes how well your lower body foundation is working.',
-    goat_pattern: 'GOAT swings show a clear pattern: load → stride → drive from the ground.',
+    goat_pattern: 'BARREL swings show a clear pattern: load → stride → drive from the ground.',
     category: 'sequencing',
     weight: 34
   }
@@ -207,7 +207,7 @@ export const WHIP_METRICS: Record<string, MetricDefinition> = {
     name: 'Hand Path',
     what_it_is: 'The path your hands take from launch to contact—whether they stay on a clean line to the ball or loop around.',
     why_it_matters: 'A clean hand path keeps the barrel in the hitting zone longer and makes it easier to square up different pitch locations.',
-    goat_pattern: 'In GOAT swings, the hands stay tight to the body and work straight to the ball—not casting way out early and not chopping straight down.',
+    goat_pattern: 'In BARREL swings, the hands stay tight to the body and work straight to the ball—not casting way out early and not chopping straight down.',
     category: 'motion',
     weight: 33
   },
@@ -216,7 +216,7 @@ export const WHIP_METRICS: Record<string, MetricDefinition> = {
     name: 'Barrel Turn',
     what_it_is: 'How quickly and smoothly the barrel turns behind you and into the zone.',
     why_it_matters: 'Good barrel turn gives you early bat speed and helps you match the pitch plane, so you don\'t have to be perfect with timing to hit the ball hard.',
-    goat_pattern: 'In GOAT swings, the barrel starts turning behind the hitter and gets on plane early, not staying straight up and then flipping late at the ball.',
+    goat_pattern: 'In BARREL swings, the barrel starts turning behind the hitter and gets on plane early, not staying straight up and then flipping late at the ball.',
     category: 'motion',
     weight: 33
   },
@@ -225,7 +225,7 @@ export const WHIP_METRICS: Record<string, MetricDefinition> = {
     name: 'Release Speed',
     what_it_is: 'How fast the bat is moving through the hitting zone at and just after contact.',
     why_it_matters: 'Release speed is a big part of exit velocity. Even with a good body move, a slow or mistimed release leaves power on the table.',
-    goat_pattern: 'In GOAT swings, you can see the bat whip through contact and keep accelerating past the ball—not slam on the brakes or slow down early.',
+    goat_pattern: 'In BARREL swings, you can see the bat whip through contact and keep accelerating past the ball—not slam on the brakes or slow down early.',
     category: 'motion',
     weight: 34
   },
@@ -235,7 +235,7 @@ export const WHIP_METRICS: Record<string, MetricDefinition> = {
     name: 'Contact Point',
     what_it_is: 'Where you\'re making contact relative to your body—too deep, too far out front, or in the "strong" zone.',
     why_it_matters: 'Even a good swing shape won\'t work if the ball is always too deep or too far out in front. The best hitters find the strong contact window over and over.',
-    goat_pattern: 'In GOAT swings, most balls are hit in front of the front hip, not jammed off the back hip and not way out past the front foot.',
+    goat_pattern: 'In BARREL swings, most balls are hit in front of the front hip, not jammed off the back hip and not way out past the front foot.',
     category: 'stability',
     weight: 33
   },
@@ -244,7 +244,7 @@ export const WHIP_METRICS: Record<string, MetricDefinition> = {
     name: 'Barrel Plane',
     what_it_is: 'How well the barrel\'s path matches the pitch\'s path (uphill/downhill angle).',
     why_it_matters: 'If your barrel is chopping down or scooping up too much, your "sweet spot time" in the zone is short, and your mishits go way up.',
-    goat_pattern: 'In GOAT swings, the barrel matches the pitch plane for a long time—almost riding the ball\'s line, not crossing it sharply.',
+    goat_pattern: 'In BARREL swings, the barrel matches the pitch plane for a long time—almost riding the ball\'s line, not crossing it sharply.',
     category: 'stability',
     weight: 33
   },
@@ -253,7 +253,7 @@ export const WHIP_METRICS: Record<string, MetricDefinition> = {
     name: 'Finish Control',
     what_it_is: 'How under control your arms and bat are after contact—do you finish balanced or fall off and lose the barrel?',
     why_it_matters: 'A wild, out‑of‑control finish usually means you\'re yanking with the arms instead of letting the whole sequence drive the bat.',
-    goat_pattern: 'In GOAT swings, the finish looks smooth and balanced; the hitter doesn\'t spin off or lose the bat with a big yank after contact.',
+    goat_pattern: 'In BARREL swings, the finish looks smooth and balanced; the hitter doesn\'t spin off or lose the bat with a big yank after contact.',
     category: 'stability',
     weight: 34
   },
@@ -263,7 +263,7 @@ export const WHIP_METRICS: Record<string, MetricDefinition> = {
     name: 'Engine → Whip Timing',
     what_it_is: 'How well the "engine" (hips and shoulders) finishes loading the barrel before the arms and bat fire.',
     why_it_matters: 'If the arms go too early, you lose the stretch and the whip. If they go too late, you\'re late on the ball.',
-    goat_pattern: 'In GOAT swings, the body creates stretch first, then the arms and bat fire right after—like cracking a whip after you\'ve snapped it back.',
+    goat_pattern: 'In BARREL swings, the body creates stretch first, then the arms and bat fire right after—like cracking a whip after you\'ve snapped it back.',
     category: 'sequencing',
     weight: 33
   },
@@ -272,7 +272,7 @@ export const WHIP_METRICS: Record<string, MetricDefinition> = {
     name: 'Hand Break & Launch',
     what_it_is: 'When and how your hands separate from the stance and start the swing.',
     why_it_matters: 'A clean hand break and launch keeps your swing on time. A late or jumpy hand move makes you late or early on everything.',
-    goat_pattern: 'In GOAT swings, the hands come off the shoulder or launch position in sync with the body—not frozen too long and not flying out way too soon.',
+    goat_pattern: 'In BARREL swings, the hands come off the shoulder or launch position in sync with the body—not frozen too long and not flying out way too soon.',
     category: 'sequencing',
     weight: 33
   },
@@ -281,7 +281,7 @@ export const WHIP_METRICS: Record<string, MetricDefinition> = {
     name: 'Whip Sequence',
     what_it_is: 'Overall grade for how well your arms and bat follow the right order and timing with the rest of your body.',
     why_it_matters: 'Summarizes how well your "whip" is doing its job: snapping the bat through at the right moment with the speed your body created.',
-    goat_pattern: 'GOAT swings almost always show a clean chain: ground → hips → shoulders → arms → bat, with the whip cracking right through the ball.',
+    goat_pattern: 'BARREL swings almost always show a clean chain: ground → hips → shoulders → arms → bat, with the whip cracking right through the ball.',
     category: 'sequencing',
     weight: 34
   }

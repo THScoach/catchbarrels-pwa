@@ -148,7 +148,7 @@ export function ProgressCharts({ assessments }: ProgressChartsProps) {
             <span className="text-sm font-bold text-white">{score}/100</span>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-xs text-gray-300">Gap to GOAT:</span>
+            <span className="text-xs text-gray-300">Gap to Target:</span>
             <span className="text-sm font-bold text-amber-400">{gap} pts</span>
           </div>
         </div>
@@ -170,17 +170,17 @@ export function ProgressCharts({ assessments }: ProgressChartsProps) {
 
   return (
     <div className="space-y-6">
-      {/* GOAT Pattern Info */}
+      {/* BARREL Pattern Info */}
       <Card className="bg-gradient-to-br from-amber-500/10 to-yellow-600/10 border-amber-500/20">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <Trophy className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="text-sm font-semibold text-amber-200 mb-1">
-                What is GOAT pattern?
+                What is BARREL pattern?
               </h4>
               <p className="text-xs text-amber-100/80 leading-relaxed">
-                GOAT pattern = how the very best hitters in the world usually move on this part of the swing.
+                BARREL pattern = how the very best hitters in the world usually move on this part of the swing.
                 Our target score of {GOAT_TARGET} represents elite-level biomechanics.
               </p>
             </div>
@@ -300,7 +300,7 @@ export function ProgressCharts({ assessments }: ProgressChartsProps) {
         </CardContent>
       </Card>
 
-      {/* Gap to GOAT Chart */}
+      {/* Gap to Target Chart */}
       <Card className="bg-gray-800/50 border-gray-700/50">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">

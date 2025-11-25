@@ -58,8 +58,8 @@
 @layer base {
   :root {
     /* BARRELS Brand Theme - Default (Dark Mode) */
-    /* Primary: Electric Gold */
-    --background: 0 0% 5.1%; /* #0D0D0D - Midnight Black */
+    /* Colors sampled from final.png banner */
+    --background: 0 0% 0%; /* #000000 - Pure Black */
     --foreground: 0 0% 100%; /* #FFFFFF - White */
 
     --card: 0 0% 10.2%; /* #1A1A1A - Light Black */
@@ -68,8 +68,8 @@
     --popover: 0 0% 10.2%;
     --popover-foreground: 0 0% 100%;
  
-    --primary: 43 93% 61%; /* #F5B942 - Electric Gold */
-    --primary-foreground: 0 0% 5.1%; /* Dark text on gold */
+    --primary: 41 78% 61%; /* #E8B14E - Electric Gold from final.png */
+    --primary-foreground: 0 0% 0%; /* Pure black text on gold */
  
     --secondary: 203 75% 57%; /* #3B9FE8 - Electric Blue */
     --secondary-foreground: 0 0% 100%;
@@ -85,14 +85,14 @@
 
     --border: 0 0% 16.5%; /* #2A2A2A */
     --input: 0 0% 16.5%;
-    --ring: 43 93% 61%; /* Gold ring */
+    --ring: 41 78% 61%; /* Gold ring from final.png */
  
     --radius: 0.5rem;
   }
  
   .dark {
     /* Dark mode uses same BARRELS theme */
-    --background: 0 0% 5.1%; /* #0D0D0D */
+    --background: 0 0% 0%; /* #000000 - Pure Black */
     --foreground: 0 0% 100%;
  
     --card: 0 0% 10.2%;
@@ -101,8 +101,8 @@
     --popover: 0 0% 10.2%;
     --popover-foreground: 0 0% 100%;
  
-    --primary: 43 93% 61%; /* #F5B942 - Electric Gold */
-    --primary-foreground: 0 0% 5.1%;
+    --primary: 41 78% 61%; /* #E8B14E - Electric Gold from final.png */
+    --primary-foreground: 0 0% 0%;
  
     --secondary: 203 75% 57%; /* #3B9FE8 - Electric Blue */
     --secondary-foreground: 0 0% 100%;
@@ -118,7 +118,7 @@
  
     --border: 0 0% 16.5%;
     --input: 0 0% 16.5%;
-    --ring: 43 93% 61%;
+    --ring: 41 78% 61%;
   }
 }
  

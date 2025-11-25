@@ -2,7 +2,7 @@
  * BARRELS Brand Theme Configuration
  * 
  * Official colors sampled from brand assets:
- * - banner.png
+ * - final.png (primary banner)
  * - barrels-icon.png (e2010299-f42e-4ff1-a5d7-dc396249f057.png)
  * 
  * DO NOT modify these colors without updating the brand assets.
@@ -10,46 +10,46 @@
 
 export const barrelsTheme = {
   colors: {
-    // Primary: Electric Gold (from bat and logo wordmark)
+    // Primary: Electric Gold (from BARRELS wordmark and bat in final.png)
     gold: {
-      DEFAULT: '#F5B942',
-      light: '#FFD96F',
-      dark: '#D89B2A',
-      gradient: 'from-[#F5B942] to-[#FFD96F]',
+      DEFAULT: '#E8B14E',  // Sampled from "BARRELS" text in final.png
+      light: '#F5C56B',    // Lighter shade for highlights
+      dark: '#C89A3A',     // Darker shade for active states
+      gradient: 'from-[#E8B14E] to-[#F5C56B]',
     },
     
-    // Secondary: Midnight Black (background)
+    // Secondary: Pure Black (background from final.png)
     black: {
-      DEFAULT: '#0D0D0D',
-      light: '#1A1A1A',
-      lighter: '#2A2A2A',
-      gradient: 'from-[#1A1A1A] to-[#0D0D0D]',
+      DEFAULT: '#000000',  // Pure black from final.png background
+      light: '#1A1A1A',    // Slightly lighter for cards
+      lighter: '#2A2A2A',  // Even lighter for borders
+      gradient: 'from-[#1A1A1A] to-[#000000]',
     },
     
-    // Accent: Electric Blue (swoosh)
+    // Accent: Electric Blue (swoosh from final.png)
     blue: {
-      DEFAULT: '#3B9FE8',
-      light: '#5AB3F0',
-      dark: '#2680C7',
+      DEFAULT: '#3B9FE8',  // Sampled from blue swoosh in icon
+      light: '#5AB3F0',    // Lighter for hover states
+      dark: '#2680C7',     // Darker for active states
       gradient: 'from-[#3B9FE8] to-[#5AB3F0]',
     },
     
     // Neutral: White/Silver for text
     neutral: {
-      white: '#FFFFFF',
-      silver: '#E5E5E5',
-      gray: '#A0A0A0',
-      darkGray: '#6B6B6B',
+      white: '#FFFFFF',    // Pure white for primary text
+      silver: '#E5E5E5',   // Silver for secondary text
+      gray: '#A0A0A0',     // Gray for muted text
+      darkGray: '#6B6B6B', // Dark gray for subtle text
     },
   },
   
   // Semantic color mappings
   semantic: {
-    primary: '#F5B942', // Gold
-    primaryHover: '#FFD96F',
-    primaryActive: '#D89B2A',
+    primary: '#E8B14E', // Gold
+    primaryHover: '#F5C56B',
+    primaryActive: '#C89A3A',
     
-    background: '#0D0D0D', // Black
+    background: '#000000', // Pure Black
     backgroundLight: '#1A1A1A',
     backgroundLighter: '#2A2A2A',
     
@@ -66,11 +66,11 @@ export const barrelsTheme = {
   
   // Gradient combinations
   gradients: {
-    primary: 'bg-gradient-to-r from-[#F5B942] to-[#FFD96F]',
-    primaryVertical: 'bg-gradient-to-b from-[#F5B942] to-[#D89B2A]',
-    background: 'bg-gradient-to-r from-[#1A1A1A] to-[#0D0D0D]',
+    primary: 'bg-gradient-to-r from-[#E8B14E] to-[#F5C56B]',
+    primaryVertical: 'bg-gradient-to-b from-[#E8B14E] to-[#C89A3A]',
+    background: 'bg-gradient-to-r from-[#1A1A1A] to-[#000000]',
     accent: 'bg-gradient-to-r from-[#3B9FE8] to-[#5AB3F0]',
-    hero: 'bg-gradient-to-br from-[#F5B942] via-[#3B9FE8] to-[#FFD96F]',
+    hero: 'bg-gradient-to-br from-[#E8B14E] via-[#3B9FE8] to-[#F5C56B]',
   },
 } as const;
 

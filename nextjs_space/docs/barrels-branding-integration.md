@@ -18,18 +18,18 @@ This document outlines the complete integration of the BARRELS brand identity in
 | Asset | Location | Usage | Dimensions |
 |-------|----------|-------|------------|
 | App Icon | `/public/barrels-icon.png` | PWA icon, header logo | 512×512px |
-| Banner | `/public/banner.png` | Dashboard hero banner | ~1200×400px (3:1 ratio) |
+| Primary Banner | `/public/banner.png` (final.png) | Dashboard hero banner | ~1500×600px (5:2 ratio) |
 
 ### 2. Official Color Palette
 
-**Sampled from brand assets and defined in `/lib/barrels-theme.ts`:**
+**Sampled from `final.png` banner and defined in `/lib/barrels-theme.ts`:**
 
 | Color Name | Hex Value | Usage | Variable Name |
 |------------|-----------|-------|---------------|
-| **Electric Gold** | `#F5B942` | Primary CTA, scores, highlights | `barrels-gold` |
-| Electric Gold Light | `#FFD96F` | Hover states, gradients | `barrels-gold-light` |
-| Electric Gold Dark | `#D89B2A` | Active states, shadows | `barrels-gold-dark` |
-| **Midnight Black** | `#0D0D0D` | Main background | `barrels-black` |
+| **Electric Gold** | `#E8B14E` | Primary CTA, scores, highlights | `barrels-gold` |
+| Electric Gold Light | `#F5C56B` | Hover states, gradients | `barrels-gold-light` |
+| Electric Gold Dark | `#C89A3A` | Active states, shadows | `barrels-gold-dark` |
+| **Pure Black** | `#000000` | Main background | `barrels-black` |
 | Midnight Black Light | `#1A1A1A` | Cards, panels | `barrels-black-light` |
 | Midnight Black Lighter | `#2A2A2A` | Borders, dividers | `barrels-black-lighter` |
 | **Electric Blue** | `#3B9FE8` | Accent, secondary actions | `barrels-blue` |
