@@ -9,7 +9,7 @@ import { AutoSkeletonExtractor } from '@/components/auto-skeleton-extractor';
 import { JointOverlayCompare } from '@/components/joint-overlay-compare';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
-import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock, MessageCircle } from 'lucide-react';
+import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock, MessageCircle, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
@@ -797,6 +797,19 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                           <Award className="w-5 h-5" />
                           <span className="text-sm font-semibold">Personal Best Overall Score!</span>
                         </div>
+                      )}
+
+                      {/* Add Another Swing button (if part of a lesson/session) */}
+                      {video.sessionId && (
+                        <Link
+                          href={`/video/upload?sessionId=${video.sessionId}`}
+                          className="block w-full mt-6"
+                        >
+                          <button className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-lg">
+                            <Plus className="w-5 h-5" />
+                            Add Another Swing to This Lesson
+                          </button>
+                        </Link>
                       )}
                     </>
                   );

@@ -1,491 +1,297 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { buttonVariants } from '@/lib/animations';
-import { Video as VideoIcon, TrendingUp, Target, Upload, Play, Calendar, Clock, Award, Home, History, MessageCircle, X, Send, Mic, Loader2, PlayCircle, Menu } from 'lucide-react';
-import { ScoreCard } from '@/components/score-card';
-import { BottomNav } from '@/components/bottom-nav';
-import { CoachRickDrawer } from '@/components/coach-rick-drawer';
-import Link from 'next/link';
-import { formatDistanceToNow, format } from 'date-fns';
-import { StatCardSkeleton, VideoCardSkeleton, Skeleton } from '@/components/ui/skeleton';
-import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
-import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores, mapWhipMetricsFromScores } from '@/lib/engine-metrics-config';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { MessageCircle, Plus } from 'lucide-react'
+import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
+import { ScoreCard } from '@/components/score-card'
+import { BottomNav } from '@/components/bottom-nav'
+import { CoachRickDrawer } from '@/components/coach-rick-drawer'
+import { NewLessonModal } from '@/components/new-lesson-modal'
+import { StatCardSkeleton, VideoCardSkeleton, Skeleton } from '@/components/ui/skeleton'
+import {
+  calculateProgress,
+  formatProgressChange,
+  getProgressIcon,
+  getProgressColor,
+} from '@/lib/utils'
+import {
+  mapEngineMetricsFromScores,
+  mapAnchorMetricsFromScores,
+  mapWhipMetricsFromScores,
+} from '@/lib/engine-metrics-config'
 
-export function DashboardClient({ 
-  user, 
-  scores, 
-  videos, 
+interface DashboardClientProps {
+  user: any
+  scores: any
+  videos: any[]
+  latestCoachingCall: any
+  membershipInfo: any
+}
+
+export default function DashboardClient({
+  user,
+  scores,
+  videos,
   latestCoachingCall,
-  membershipInfo = { tier: 'free', status: 'inactive' }
-}: any) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCoachRickOpen, setIsCoachRickOpen] = useState(false);
-  const [activeSession, setActiveSession] = useState<any>(null);
-  const [loadingSession, setLoadingSession] = useState(true);
-  const [creatingSession, setCreatingSession] = useState(false);
-  const router = useRouter();
+  membershipInfo,
+}: DashboardClientProps) {
+  const router = useRouter()
+  const [isCoachRickOpen, setIsCoachRickOpen] = useState(false)
+  const [isNewLessonModalOpen, setIsNewLessonModalOpen] = useState(false)
+  const [activeLesson, setActiveLesson] = useState<any>(null)
+  const [isLoadingLesson, setIsLoadingLesson] = useState(true)
 
-  // Fetch active session on mount
+  // Fetch active lesson on mount
   useEffect(() => {
-    const fetchActiveSession = async () => {
+    const fetchActiveLesson = async () => {
       try {
-        const response = await fetch('/api/sessions/active');
+        const response = await fetch('/api/sessions/active')
         if (response.ok) {
-          const data = await response.json();
-          setActiveSession(data.activeSession);
+          const data = await response.json()
+          setActiveLesson(data.activeSession)
         }
       } catch (error) {
-        console.error('Error fetching active session:', error);
+        console.error('Error fetching active lesson:', error)
       } finally {
-        setLoadingSession(false);
+        setIsLoadingLesson(false)
       }
-    };
-
-    fetchActiveSession();
-  }, []);
-
-  useEffect(() => {
-    // Simulate smooth loading transition
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleStartNewSession = async () => {
-    setCreatingSession(true);
-    try {
-      const response = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-
-      if (!response.ok) throw new Error('Failed to create session');
-
-      const data = await response.json();
-      toast.success('New session started!');
-      router.push(`/sessions/${data.session.id}`);
-    } catch (error) {
-      console.error('Error creating session:', error);
-      toast.error('Failed to start new session');
-      setCreatingSession(false);
     }
-  };
+    fetchActiveLesson()
+  }, [])
 
-
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#1a2332] pb-20">
-        {/* Header Skeleton */}
-        <div className="bg-gradient-to-r from-[#1a2332] to-[#2d3a4f] p-6 border-b border-gray-800">
-          <Skeleton className="h-8 w-64 mb-2" />
-          <Skeleton className="h-4 w-48" />
-        </div>
-
-        <div className="p-6 space-y-6 max-w-7xl mx-auto">
-          {/* Top Navigation Skeleton - Dashboard, New Lesson, History */}
-          <div className="flex gap-3 justify-center">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-32 rounded-full" />
-            ))}
-          </div>
-
-          {/* Overall BARREL Score Skeleton */}
-          <Skeleton className="h-32 w-full rounded-lg" />
-
-          {/* Body Metrics Skeleton */}
-          <div>
-            <Skeleton className="h-6 w-32 mb-4" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <StatCardSkeleton key={i} />
-              ))}
-            </div>
-          </div>
-
-          {/* Leaderboard Skeleton */}
-          <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg p-5">
-            <div className="flex items-center justify-between mb-4">
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-5 w-5 rounded-full" />
-            </div>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="w-8 h-8 rounded-full" />
-                      <Skeleton className="h-4 w-32" />
-                    </div>
-                    <Skeleton className="h-5 w-20" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <BottomNav />
-      </div>
-    );
+  const handleStartNewLesson = () => {
+    setIsNewLessonModalOpen(true)
   }
 
+  const handleContinueLesson = () => {
+    if (activeLesson?.id) {
+      router.push(`/sessions/${activeLesson.id}`)
+    }
+  }
+
+  const recentVideos = videos?.slice(0, 3) || []
+
+  const engineMetrics = scores?.engine
+    ? mapEngineMetricsFromScores(scores)
+    : undefined
+  const anchorMetrics = scores?.anchor
+    ? mapAnchorMetricsFromScores(scores)
+    : undefined
+  const whipMetrics = scores?.whip ? mapWhipMetricsFromScores(scores) : undefined
+
   return (
-    <div className="min-h-screen bg-[#1a2332] pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pb-20">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-gradient-to-r from-[#1a2332] to-[#2d3a4f] p-6 border-b border-gray-800"
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-white">Welcome back, {user?.name?.split(' ')[0] || 'Athlete'}! 👋</h1>
-            <p className="text-gray-400 text-sm mt-1">
-              {videos?.length > 0 
-                ? `Last swing: ${formatDistanceToNow(new Date(videos[0]?.uploadDate), { addSuffix: true })}`
-                : 'Ready to analyze your first swing?'}
-            </p>
+      <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Welcome back</h1>
+            <p className="text-gray-400 text-sm">{user?.name || 'Athlete'}</p>
           </div>
           <button
             onClick={() => setIsCoachRickOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors"
+            className="p-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 transition-colors"
           >
-            <MessageCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Ask Coach Rick</span>
+            <MessageCircle className="h-6 w-6 text-purple-400" />
           </button>
         </div>
-      </motion.div>
+      </div>
 
-      <div className="p-6 space-y-6 max-w-7xl mx-auto">
-        {/* Top Navigation Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex gap-3 justify-center"
-        >
-          <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#F5A623] to-[#E89815] px-5 py-3 rounded-full shadow-lg h-12 border-2 border-[#F5A623]">
-              <Home className="w-4 h-4 text-white" />
-              <span className="text-white font-medium text-sm">Dashboard</span>
-            </div>
-          </motion.div>
-          <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
-            <Link
-              href="/video/upload"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-gray-700 to-gray-800 px-5 py-3 rounded-full hover:shadow-lg transition-all duration-200 border border-gray-700 h-12"
-            >
-              <Play className="w-4 h-4 text-white" />
-              <span className="text-white font-medium text-sm">New Lesson</span>
-            </Link>
-          </motion.div>
-          <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
-            <Link
-              href="/video"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-gray-700 to-gray-800 px-5 py-3 rounded-full hover:shadow-lg transition-all duration-200 border border-gray-700 h-12"
-            >
-              <History className="w-4 h-4 text-white" />
-              <span className="text-white font-medium text-sm">History</span>
-            </Link>
-          </motion.div>
-        </motion.div>
-
-        {/* Session Management */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="space-y-3"
-        >
-          <h2 className="text-lg font-semibold text-white">Training Sessions</h2>
-          
-          {/* Start New Session Button */}
-          <Button
-            onClick={handleStartNewSession}
-            disabled={creatingSession}
-            className="w-full bg-gradient-to-r from-[#F5A623] to-[#E89815] hover:from-[#E89815] hover:to-[#D68710] text-white py-6 text-lg font-semibold"
-          >
-            {creatingSession ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Starting Session...
-              </>
-            ) : (
-              <>
-                <PlayCircle className="w-5 h-5 mr-2" />
-                Start New Session
-              </>
-            )}
-          </Button>
-
-          {/* Resume Active Session Button */}
-          {!loadingSession && activeSession && (
-            <Link href={`/sessions/${activeSession.id}`}>
-              <Button
-                variant="outline"
-                className="w-full bg-gray-800/50 border-gray-700 hover:bg-gray-800 text-white py-6 text-lg font-semibold"
-              >
-                <Play className="w-5 h-5 mr-2" />
-                Resume Current Session ({activeSession.swingCount} swings)
-              </Button>
-            </Link>
-          )}
-
-          {/* Session Loading State */}
-          {loadingSession && (
-            <Skeleton className="h-16 w-full rounded-lg" />
-          )}
-        </motion.div>
-
-        {/* Overall BARREL Score */}
-        {scores?.overall > 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg p-4"
-          >
-            <h2 className="text-base font-semibold text-white mb-3">Your BARREL Score</h2>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-4xl font-bold text-white">{scores.overall}</div>
-                <div className="text-xl font-semibold text-[#F5A623] mt-0.5">{scores.tier}</div>
-                <p className="text-gray-400 text-xs mt-1.5">
-                  {scores.overall >= 85
-                    ? 'Elite level! All three areas working together.'
-                    : scores.overall >= 75
-                    ? 'Advanced mechanics! Strong foundation.'
-                    : scores.overall >= 65
-                    ? 'Intermediate - Keep building consistency.'
-                    : 'Developing - Focus on fundamentals.'}
-                </p>
-              </div>
-              <div className="w-24 h-24 relative flex-shrink-0">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="42"
-                    stroke="currentColor"
-                    strokeWidth="6"
-                    fill="none"
-                    className="text-gray-700"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="42"
-                    stroke="currentColor"
-                    strokeWidth="6"
-                    fill="none"
-                    strokeDasharray={`${(scores.overall / 100) * 264} 264`}
-                    className="text-[#F5A623]"
-                  />
-                </svg>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* 4Bs Body Metrics Breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <h2 className="text-lg font-semibold text-white mb-4">Body Metrics</h2>
-          <p className="text-sm text-gray-400 mb-4">Motion (Timing) • Stability • Sequencing</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ScoreCard
-              title="ANCHOR (Feet & Ground)"
-              score={scores.anchor}
-              icon="⚓"
-              description="How well you use the ground to stay balanced and create power"
-              color="blue"
-              detailedMetrics={mapAnchorMetricsFromScores({
-                anchorMotion: Math.round(((scores.anchorSubs?.stance || 0) + (scores.anchorSubs?.weightShift || 0)) / 2),
-                anchorStability: Math.round(((scores.anchorSubs?.groundConnection || 0) + (scores.anchorSubs?.lowerBodyMechanics || 0)) / 2),
-                anchorSequencing: scores.anchorSubs?.lowerBodyMechanics || 0,
-                anchorStance: scores.anchorSubs?.stance || 0,
-                anchorWeightShift: scores.anchorSubs?.weightShift || 0,
-                anchorGroundConnection: scores.anchorSubs?.groundConnection || 0,
-                anchorLowerBodyMechanics: scores.anchorSubs?.lowerBodyMechanics || 0
-              })}
-            />
-            <ScoreCard
-              title="ENGINE (Hips & Shoulders)"
-              score={scores.engine}
-              icon="🔄"
-              description="How well your hips and shoulders work together to create power"
-              color="green"
-              detailedMetrics={mapEngineMetricsFromScores({
-                engineMotion: Math.round(((scores.engineSubs?.hipRotation || 0) + (scores.engineSubs?.corePower || 0)) / 2),
-                engineStability: scores.engineSubs?.separation || 0,
-                engineSequencing: scores.engineSubs?.torsoMechanics || 0,
-                engineHipRotation: scores.engineSubs?.hipRotation || 0,
-                engineTorsoMechanics: scores.engineSubs?.torsoMechanics || 0,
-                engineCorePower: scores.engineSubs?.corePower || 0
-              })}
-            />
-            <ScoreCard
-              title="WHIP (Arms & Bat)"
-              score={scores.whip}
-              icon="⚡"
-              description="How well your arms and bat snap through the zone at the right time"
-              color="purple"
-              detailedMetrics={mapWhipMetricsFromScores({
-                whipMotion: Math.round(((scores.whipSubs?.batSpeed || 0) + (scores.whipSubs?.armPath || 0)) / 2),
-                whipStability: scores.whipSubs?.connection || 0,
-                whipSequencing: scores.whipSubs?.batPath || 0,
-                whipBatSpeed: scores.whipSubs?.batSpeed || 0,
-                whipArmPath: scores.whipSubs?.armPath || 0,
-                whipConnection: scores.whipSubs?.connection || 0
-              })}
-            />
-          </div>
-        </motion.div>
-
-        {/* See Your Progress Button - Moved below Body Metrics */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <Link href="/progress">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
-            >
-              <TrendingUp className="w-4 h-4" />
-              See Your Progress
-            </motion.button>
-          </Link>
-        </motion.div>
-
-        {/* Latest Coaching Call */}
-        {latestCoachingCall && (
+      <div className="p-4 space-y-6">
+        {/* Active Lesson Section */}
+        {isLoadingLesson ? (
+          <Skeleton className="h-32 w-full rounded-xl" />
+        ) : activeLesson ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-[#F5A623]/10 to-[#E89815]/10 rounded-xl p-6 border border-[#F5A623]/20"
+            className="bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20 rounded-xl p-4"
           >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h2 className="text-lg font-semibold text-white mb-1">📹 Latest Coaching Call</h2>
-                <p className="text-sm text-gray-400">Watch Monday night recording</p>
-              </div>
-              <Link
-                href="/coaching"
-                className="flex items-center gap-2 bg-[#F5A623] hover:bg-[#E89815] text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-              >
-                <Play className="w-4 h-4" fill="white" />
-                Watch Now
-              </Link>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-white font-medium">{latestCoachingCall.title}</h3>
-              <div className="flex items-center gap-4 text-sm text-gray-400">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {format(new Date(latestCoachingCall.callDate), 'MMM dd, yyyy')}
-                </span>
-                {latestCoachingCall.duration && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {latestCoachingCall.duration} min
-                  </span>
-                )}
-              </div>
-              {latestCoachingCall.topics?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {latestCoachingCall.topics.slice(0, 3).map((topic: string, index: number) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-[#F5A623]/20 text-[#F5A623] text-xs rounded-full"
-                    >
-                      {topic}
-                    </span>
-                  ))}
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-xs font-medium text-green-400">Active Lesson</span>
                 </div>
-              )}
+                <h3 className="text-white font-semibold mb-1">
+                  {activeLesson.sessionName || 'Current Lesson'}
+                </h3>
+                {activeLesson.lessonFocus && (
+                  <p className="text-sm text-gray-400 mb-2 line-clamp-2">
+                    Focus: {activeLesson.lessonFocus}
+                  </p>
+                )}
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <span>{activeLesson.swingCount || 0} swings</span>
+                  {activeLesson.avgScore && (
+                    <span>Avg: {Math.round(activeLesson.avgScore)}/100</span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={handleContinueLesson}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Continue
+              </button>
             </div>
           </motion.div>
+        ) : (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={handleStartNewLesson}
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl p-6 text-left transition-all transform hover:scale-[1.02]"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-1">Start New Lesson</h3>
+                <p className="text-white/80 text-sm">Set your focus and begin analyzing swings</p>
+              </div>
+              <Plus className="h-8 w-8" />
+            </div>
+          </motion.button>
         )}
 
-        {/* Leaderboard */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg p-5"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Leaderboard</h2>
-            <Award className="w-5 h-5 text-[#F5A623]" />
-          </div>
+        {/* 4Bs Scores */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-bold text-white">Your 4Bs Metrics</h2>
           <div className="space-y-3">
-            {/* Placeholder rows - will wire real data later */}
-            {[
-              { rank: 1, name: 'Test Player', score: 87, isCurrentUser: true },
-              { rank: 2, name: 'Sample Player', score: 82, isCurrentUser: false },
-              { rank: 3, name: 'Demo Player', score: 78, isCurrentUser: false },
-              { rank: 4, name: 'Practice Player', score: 75, isCurrentUser: false },
-              { rank: 5, name: 'Training Player', score: 72, isCurrentUser: false },
-            ].map((player) => (
-              <div
-                key={player.rank}
-                className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
-                  player.isCurrentUser
-                    ? 'bg-[#F5A623]/10 border border-[#F5A623]/30'
-                    : 'bg-gray-800/30 border border-gray-700/50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                      player.rank === 1
-                        ? 'bg-yellow-500/20 text-yellow-400'
-                        : player.rank === 2
-                        ? 'bg-gray-400/20 text-gray-300'
-                        : player.rank === 3
-                        ? 'bg-orange-500/20 text-orange-400'
-                        : 'bg-gray-700 text-gray-400'
-                    }`}
-                  >
-                    {player.rank}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className={`font-medium ${player.isCurrentUser ? 'text-[#F5A623]' : 'text-white'}`}>
-                        {player.name}
-                      </span>
-                      {player.isCurrentUser && (
-                        <span className="text-xs bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded-full">
-                          You
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-white">BARREL {player.score}</div>
-                </div>
-              </div>
-            ))}
+            {scores ? (
+              <>
+                <ScoreCard
+                  title="Anchor"
+                  score={scores.anchor || 0}
+                  maxScore={100}
+                  icon="⚓"
+                  description="Lower Body Foundation"
+                  color="blue"
+                  detailedMetrics={anchorMetrics}
+                />
+                <ScoreCard
+                  title="Engine"
+                  score={scores.engine || 0}
+                  maxScore={100}
+                  icon="⚡"
+                  description="Core Rotation Power"
+                  color="purple"
+                  detailedMetrics={engineMetrics}
+                />
+                <ScoreCard
+                  title="Whip"
+                  score={scores.whip || 0}
+                  maxScore={100}
+                  icon="🔥"
+                  description="Bat Speed & Connection"
+                  color="orange"
+                  detailedMetrics={whipMetrics}
+                />
+              </>
+            ) : (
+              <>
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+              </>
+            )}
           </div>
-        </motion.div>
+        </div>
+
+        {/* Recent Swings */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white">Recent Swings</h2>
+            <Link
+              href="/sessions"
+              className="text-sm text-orange-400 hover:text-orange-300"
+            >
+              View All
+            </Link>
+          </div>
+
+          {recentVideos.length > 0 ? (
+            <div className="space-y-3">
+              {recentVideos.map((video: any) => {
+                const progress = calculateProgress(
+                  video.overallScore || 0,
+                  video.previousScores?.overall,
+                  video.personalBests?.overall
+                )
+
+                return (
+                  <Link key={video.id} href={`/video/${video.id}`}>
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 hover:border-orange-500/50 transition-all"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold mb-1">
+                            {video.title || 'Untitled Swing'}
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            {formatDistanceToNow(new Date(video.uploadDate), {
+                              addSuffix: true,
+                            })}
+                          </p>
+                        </div>
+                        {video.analyzed && (
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-white">
+                              {video.overallScore || 0}
+                            </div>
+                            {progress.change !== 0 && (
+                              <div
+                                className={`text-xs font-medium ${getProgressColor(
+                                  progress.direction,
+                                  progress.isPersonalBest
+                                )}`}
+                              >
+                                {getProgressIcon(progress.direction)}
+                                {formatProgressChange(progress.change)}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {video.analyzed && (
+                        <div className="flex gap-2 text-xs">
+                          <div className="flex-1 bg-blue-500/10 rounded px-2 py-1">
+                            <span className="text-blue-400">A: {video.anchor || 0}</span>
+                          </div>
+                          <div className="flex-1 bg-purple-500/10 rounded px-2 py-1">
+                            <span className="text-purple-400">E: {video.engine || 0}</span>
+                          </div>
+                          <div className="flex-1 bg-orange-500/10 rounded px-2 py-1">
+                            <span className="text-orange-400">W: {video.whip || 0}</span>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-8 text-center">
+              <p className="text-gray-400 mb-4">No swings analyzed yet</p>
+              <button
+                onClick={handleStartNewLesson}
+                className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Start Your First Lesson
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav />
 
       {/* Coach Rick Drawer */}
       <CoachRickDrawer
@@ -494,7 +300,11 @@ export function DashboardClient({
         context={{ pageType: 'dashboard' }}
       />
 
-      <BottomNav />
+      {/* New Lesson Modal */}
+      <NewLessonModal
+        isOpen={isNewLessonModalOpen}
+        onClose={() => setIsNewLessonModalOpen(false)}
+      />
     </div>
-  );
+  )
 }
