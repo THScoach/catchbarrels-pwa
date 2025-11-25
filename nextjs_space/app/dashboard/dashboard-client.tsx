@@ -70,14 +70,71 @@ export default function DashboardClient({
 
       <div className="p-4 space-y-6">
 
-        {/* 4Bs Scores */}
+        {/* BARREL Score - Primary Metric */}
         <div className="space-y-3">
-          <h2 className="text-lg font-bold text-white">Your 4Bs Metrics</h2>
+          {scores ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="relative bg-gradient-to-br from-orange-500/20 to-orange-600/20 border-2 border-orange-500/50 rounded-2xl p-8 shadow-2xl"
+            >
+              {/* Title */}
+              <div className="text-center mb-4">
+                <h2 className="text-xl font-bold text-white uppercase tracking-wider">
+                  BARREL Score
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">Your Overall Swing Performance</p>
+              </div>
+
+              {/* Large centered score */}
+              <div className="flex items-center justify-center mb-6">
+                <div className="text-7xl md:text-8xl font-black text-white drop-shadow-2xl">
+                  {Math.round((scores.anchor + scores.engine + scores.whip) / 3) || 0}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full bg-gray-700/50 rounded-full h-3 mb-4 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{
+                    width: `${((scores.anchor + scores.engine + scores.whip) / 3)}%`,
+                  }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="h-3 rounded-full bg-gradient-to-r from-orange-500 to-orange-400 shadow-lg"
+                />
+              </div>
+
+              {/* Mini sub-scores */}
+              <div className="flex gap-2 justify-center text-sm">
+                <div className="bg-blue-500/20 rounded-lg px-3 py-2 text-center border border-blue-500/30">
+                  <div className="text-blue-400 font-semibold">A</div>
+                  <div className="text-white font-bold">{scores.anchor || 0}</div>
+                </div>
+                <div className="bg-purple-500/20 rounded-lg px-3 py-2 text-center border border-purple-500/30">
+                  <div className="text-purple-400 font-semibold">E</div>
+                  <div className="text-white font-bold">{scores.engine || 0}</div>
+                </div>
+                <div className="bg-orange-500/20 rounded-lg px-3 py-2 text-center border border-orange-500/30">
+                  <div className="text-orange-400 font-semibold">W</div>
+                  <div className="text-white font-bold">{scores.whip || 0}</div>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <StatCardSkeleton />
+          )}
+        </div>
+
+        {/* 4Bs Detailed Metrics - Secondary */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-bold text-white">Your 4Bs Breakdown</h2>
           <div className="space-y-3">
             {scores ? (
               <>
                 <ScoreCard
-                  title="Anchor"
+                  title="Anchor (Feet & Ground)"
                   score={scores.anchor || 0}
                   maxScore={100}
                   icon="⚓"
@@ -86,7 +143,7 @@ export default function DashboardClient({
                   detailedMetrics={anchorMetrics}
                 />
                 <ScoreCard
-                  title="Engine"
+                  title="Engine (Hips & Shoulders)"
                   score={scores.engine || 0}
                   maxScore={100}
                   icon="⚡"
@@ -95,7 +152,7 @@ export default function DashboardClient({
                   detailedMetrics={engineMetrics}
                 />
                 <ScoreCard
-                  title="Whip"
+                  title="Whip (Arms & Bat)"
                   score={scores.whip || 0}
                   maxScore={100}
                   icon="🔥"
