@@ -70,114 +70,170 @@ export default function DashboardClient({
 
       <main className="p-4 space-y-6 max-w-4xl mx-auto pt-4 mt-4">
 
-        {/* Hero BARREL Score */}
+        {/* Hero BARREL Score - Redesigned with Compliance Gauge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="relative bg-gradient-to-br from-barrels-gold/20 via-barrels-gold-soft/20 to-barrels-gold/10 border-2 border-barrels-gold/40 rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden"
+          className="relative rounded-[20px] p-6 shadow-2xl overflow-hidden"
+          style={{ backgroundColor: '#05070B' }}
         >
-          {/* Background gradient accent */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-barrels-gold-dark/10 to-transparent pointer-events-none" />
-          
-          <div className="relative z-10">
-            {/* Title */}
-            <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-barrels-gold to-barrels-gold-soft bg-clip-text text-transparent uppercase tracking-wide mb-2">
-                BARREL Score
-              </h2>
-              <p className="text-sm text-barrels-muted">Your Overall Swing Performance</p>
-            </div>
+          <div className="space-y-6">
+            {/* Title - Left aligned */}
+            <h2 className="text-lg font-semibold" style={{ color: '#F5F5F5' }}>
+              BARRELS Score
+            </h2>
 
-            {/* Main Score Layout - Score with Ring + Vertical Stacked Metrics */}
-            <div className="flex items-center justify-center gap-8 md:gap-12">
-              {/* Large centered score with ring */}
-              <div className="relative flex items-center justify-center">
-                {/* Circular progress ring */}
-                <svg className="absolute inset-0 w-48 h-48 md:w-64 md:h-64 -rotate-90" viewBox="0 0 100 100">
-                  {/* Background ring */}
+            {/* Circular Compliance Gauge */}
+            <div className="flex items-center justify-center py-4">
+              <div className="relative flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
+                {/* SVG Circular Ring */}
+                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  {/* Background track */}
                   <circle
                     cx="50"
                     cy="50"
-                    r="42"
+                    r="40"
                     fill="none"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    className="text-barrels-border/30"
+                    stroke="#2E3440"
+                    strokeWidth="12"
                   />
-                  {/* Progress ring */}
+                  {/* Progress ring - Electric Gold */}
                   <motion.circle
                     cx="50"
                     cy="50"
-                    r="42"
+                    r="40"
                     fill="none"
-                    stroke="url(#goldGradient)"
-                    strokeWidth="4"
+                    stroke="url(#complianceGradient)"
+                    strokeWidth="12"
                     strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 42}`}
-                    initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
+                    strokeDasharray={`${2 * Math.PI * 40}`}
+                    initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
                     animate={{ 
-                      strokeDashoffset: 2 * Math.PI * 42 * (1 - (scores?.barrel || 0) / 100) 
+                      strokeDashoffset: 2 * Math.PI * 40 * (1 - (scores?.barrel || 0) / 100) 
                     }}
-                    transition={{ duration: 1.5, delay: 0.3 }}
+                    transition={{ duration: 1.8, delay: 0.2, ease: "easeOut" }}
                   />
                   <defs>
-                    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient id="complianceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FFC93C" />
-                      <stop offset="100%" stopColor="#F8E16A" />
+                      <stop offset="100%" stopColor="#FFD54A" />
                     </linearGradient>
                   </defs>
                 </svg>
                 
-                {/* Score number */}
+                {/* Center text */}
+                <div className="flex flex-col items-center justify-center">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="text-5xl font-bold leading-none mb-1"
+                    style={{ color: '#FFFFFF' }}
+                  >
+                    {scores?.barrel || 0}%
+                  </motion.div>
+                  <div className="text-sm font-medium" style={{ color: '#B0B6C3' }}>
+                    Compliance
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sub-scores - Horizontal Row */}
+            {scores?.barrel > 0 && (
+              <div className="grid grid-cols-3 gap-3 px-2">
+                {/* Engine */}
                 <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-6xl md:text-7xl font-black bg-gradient-to-br from-barrels-gold to-barrels-gold-soft bg-clip-text text-transparent drop-shadow-2xl leading-none"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 }}
+                  className="text-center"
                 >
-                  {scores?.barrel || '—'}
+                  <div className="text-lg font-semibold mb-0.5" style={{ color: '#FFFFFF' }}>
+                    {scores.engine}%
+                  </div>
+                  <div className="text-xs font-medium" style={{ color: '#B0B6C3' }}>
+                    Engine
+                  </div>
+                  {/* Mini progress bar */}
+                  <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#2E3440' }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${scores.engine}%` }}
+                      transition={{ duration: 1, delay: 0.7 }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: '#FFC93C' }}
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Anchor */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.6 }}
+                  className="text-center"
+                >
+                  <div className="text-lg font-semibold mb-0.5" style={{ color: '#FFFFFF' }}>
+                    {scores.anchor}%
+                  </div>
+                  <div className="text-xs font-medium" style={{ color: '#B0B6C3' }}>
+                    Anchor
+                  </div>
+                  {/* Mini progress bar */}
+                  <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#2E3440' }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${scores.anchor}%` }}
+                      transition={{ duration: 1, delay: 0.8 }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: '#FFC93C' }}
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Whip */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.7 }}
+                  className="text-center"
+                >
+                  <div className="text-lg font-semibold mb-0.5" style={{ color: '#FFFFFF' }}>
+                    {scores.whip}%
+                  </div>
+                  <div className="text-xs font-medium" style={{ color: '#B0B6C3' }}>
+                    Whip
+                  </div>
+                  {/* Mini progress bar */}
+                  <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#2E3440' }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${scores.whip}%` }}
+                      transition={{ duration: 1, delay: 0.9 }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: '#FFC93C' }}
+                    />
+                  </div>
                 </motion.div>
               </div>
+            )}
 
-              {/* Vertically stacked metric scores */}
-              {scores?.barrel > 0 && (
-                <div className="flex flex-col gap-3">
-                  {/* Anchor */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.4 }}
-                    className="flex items-center gap-3 bg-barrels-surface/50 border border-barrels-border rounded-xl px-4 py-2"
-                  >
-                    <Pill label="Anchor" variant="gold" className="text-[10px] px-2 py-0.5" />
-                    <div className="text-2xl font-black text-barrels-text">{scores.anchor || 0}</div>
-                  </motion.div>
-
-                  {/* Engine */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.5 }}
-                    className="flex items-center gap-3 bg-barrels-gold/10 border border-barrels-gold/30 rounded-xl px-4 py-2"
-                  >
-                    <Pill label="Engine" variant="gold" className="text-[10px] px-2 py-0.5" />
-                    <div className="text-2xl font-black text-barrels-text">{scores.engine || 0}</div>
-                  </motion.div>
-
-                  {/* Whip */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.6 }}
-                    className="flex items-center gap-3 bg-barrels-surface/50 border border-barrels-border rounded-xl px-4 py-2"
-                  >
-                    <Pill label="Whip" variant="gold" className="text-[10px] px-2 py-0.5" />
-                    <div className="text-2xl font-black text-barrels-text">{scores.whip || 0}</div>
-                  </motion.div>
-                </div>
-              )}
-            </div>
+            {/* CTA Button - See Your Progress */}
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.8 }}
+              onClick={() => router.push('/lesson/history')}
+              className="w-full h-12 rounded-full font-semibold text-base transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+              style={{ 
+                backgroundColor: '#2979FF',
+                color: '#FFFFFF'
+              }}
+            >
+              See Your Progress
+            </motion.button>
           </div>
         </motion.div>
 
