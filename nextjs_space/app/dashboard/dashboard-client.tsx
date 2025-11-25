@@ -59,21 +59,21 @@ export function DashboardClient({
             </div>
           </div>
 
-          {/* Recent Swings Skeleton */}
-          <div>
+          {/* Leaderboard Skeleton */}
+          <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg p-5">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-5 w-5 rounded-full" />
             </div>
             <div className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                  <div className="flex items-center space-x-4">
-                    <Skeleton className="w-16 h-16 rounded flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-8 h-8 rounded-full" />
+                      <Skeleton className="h-4 w-32" />
                     </div>
+                    <Skeleton className="h-5 w-20" />
                   </div>
                 </div>
               ))}
@@ -148,7 +148,7 @@ export function DashboardClient({
             className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg p-4"
           >
             <h2 className="text-base font-semibold text-white mb-3">Overall Score</h2>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="text-4xl font-bold text-white">{scores.overall}</div>
                 <div className="text-xl font-semibold text-[#F5A623] mt-0.5">{scores.tier}</div>
@@ -186,6 +186,17 @@ export function DashboardClient({
                 </svg>
               </div>
             </div>
+            {/* See Your Progress Button */}
+            <Link href="/progress">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <TrendingUp className="w-4 h-4" />
+                See Your Progress
+              </motion.button>
+            </Link>
           </motion.div>
         )}
 
@@ -314,129 +325,66 @@ export function DashboardClient({
           </motion.div>
         )}
 
-        {/* Recent Activity */}
+        {/* Leaderboard */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg p-5"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Recent Swings</h2>
-            <Link href="/video" className="text-[#F5A623] text-sm hover:underline">
-              View All
-            </Link>
+            <h2 className="text-lg font-semibold text-white">Leaderboard</h2>
+            <Award className="w-5 h-5 text-[#F5A623]" />
           </div>
           <div className="space-y-3">
-            {videos?.slice(0, 3)?.map((video: any) => {
-              // Calculate progress for this video
-              const overallProgress = calculateProgress(
-                video?.overallScore,
-                video?.previousScores?.overallScore,
-                video?.personalBests?.overallScore
-              );
-              const anchorProgress = calculateProgress(
-                video?.anchor,
-                video?.previousScores?.anchor,
-                video?.personalBests?.anchor
-              );
-              const engineProgress = calculateProgress(
-                video?.engine,
-                video?.previousScores?.engine,
-                video?.personalBests?.engine
-              );
-              const whipProgress = calculateProgress(
-                video?.whip,
-                video?.previousScores?.whip,
-                video?.personalBests?.whip
-              );
-
-              return (
-                <Link
-                  key={video?.id}
-                  href={`/video/${video?.id}`}
-                  className="block bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/70 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-gray-700 rounded flex items-center justify-center relative">
-                      <VideoIcon className="w-8 h-8 text-gray-400" />
-                      {overallProgress.isPersonalBest && (
-                        <div className="absolute -top-1 -right-1 bg-yellow-500 rounded-full p-1">
-                          <Award className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-white font-medium">{video?.title}</h3>
-                        {overallProgress.isPersonalBest && (
-                          <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">
-                            Best!
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-400 text-sm">
-                        {formatDistanceToNow(new Date(video?.uploadDate), { addSuffix: true })}
-                      </p>
-                      {video?.analyzed && (
-                        <div className="mt-2 space-y-1">
-                          {/* Overall Score with Progress */}
-                          <div className="flex items-center space-x-3">
-                            <span className="text-sm text-white font-medium">
-                              Overall: {video.overallScore}
-                            </span>
-                            {overallProgress.change !== 0 && (
-                              <span className={`text-xs font-medium ${getProgressColor(overallProgress.direction, overallProgress.isPersonalBest)}`}>
-                                {getProgressIcon(overallProgress.direction)} {formatProgressChange(overallProgress.change)}
-                              </span>
-                            )}
-                          </div>
-                          {/* 4Bs Metrics with Progress */}
-                          <div className="flex items-center space-x-3 text-xs">
-                            <span className="text-gray-400">
-                              Anchor: {video.anchor || '—'}
-                              {anchorProgress.change !== 0 && (
-                                <span className={`ml-1 ${getProgressColor(anchorProgress.direction)}`}>
-                                  {getProgressIcon(anchorProgress.direction)}{formatProgressChange(anchorProgress.change)}
-                                </span>
-                              )}
-                            </span>
-                            <span className="text-gray-400">
-                              Engine: {video.engine || '—'}
-                              {engineProgress.change !== 0 && (
-                                <span className={`ml-1 ${getProgressColor(engineProgress.direction)}`}>
-                                  {getProgressIcon(engineProgress.direction)}{formatProgressChange(engineProgress.change)}
-                                </span>
-                              )}
-                            </span>
-                            <span className="text-gray-400">
-                              Whip: {video.whip || '—'}
-                              {whipProgress.change !== 0 && (
-                                <span className={`ml-1 ${getProgressColor(whipProgress.direction)}`}>
-                                  {getProgressIcon(whipProgress.direction)}{formatProgressChange(whipProgress.change)}
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        </div>
+            {/* Placeholder rows - will wire real data later */}
+            {[
+              { rank: 1, name: 'Test Player', score: 87, isCurrentUser: true },
+              { rank: 2, name: 'Sample Player', score: 82, isCurrentUser: false },
+              { rank: 3, name: 'Demo Player', score: 78, isCurrentUser: false },
+              { rank: 4, name: 'Practice Player', score: 75, isCurrentUser: false },
+              { rank: 5, name: 'Training Player', score: 72, isCurrentUser: false },
+            ].map((player) => (
+              <div
+                key={player.rank}
+                className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                  player.isCurrentUser
+                    ? 'bg-[#F5A623]/10 border border-[#F5A623]/30'
+                    : 'bg-gray-800/30 border border-gray-700/50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                      player.rank === 1
+                        ? 'bg-yellow-500/20 text-yellow-400'
+                        : player.rank === 2
+                        ? 'bg-gray-400/20 text-gray-300'
+                        : player.rank === 3
+                        ? 'bg-orange-500/20 text-orange-400'
+                        : 'bg-gray-700 text-gray-400'
+                    }`}
+                  >
+                    {player.rank}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-medium ${player.isCurrentUser ? 'text-[#F5A623]' : 'text-white'}`}>
+                        {player.name}
+                      </span>
+                      {player.isCurrentUser && (
+                        <span className="text-xs bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded-full">
+                          You
+                        </span>
                       )}
                     </div>
                   </div>
-                </Link>
-              );
-            })}
-            {videos?.length === 0 && (
-              <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-8 text-center">
-                <VideoIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-400 mb-4">No swings yet</p>
-                <Link
-                  href="/video/upload"
-                  className="inline-flex items-center space-x-2 bg-[#F5A623] hover:bg-[#E89815] text-white px-6 py-2 rounded-lg transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Upload Your First Swing</span>
-                </Link>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-white">GOAT {player.score}</div>
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </motion.div>
       </div>
