@@ -55,7 +55,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
   // STABILITY (30%) - How under control your body is
   postureControl: {
     name: 'Posture Control',
-    what_it_is: 'How steady your body angle stays from start of swing to contact.',
+    what_it_is: 'Keeping your body in a strong, balanced position throughout the swing.',
     why_it_matters: 'Good posture means better balance and more consistent contact.',
     goat_pattern: 'In GOAT swings, the head stays about the same height while the lower body works underneath.',
     category: 'stability',
@@ -64,7 +64,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
   
   shoulderFinish: {
     name: 'Shoulder Finish',
-    what_it_is: 'Where your shoulders are at contact—under‑turned, just right, or spun too far.',
+    what_it_is: 'How your shoulders rotate and finish after hitting the ball.',
     why_it_matters: 'Too little turn kills power; too much turn makes you spin off the ball.',
     goat_pattern: 'In GOAT swings, the shoulders finish turned toward the pitcher but still "on" the ball, not flying open toward the dugout.',
     category: 'stability',
@@ -73,7 +73,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
   
   backLegSupport: {
     name: 'Back Leg Support',
-    what_it_is: 'How well your back leg holds you up instead of the back knee caving in.',
+    what_it_is: 'How well your back leg pushes and supports your body\'s rotation.',
     why_it_matters: 'A strong back leg lets you drive the ground and keep your swing stable.',
     goat_pattern: 'In GOAT swings, the back leg stays strong and drives the ground instead of the back knee just collapsing.',
     category: 'stability',
@@ -83,7 +83,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
   // SEQUENCING (20%) - Order and timing of hips & shoulders
   hipsFirst: {
     name: 'Hips First',
-    what_it_is: 'Do your hips start turning before your shoulders?',
+    what_it_is: 'Starting your swing with your hips before your shoulders.',
     why_it_matters: 'Great swings go hips → shoulders → arms → bat.',
     goat_pattern: 'In GOAT swings, the hips clearly win the race and the shoulders chase a split second later.',
     category: 'sequencing',
@@ -92,7 +92,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
   
   hipsToShouldersTiming: {
     name: 'Hips‑to‑Shoulders Timing',
-    what_it_is: 'How smoothly your shoulders speed up right after your hips are moving fastest.',
+    what_it_is: 'The smooth, powerful hand-off of energy from your hips to your shoulders.',
     why_it_matters: 'Shows how cleanly you pass power from hips to shoulders.',
     goat_pattern: 'In GOAT swings, it looks like a smooth wave—hips fire, then shoulders catch and go, not everything jerking at once.',
     category: 'sequencing',
@@ -101,7 +101,7 @@ export const ENGINE_METRICS: Record<string, MetricDefinition> = {
   
   engineSequence: {
     name: 'Engine Sequence',
-    what_it_is: 'Overall grade for how well your hips and shoulders follow the right order and timing.',
+    what_it_is: 'The overall order and flow of your hips and shoulders working together.',
     why_it_matters: 'Summarizes how well your "engine" is working.',
     goat_pattern: 'GOAT swings almost always show a clean chain: hips → shoulders → bat.',
     category: 'sequencing',
