@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, Share2, TrendingUp, User, Award, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScoreCard } from '@/components/score-card';
-import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores } from '@/lib/engine-metrics-config';
+import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores, mapWhipMetricsFromScores } from '@/lib/engine-metrics-config';
 
 interface PublicShareClientProps {
   video: any;
@@ -201,28 +201,19 @@ export default function PublicShareClient({ video }: PublicShareClientProps) {
                     
                     {video.whip && (
                       <ScoreCard
-                        title="Whip"
+                        title="WHIP (Arms & Bat)"
                         score={video.whip}
                         icon="⚡"
-                        description="Arms & Bat"
+                        description="How well your arms and bat snap through the zone at the right time"
                         color="purple"
-                        subCategories={[
-                          { 
-                            name: 'Motion (40%)', 
-                            score: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2), 
-                            description: 'Arm→Bat timing'
-                          },
-                          { 
-                            name: 'Stability (30%)', 
-                            score: video.whipConnection || 0, 
-                            description: 'Elbow/shoulder angles'
-                          },
-                          { 
-                            name: 'Sequencing (30%)', 
-                            score: video.whipBatPath || 0, 
-                            description: 'Torso→Arm→Bat order'
-                          }
-                        ].filter(s => s.score > 0)}
+                        detailedMetrics={mapWhipMetricsFromScores({
+                          whipMotion: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2),
+                          whipStability: video.whipConnection || 0,
+                          whipSequencing: video.whipBatPath || 0,
+                          whipBatSpeed: video.whipBatSpeed || 0,
+                          whipArmPath: video.whipArmPath || 0,
+                          whipConnection: video.whipConnection || 0
+                        })}
                       />
                     )}
                   </div>

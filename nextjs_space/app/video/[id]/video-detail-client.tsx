@@ -19,7 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores } from '@/lib/engine-metrics-config';
+import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores, mapWhipMetricsFromScores } from '@/lib/engine-metrics-config';
 import { ProgressCharts } from '@/components/progress-charts';
 
 export function VideoDetailClient({ video, previousScores, personalBests, userHeight, userHandedness }: any) {
@@ -777,28 +777,19 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                       detailedMetrics={mapEngineMetricsFromScores(video)}
                     />
                     <ScoreCard 
-                      title="Whip" 
+                      title="WHIP (Arms & Bat)" 
                       score={video.whip} 
                       icon="⚡" 
-                      description="Arms & Bat" 
+                      description="How well your arms and bat snap through the zone at the right time" 
                       color="purple"
-                      subCategories={[
-                        { 
-                          name: 'Motion (40%)', 
-                          score: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2), 
-                          description: 'Arm→Bat gap timing'
-                        },
-                        { 
-                          name: 'Stability (30%)', 
-                          score: video.whipConnection || 0, 
-                          description: 'Elbow angles, shoulder tilt'
-                        },
-                        { 
-                          name: 'Sequencing (30%)', 
-                          score: video.whipBatPath || 0, 
-                          description: 'Torso→Arm→Bat order'
-                        },
-                      ]}
+                      detailedMetrics={mapWhipMetricsFromScores({
+                        whipMotion: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2),
+                        whipStability: video.whipConnection || 0,
+                        whipSequencing: video.whipBatPath || 0,
+                        whipBatSpeed: video.whipBatSpeed || 0,
+                        whipArmPath: video.whipArmPath || 0,
+                        whipConnection: video.whipConnection || 0
+                      })}
                     />
                   </div>
                 </div>

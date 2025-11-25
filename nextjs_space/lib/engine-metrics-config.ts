@@ -199,6 +199,166 @@ export const ANCHOR_METRICS: Record<string, MetricDefinition> = {
 };
 
 /**
+ * WHIP (Arms & Bat) - How well your arms and bat snap through the zone at the right time
+ */
+export const WHIP_METRICS: Record<string, MetricDefinition> = {
+  // MOTION (40%) - Timing-based arm and bat movement
+  handPath: {
+    name: 'Hand Path',
+    what_it_is: 'The path your hands take from launch to contact—whether they stay on a clean line to the ball or loop around.',
+    why_it_matters: 'A clean hand path keeps the barrel in the hitting zone longer and makes it easier to square up different pitch locations.',
+    goat_pattern: 'In GOAT swings, the hands stay tight to the body and work straight to the ball—not casting way out early and not chopping straight down.',
+    category: 'motion',
+    weight: 33
+  },
+  
+  barrelTurn: {
+    name: 'Barrel Turn',
+    what_it_is: 'How quickly and smoothly the barrel turns behind you and into the zone.',
+    why_it_matters: 'Good barrel turn gives you early bat speed and helps you match the pitch plane, so you don\'t have to be perfect with timing to hit the ball hard.',
+    goat_pattern: 'In GOAT swings, the barrel starts turning behind the hitter and gets on plane early, not staying straight up and then flipping late at the ball.',
+    category: 'motion',
+    weight: 33
+  },
+  
+  releaseSpeed: {
+    name: 'Release Speed',
+    what_it_is: 'How fast the bat is moving through the hitting zone at and just after contact.',
+    why_it_matters: 'Release speed is a big part of exit velocity. Even with a good body move, a slow or mistimed release leaves power on the table.',
+    goat_pattern: 'In GOAT swings, you can see the bat whip through contact and keep accelerating past the ball—not slam on the brakes or slow down early.',
+    category: 'motion',
+    weight: 34
+  },
+  
+  // STABILITY (30%) - Control and consistency of barrel path
+  contactPoint: {
+    name: 'Contact Point',
+    what_it_is: 'Where you\'re making contact relative to your body—too deep, too far out front, or in the "strong" zone.',
+    why_it_matters: 'Even a good swing shape won\'t work if the ball is always too deep or too far out in front. The best hitters find the strong contact window over and over.',
+    goat_pattern: 'In GOAT swings, most balls are hit in front of the front hip, not jammed off the back hip and not way out past the front foot.',
+    category: 'stability',
+    weight: 33
+  },
+  
+  barrelPlane: {
+    name: 'Barrel Plane',
+    what_it_is: 'How well the barrel\'s path matches the pitch\'s path (uphill/downhill angle).',
+    why_it_matters: 'If your barrel is chopping down or scooping up too much, your "sweet spot time" in the zone is short, and your mishits go way up.',
+    goat_pattern: 'In GOAT swings, the barrel matches the pitch plane for a long time—almost riding the ball\'s line, not crossing it sharply.',
+    category: 'stability',
+    weight: 33
+  },
+  
+  finishControl: {
+    name: 'Finish Control',
+    what_it_is: 'How under control your arms and bat are after contact—do you finish balanced or fall off and lose the barrel?',
+    why_it_matters: 'A wild, out‑of‑control finish usually means you\'re yanking with the arms instead of letting the whole sequence drive the bat.',
+    goat_pattern: 'In GOAT swings, the finish looks smooth and balanced; the hitter doesn\'t spin off or lose the bat with a big yank after contact.',
+    category: 'stability',
+    weight: 34
+  },
+  
+  // SEQUENCING (20%) - Order and timing of arms/bat relative to body
+  engineToWhipTiming: {
+    name: 'Engine → Whip Timing',
+    what_it_is: 'How well the "engine" (hips and shoulders) finishes loading the barrel before the arms and bat fire.',
+    why_it_matters: 'If the arms go too early, you lose the stretch and the whip. If they go too late, you\'re late on the ball.',
+    goat_pattern: 'In GOAT swings, the body creates stretch first, then the arms and bat fire right after—like cracking a whip after you\'ve snapped it back.',
+    category: 'sequencing',
+    weight: 33
+  },
+  
+  handBreakLaunch: {
+    name: 'Hand Break & Launch',
+    what_it_is: 'When and how your hands separate from the stance and start the swing.',
+    why_it_matters: 'A clean hand break and launch keeps your swing on time. A late or jumpy hand move makes you late or early on everything.',
+    goat_pattern: 'In GOAT swings, the hands come off the shoulder or launch position in sync with the body—not frozen too long and not flying out way too soon.',
+    category: 'sequencing',
+    weight: 33
+  },
+  
+  whipSequence: {
+    name: 'Whip Sequence',
+    what_it_is: 'Overall grade for how well your arms and bat follow the right order and timing with the rest of your body.',
+    why_it_matters: 'Summarizes how well your "whip" is doing its job: snapping the bat through at the right moment with the speed your body created.',
+    goat_pattern: 'GOAT swings almost always show a clean chain: ground → hips → shoulders → arms → bat, with the whip cracking right through the ball.',
+    category: 'sequencing',
+    weight: 34
+  }
+};
+
+/**
+ * Map existing database fields to WHIP metrics
+ * This allows us to use existing data while introducing new UI
+ */
+export function mapWhipMetricsFromScores(scores: any): MetricValue[] {
+  // Extract relevant scores
+  const whipMotion = scores?.whipMotion || 0;
+  const whipStability = scores?.whipStability || 0;
+  const whipSequencing = scores?.whipSequencing || 0;
+  const whipBatSpeed = scores?.whipBatSpeed || 0;
+  const whipArmPath = scores?.whipArmPath || 0;
+  const whipConnection = scores?.whipConnection || 0;
+  
+  // For now, map existing scores to the 9 metrics
+  // In the future, these will be calculated individually in swing-analyzer.ts
+  const metrics: MetricValue[] = [
+    // MOTION (40%)
+    {
+      ...WHIP_METRICS.handPath,
+      value: whipArmPath,
+      ...getGradeFromScore(whipArmPath)
+    },
+    {
+      ...WHIP_METRICS.barrelTurn,
+      value: Math.round(whipMotion * 0.5),
+      ...getGradeFromScore(Math.round(whipMotion * 0.5))
+    },
+    {
+      ...WHIP_METRICS.releaseSpeed,
+      value: whipBatSpeed,
+      ...getGradeFromScore(whipBatSpeed)
+    },
+    
+    // STABILITY (30%)
+    {
+      ...WHIP_METRICS.contactPoint,
+      value: Math.round(whipStability * 0.33),
+      ...getGradeFromScore(Math.round(whipStability * 0.33))
+    },
+    {
+      ...WHIP_METRICS.barrelPlane,
+      value: Math.round(whipStability * 0.33),
+      ...getGradeFromScore(Math.round(whipStability * 0.33))
+    },
+    {
+      ...WHIP_METRICS.finishControl,
+      value: Math.round(whipStability * 0.34),
+      ...getGradeFromScore(Math.round(whipStability * 0.34))
+    },
+    
+    // SEQUENCING (20%)
+    {
+      ...WHIP_METRICS.engineToWhipTiming,
+      value: Math.round(whipSequencing * 0.4),
+      ...getGradeFromScore(Math.round(whipSequencing * 0.4))
+    },
+    {
+      ...WHIP_METRICS.handBreakLaunch,
+      value: whipConnection,
+      ...getGradeFromScore(whipConnection)
+    },
+    {
+      ...WHIP_METRICS.whipSequence,
+      value: whipSequencing,
+      ...getGradeFromScore(whipSequencing)
+    }
+  ];
+  
+  return metrics;
+}
+
+/**
  * Calculate grade and color based on score (0-100)
  */
 export function getGradeFromScore(score: number | null): { grade: MetricGrade; color: 'green' | 'yellow' | 'red' | 'gray' } {

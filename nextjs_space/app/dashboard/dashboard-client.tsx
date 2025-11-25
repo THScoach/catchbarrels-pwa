@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { StatCardSkeleton, VideoCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
-import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores } from '@/lib/engine-metrics-config';
+import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores, mapWhipMetricsFromScores } from '@/lib/engine-metrics-config';
 
 export function DashboardClient({ 
   user, 
@@ -230,28 +230,19 @@ export function DashboardClient({
               })}
             />
             <ScoreCard
-              title="Whip"
+              title="WHIP (Arms & Bat)"
               score={scores.whip}
               icon="⚡"
-              description="Arms & Bat"
+              description="How well your arms and bat snap through the zone at the right time"
               color="purple"
-              subCategories={[
-                { 
-                  name: 'Motion (40%)', 
-                  score: Math.round(((scores.whipSubs?.batSpeed || 0) + (scores.whipSubs?.armPath || 0)) / 2), 
-                  description: 'Arm→Bat gap timing'
-                },
-                { 
-                  name: 'Stability (30%)', 
-                  score: scores.whipSubs?.connection || 0, 
-                  description: 'Elbow angles, shoulder tilt'
-                },
-                { 
-                  name: 'Sequencing (30%)', 
-                  score: scores.whipSubs?.batPath || 0, 
-                  description: 'Torso→Arm→Bat order'
-                },
-              ]}
+              detailedMetrics={mapWhipMetricsFromScores({
+                whipMotion: Math.round(((scores.whipSubs?.batSpeed || 0) + (scores.whipSubs?.armPath || 0)) / 2),
+                whipStability: scores.whipSubs?.connection || 0,
+                whipSequencing: scores.whipSubs?.batPath || 0,
+                whipBatSpeed: scores.whipSubs?.batSpeed || 0,
+                whipArmPath: scores.whipSubs?.armPath || 0,
+                whipConnection: scores.whipSubs?.connection || 0
+              })}
             />
           </div>
         </motion.div>
