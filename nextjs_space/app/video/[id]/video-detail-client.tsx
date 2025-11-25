@@ -9,12 +9,13 @@ import { AutoSkeletonExtractor } from '@/components/auto-skeleton-extractor';
 import { JointOverlayCompare } from '@/components/joint-overlay-compare';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
-import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock } from 'lucide-react';
+import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
 import { convertToSwingJointSeries } from '@/lib/joint-utils';
 import { SwingJointSeries } from '@/lib/types';
+
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,7 @@ import { AnalysisHeader } from '@/components/analysis/analysis-header';
 import { MiniDashboardStrip } from '@/components/analysis/mini-dashboard-strip';
 import { AnalysisResultsCard } from '@/components/analysis/analysis-results-card';
 import { PlayerReflectionBox } from '@/components/analysis/player-reflection-box';
-import { GoatyFeedbackBlock } from '@/components/analysis/goaty-feedback-block';
+import { CoachRickDrawer } from '@/components/coach-rick-drawer';
 import { DrillCard } from '@/components/analysis/drill-card';
 import { AEWCardsSection } from '@/components/analysis/aew-cards-section';
 
@@ -80,11 +81,9 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
   const [sharingVideo, setSharingVideo] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   
-  // Player reflection and GOATY chat state
+  // Player reflection and Coach Rick state
   const [playerReflection, setPlayerReflection] = useState('');
-  const [goatyMessages, setGoatyMessages] = useState<Array<{role: 'system' | 'user' | 'assistant', content: string}>>([]);
-  const [isGoatyVisible, setIsGoatyVisible] = useState(false);
-  const [sendingMessage, setSendingMessage] = useState(false);
+  const [isCoachRickOpen, setIsCoachRickOpen] = useState(false);
 
   // Fetch signed URL for video playback
   useEffect(() => {
@@ -324,86 +323,6 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
       toast.error('Failed to process skeleton data');
     } finally {
       setExtractingSkeleton(false);
-    }
-  };
-
-  // Handle sending GOATY chat messages
-  const handleSendGoatyMessage = async (message: string) => {
-    if (!message.trim() || sendingMessage) return;
-
-    try {
-      setSendingMessage(true);
-      
-      // Add user message to chat
-      const userMessage = { role: 'user' as const, content: message };
-      setGoatyMessages(prev => [...prev, userMessage]);
-
-      // Determine analysis type based on video type
-      const analysisType = video.videoType || 'swing';
-      
-      // Determine analysis intent based on message content
-      let analysisIntent = 'general';
-      if (message.toLowerCase().includes('drill')) {
-        analysisIntent = 'drill_recommendation';
-      } else if (message.toLowerCase().includes('fix') || message.toLowerCase().includes('improve')) {
-        analysisIntent = 'fix_priority';
-      } else if (message.toLowerCase().includes('compare') || message.toLowerCase().includes('previous')) {
-        analysisIntent = 'comparison';
-      } else if (message.toLowerCase().includes('feel') || message.toLowerCase().includes('cue')) {
-        analysisIntent = 'feel_cue';
-      } else if (message.toLowerCase().includes('head') || message.toLowerCase().includes('movement')) {
-        analysisIntent = 'movement_analysis';
-      }
-
-      // Call Coach Rick API with full swing context
-      const response = await fetch('/api/coach-rick', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message,
-          swing_id: video.id,
-          analysis_type: analysisType,
-          analysis_intent: analysisIntent,
-          videoId: video.id,
-          context: {
-            scores: {
-              overall: video.overallScore,
-              anchor: video.anchor,
-              engine: video.engine,
-              whip: video.whip,
-              // Include sub-scores for detailed analysis
-              anchorMotion: video.anchorStance,
-              anchorStability: video.anchorGroundConnection,
-              anchorSequencing: video.anchorLowerBodyMechanics,
-              engineMotion: video.engineHipRotation,
-              engineStability: video.engineCorePower,
-              engineSequencing: video.engineTorsoMechanics,
-              whipMotion: video.whipBatSpeed,
-              whipStability: video.whipConnection,
-              whipSequencing: video.whipBatPath
-            },
-            playerReflection,
-            videoType: video.videoType,
-            uploadDate: video.uploadDate
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response from AI Coach');
-      }
-
-      const data = await response.json();
-      
-      // Add assistant response to chat
-      const assistantMessage = { role: 'assistant' as const, content: data.response };
-      setGoatyMessages(prev => [...prev, assistantMessage]);
-
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message to AI Coach');
-    } finally {
-      setSendingMessage(false);
     }
   };
 
@@ -797,20 +716,14 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                         }}
                       />
 
-                      {/* Ask GOATY Toggle */}
-                      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg mb-4">
-                        <div>
-                          <label htmlFor="goaty-toggle" className="text-sm font-semibold text-white cursor-pointer">
-                            Ask GOATY
-                          </label>
-                          <p className="text-xs text-gray-400">Get direct feedback on this swing</p>
-                        </div>
-                        <Switch
-                          id="goaty-toggle"
-                          checked={isGoatyVisible}
-                          onCheckedChange={setIsGoatyVisible}
-                        />
-                      </div>
+                      {/* Ask Coach Rick Button */}
+                      <button
+                        onClick={() => setIsCoachRickOpen(true)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors mb-4"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Ask Coach Rick About This Swing
+                      </button>
 
                       {/* Mini Dashboard Strip */}
                       <MiniDashboardStrip
@@ -848,13 +761,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                         onChange={setPlayerReflection}
                       />
 
-                      {/* AI Coach Feedback Block */}
-                      <GoatyFeedbackBlock
-                        messages={goatyMessages}
-                        onSendMessage={handleSendGoatyMessage}
-                        hasPreviousSwing={!!video.sessionId}
-                        isVisible={isGoatyVisible}
-                      />
+
 
                       {/* Drill Card */}
                       <DrillCard drill={recommendedDrill} />
@@ -1025,6 +932,13 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
           </div>
         ) : null}
       </div>
+
+      {/* Coach Rick Drawer */}
+      <CoachRickDrawer
+        isOpen={isCoachRickOpen}
+        onClose={() => setIsCoachRickOpen(false)}
+        context={{ pageType: 'video', videoId: video?.id }}
+      />
 
       <BottomNav />
     </div>

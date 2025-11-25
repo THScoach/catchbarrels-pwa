@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { buttonVariants } from '@/lib/animations';
-import { Video as VideoIcon, TrendingUp, Target, Upload, Play, Calendar, Clock, Award, Home, History, MessageCircle, X, Send, Mic, Loader2, PlayCircle } from 'lucide-react';
+import { Video as VideoIcon, TrendingUp, Target, Upload, Play, Calendar, Clock, Award, Home, History, MessageCircle, X, Send, Mic, Loader2, PlayCircle, Menu } from 'lucide-react';
 import { ScoreCard } from '@/components/score-card';
 import { BottomNav } from '@/components/bottom-nav';
+import { CoachRickDrawer } from '@/components/coach-rick-drawer';
 import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { StatCardSkeleton, VideoCardSkeleton, Skeleton } from '@/components/ui/skeleton';
@@ -17,11 +18,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
 export function DashboardClient({ 
   user, 
   scores, 
@@ -30,19 +26,10 @@ export function DashboardClient({
   membershipInfo = { tier: 'free', status: 'inactive' }
 }: any) {
   const [isLoading, setIsLoading] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isCoachRickOpen, setIsCoachRickOpen] = useState(false);
   const [activeSession, setActiveSession] = useState<any>(null);
   const [loadingSession, setLoadingSession] = useState(true);
-  const [chatMessages, setChatMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: "Hey! I'm here to help you with your swing. Ask me anything! ⚾",
-    },
-  ]);
-  const [chatInput, setChatInput] = useState('');
-  const [isSending, setIsSending] = useState(false);
   const [creatingSession, setCreatingSession] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   // Fetch active session on mount
@@ -72,13 +59,6 @@ export function DashboardClient({
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-scroll chat to bottom
-  useEffect(() => {
-    if (isChatOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatMessages, isChatOpen]);
-
   const handleStartNewSession = async () => {
     setCreatingSession(true);
     try {
@@ -100,48 +80,7 @@ export function DashboardClient({
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!chatInput.trim() || isSending) return;
 
-    const userMessage: Message = {
-      role: 'user',
-      content: chatInput,
-    };
-
-    setChatMessages((prev) => [...prev, userMessage]);
-    setChatInput('');
-    setIsSending(true);
-
-    try {
-      const response = await fetch('/api/coach-rick', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: chatInput,
-          context: {
-            currentPage: '/dashboard',
-            userScores: scores || null,
-            pageContext: 'User is viewing their dashboard with overall stats',
-          },
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to send message');
-
-      const data = await response.json();
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: data.response || 'Sorry, I had trouble processing that. Can you try again?',
-      };
-
-      setChatMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message. Please try again.');
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -209,12 +148,23 @@ export function DashboardClient({
         transition={{ duration: 0.5 }}
         className="bg-gradient-to-r from-[#1a2332] to-[#2d3a4f] p-6 border-b border-gray-800"
       >
-        <h1 className="text-2xl font-bold text-white">Welcome back, {user?.name?.split(' ')[0] || 'Athlete'}! 👋</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          {videos?.length > 0 
-            ? `Last swing: ${formatDistanceToNow(new Date(videos[0]?.uploadDate), { addSuffix: true })}`
-            : 'Ready to analyze your first swing?'}
-        </p>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-white">Welcome back, {user?.name?.split(' ')[0] || 'Athlete'}! 👋</h1>
+            <p className="text-gray-400 text-sm mt-1">
+              {videos?.length > 0 
+                ? `Last swing: ${formatDistanceToNow(new Date(videos[0]?.uploadDate), { addSuffix: true })}`
+                : 'Ready to analyze your first swing?'}
+            </p>
+          </div>
+          <button
+            onClick={() => setIsCoachRickOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span className="hidden sm:inline">Ask Coach Rick</span>
+          </button>
+        </div>
       </motion.div>
 
       <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -537,115 +487,12 @@ export function DashboardClient({
         </motion.div>
       </div>
 
-      {/* Floating Chat Bubble */}
-      <AnimatePresence>
-        {isChatOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-4 w-80 max-w-[calc(100vw-2rem)] bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden z-40"
-          >
-            {/* Chat Header */}
-            <div className="bg-gradient-to-r from-[#F5A623] to-[#E89815] p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-5 h-5 text-white" />
-                <span className="font-semibold text-white">Chat with Coach</span>
-              </div>
-              <button
-                onClick={() => setIsChatOpen(false)}
-                className="text-white hover:bg-white/20 rounded-full p-1 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Chat Messages */}
-            <div className="h-80 overflow-y-auto p-4 space-y-3 bg-gray-900/50">
-              {chatMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      msg.role === 'user'
-                        ? 'bg-[#F5A623] text-white'
-                        : 'bg-gray-800 text-gray-200 border border-gray-700'
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  </div>
-                </div>
-              ))}
-              {isSending && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-800 text-gray-200 border border-gray-700 p-3 rounded-lg">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Chat Input */}
-            <div className="p-4 border-t border-gray-700 bg-gray-900">
-              <Tabs defaultValue="text" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-3 bg-gray-800">
-                  <TabsTrigger value="text" className="text-xs">
-                    <MessageCircle className="w-3 h-3 mr-1" />
-                    Text
-                  </TabsTrigger>
-                  <TabsTrigger value="voice" className="text-xs">
-                    <Mic className="w-3 h-3 mr-1" />
-                    Voice
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="text" className="mt-0">
-                  <div className="flex gap-2">
-                    <Input
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                      placeholder="Ask about your swing..."
-                      className="flex-1 bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                      disabled={isSending}
-                    />
-                    <Button
-                      onClick={handleSendMessage}
-                      disabled={isSending || !chatInput.trim()}
-                      className="bg-[#F5A623] hover:bg-[#E89815] text-white"
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TabsContent>
-                <TabsContent value="voice" className="mt-0">
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                    <Mic className="w-4 h-4 mr-2" />
-                    Tap to Speak
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Chat Bubble Button */}
-      {!isChatOpen && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setIsChatOpen(true)}
-          className="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-r from-[#F5A623] to-[#E89815] rounded-full shadow-lg flex items-center justify-center z-40"
-        >
-          <MessageCircle className="w-6 h-6 text-white" />
-        </motion.button>
-      )}
+      {/* Coach Rick Drawer */}
+      <CoachRickDrawer
+        isOpen={isCoachRickOpen}
+        onClose={() => setIsCoachRickOpen(false)}
+        context={{ pageType: 'dashboard' }}
+      />
 
       <BottomNav />
     </div>
