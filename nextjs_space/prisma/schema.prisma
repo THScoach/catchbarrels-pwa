@@ -90,6 +90,8 @@ model Video {
   // Skeleton Data (JSON array of frame-by-frame joint coordinates)
   skeletonData    Json?     // [{frame: 0, keypoints: [{x, y, z, visibility, name}, ...]}, ...]
   skeletonExtracted Boolean @default(false)
+  skeletonStatus  String    @default("PENDING") // "PENDING" | "RUNNING" | "COMPLETE" | "FAILED"
+  skeletonErrorMessage String?  // Error details if extraction failed
   
   // Analysis data - 4Bs Body Metrics (mock for prototype)
   analyzed        Boolean   @default(false)
@@ -567,6 +569,8 @@ model ModelVideo {
   // Skeleton data for overlay (JSON format)
   skeletonData     Json?    // Frame-by-frame joint positions
   skeletonExtracted Boolean @default(false)
+  skeletonStatus   String   @default("COMPLETE") // ModelVideo pre-processed, always COMPLETE
+  skeletonErrorMessage String?
   
   // Metadata
   duration         Int?     // Video duration in seconds

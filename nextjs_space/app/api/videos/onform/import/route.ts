@@ -112,6 +112,7 @@ async function handleFileImport(request: NextRequest, userId: string) {
         thumbnailUrl: '',
         analyzed: false,
         skeletonExtracted: false,
+        skeletonStatus: 'PENDING', // Automatic skeleton extraction will process this
         // Future-proofing for 3D data - omit null values to use schema defaults
       }
     });
@@ -231,6 +232,7 @@ async function handleLinkImport(request: NextRequest, userId: string) {
         thumbnailUrl: '',
         analyzed: false,
         skeletonExtracted: false,
+        skeletonStatus: 'PENDING', // Automatic skeleton extraction will process this
         // Future-proofing for 3D data - omit null values to use schema defaults
       }
     });

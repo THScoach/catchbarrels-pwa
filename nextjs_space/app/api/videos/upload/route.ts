@@ -48,8 +48,11 @@ export async function POST(request: NextRequest) {
         videoUrl: cloudStoragePath, // Store S3 key
         thumbnailUrl: '', // Will be generated later
         analyzed: false,
+        skeletonStatus: 'PENDING', // Automatic skeleton extraction will process this
       },
     });
+
+    console.log(`[Video Upload] Created video ${video.id} with skeleton status PENDING`);
 
     // Simulate async AI analysis - in production, this would be a background job
     setTimeout(async () => {

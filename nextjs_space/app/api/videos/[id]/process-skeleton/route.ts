@@ -97,11 +97,15 @@ export async function POST(
       data: {
         skeletonData: normalizedSkeleton,
         skeletonExtracted: true,
+        skeletonStatus: 'COMPLETE',
+        skeletonErrorMessage: null, // Clear any previous errors
         impactFrame: impactResult.impactFrame - startFrame, // Adjust for trimmed range
         fps,
         normalizedFps: 60
       }
     });
+
+    console.log(`[ProcessSkeleton] Successfully processed skeleton for video ${videoId}`);
 
     return NextResponse.json({
       success: true,
@@ -117,6 +121,20 @@ export async function POST(
 
   } catch (error) {
     console.error('Skeleton processing error:', error);
+    
+    // Update status to FAILED
+    try {
+      await prisma.video.update({
+        where: { id: params.id },
+        data: {
+          skeletonStatus: 'FAILED',
+          skeletonErrorMessage: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+    } catch (dbError) {
+      console.error('Failed to update error status:', dbError);
+    }
+    
     return NextResponse.json(
       { error: 'Failed to process skeleton data', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
