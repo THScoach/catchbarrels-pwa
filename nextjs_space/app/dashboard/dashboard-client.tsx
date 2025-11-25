@@ -39,15 +39,15 @@ export function DashboardClient({
         </div>
 
         <div className="p-6 space-y-6 max-w-7xl mx-auto">
-          {/* Quick Actions Skeleton */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Quick Actions Skeleton - Compact Row */}
+          <div className="flex gap-3 flex-wrap">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-lg" />
+              <Skeleton key={i} className="h-12 w-28 rounded-full" />
             ))}
           </div>
 
-          {/* Overall Score Skeleton */}
-          <Skeleton className="h-48 w-full rounded-lg" />
+          {/* Overall Score Skeleton - Reduced Height */}
+          <Skeleton className="h-32 w-full rounded-lg" />
 
           {/* Body Metrics Skeleton */}
           <div>
@@ -104,55 +104,55 @@ export function DashboardClient({
       </motion.div>
 
       <div className="p-6 space-y-6 max-w-7xl mx-auto">
-        {/* Quick Actions */}
+        {/* Quick Actions - Compact Horizontal Row */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="grid grid-cols-3 gap-4"
+          className="flex gap-3 flex-wrap"
         >
           <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
             <Link
               href="/video/upload"
-              className="block bg-gradient-to-r from-[#F5A623] to-[#E89815] p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-xl transition-all duration-200"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#F5A623] to-[#E89815] px-5 py-3 rounded-full hover:shadow-lg transition-all duration-200 h-12"
             >
-              <Upload className="w-5 h-5 text-white mb-1" />
+              <Upload className="w-4 h-4 text-white" />
               <span className="text-white font-medium text-sm">Upload</span>
             </Link>
           </motion.div>
           <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
             <Link
               href="/drills"
-              className="block bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-xl transition-all duration-200 border border-gray-700"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-gray-700 to-gray-800 px-5 py-3 rounded-full hover:shadow-lg transition-all duration-200 border border-gray-700 h-12"
             >
-              <Target className="w-5 h-5 text-white mb-1" />
+              <Target className="w-4 h-4 text-white" />
               <span className="text-white font-medium text-sm">Drills</span>
             </Link>
           </motion.div>
           <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
             <Link
               href="/progress"
-              className="block bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-xl transition-all duration-200 border border-gray-700"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-gray-700 to-gray-800 px-5 py-3 rounded-full hover:shadow-lg transition-all duration-200 border border-gray-700 h-12"
             >
-              <TrendingUp className="w-5 h-5 text-white mb-1" />
+              <TrendingUp className="w-4 h-4 text-white" />
               <span className="text-white font-medium text-sm">Progress</span>
             </Link>
           </motion.div>
         </motion.div>
 
-        {/* Overall Score */}
+        {/* Overall Score - Reduced Height */}
         {scores?.overall > 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg p-6"
+            className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-lg p-4"
           >
-            <h2 className="text-lg font-semibold text-white mb-4">Overall Score</h2>
+            <h2 className="text-base font-semibold text-white mb-3">Overall Score</h2>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-5xl font-bold text-white">{scores.overall}</div>
-                <div className="text-2xl font-semibold text-[#F5A623] mt-1">{scores.tier}</div>
-                <p className="text-gray-400 text-sm mt-2">
+                <div className="text-4xl font-bold text-white">{scores.overall}</div>
+                <div className="text-xl font-semibold text-[#F5A623] mt-0.5">{scores.tier}</div>
+                <p className="text-gray-400 text-xs mt-1.5">
                   {scores.overall >= 85
                     ? 'Elite level! All three areas working together.'
                     : scores.overall >= 75
@@ -162,25 +162,25 @@ export function DashboardClient({
                     : 'Developing - Focus on fundamentals.'}
                 </p>
               </div>
-              <div className="w-32 h-32 relative">
+              <div className="w-24 h-24 relative flex-shrink-0">
                 <svg className="w-full h-full transform -rotate-90">
                   <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
+                    cx="48"
+                    cy="48"
+                    r="42"
                     stroke="currentColor"
-                    strokeWidth="8"
+                    strokeWidth="6"
                     fill="none"
                     className="text-gray-700"
                   />
                   <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
+                    cx="48"
+                    cy="48"
+                    r="42"
                     stroke="currentColor"
-                    strokeWidth="8"
+                    strokeWidth="6"
                     fill="none"
-                    strokeDasharray={`${(scores.overall / 100) * 352} 352`}
+                    strokeDasharray={`${(scores.overall / 100) * 264} 264`}
                     className="text-[#F5A623]"
                   />
                 </svg>
