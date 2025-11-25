@@ -2,6 +2,7 @@
 
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { BottomNav } from '@/components/bottom-nav';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,18 +12,27 @@ import { User, LogOut, ClipboardList, FileText, ExternalLink } from 'lucide-reac
 
 export function ProfileClient({ user, assessments }: any) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState('info');
 
   return (
     <div className="min-h-screen bg-[#1a2332] pb-20">
       <div className="p-6 max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold text-white mb-6">Profile</h1>
 
-        <Tabs defaultValue="info" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-gray-800/50 border border-gray-700">
-            <TabsTrigger value="info" className="data-[state=active]:bg-orange-500/20">
+            <TabsTrigger 
+              value="info" 
+              className="data-[state=active]:bg-orange-500/20"
+              onClick={() => setActiveTab('info')}
+            >
               Info
             </TabsTrigger>
-            <TabsTrigger value="assessments" className="data-[state=active]:bg-orange-500/20">
+            <TabsTrigger 
+              value="assessments" 
+              className="data-[state=active]:bg-orange-500/20"
+              onClick={() => setActiveTab('assessments')}
+            >
               Assessments
             </TabsTrigger>
           </TabsList>

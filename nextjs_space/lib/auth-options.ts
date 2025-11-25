@@ -1,6 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
+// import { PrismaAdapter } from '@next-auth/prisma-adapter'; // Not used with CredentialsProvider + JWT
 import { prisma } from './db';
 import bcrypt from 'bcryptjs';
 
@@ -8,7 +8,9 @@ import bcrypt from 'bcryptjs';
 // PHASE 5: Will add Whop OAuth provider here for subscription management
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // Note: PrismaAdapter is incompatible with CredentialsProvider + JWT strategy
+  // adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -65,8 +67,8 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   pages: {
-    signIn: '/welcome',
-    signOut: '/welcome',
+    signIn: '/auth/login',
+    error: '/auth/login',
   },
   callbacks: {
     async jwt({ token, user }) {
