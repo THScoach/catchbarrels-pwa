@@ -1,14 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Upload, TrendingUp, Play, ChevronRight, FileText } from 'lucide-react'
+import { Upload, TrendingUp, Play, ChevronRight, FileText, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { BottomNav } from '@/components/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import BarrelsHeader from '@/components/barrels-header'
+import { CoachRickDrawer } from '@/components/coach-rick-drawer'
 
 interface DashboardClientProps {
   user: any
@@ -33,6 +35,7 @@ export default function DashboardClient({
   membershipInfo,
 }: DashboardClientProps) {
   const router = useRouter()
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   // Primary drill is the first in the list
   const primaryDrill = recommendedDrills?.[0]
@@ -40,10 +43,30 @@ export default function DashboardClient({
 
   return (
     <div className="min-h-screen bg-barrels-black pb-24">
-      {/* BARRELS Header with Navigation */}
+      {/* BARRELS Header with Logo */}
+      <header className="px-4 pt-4 pb-3 border-b border-barrels-black-lighter bg-gradient-to-r from-barrels-black-light to-barrels-black">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <img 
+            src="/barrels-logo-transparent.png" 
+            alt="BARRELS"
+            className="h-10 w-auto"
+          />
+          
+          {/* Menu Button */}
+          <button
+            onClick={() => setIsDrawerOpen(true)}
+            className="p-2 rounded-lg bg-barrels-black-light hover:bg-barrels-black-lighter border border-barrels-black-lighter hover:border-barrels-blue transition-all duration-200"
+            aria-label="Open menu"
+          >
+            <Menu className="h-6 w-6 text-barrels-neutral" />
+          </button>
+        </div>
+      </header>
+
+      {/* BARRELS Navigation */}
       <BarrelsHeader activeTab="dashboard" />
 
-      <div className="p-4 space-y-6 max-w-4xl mx-auto mt-6">
+      <main className="p-4 space-y-6 max-w-4xl mx-auto pt-4 mt-4">
 
         {/* Hero BARREL Score */}
         <motion.div
@@ -270,10 +293,13 @@ export default function DashboardClient({
           </Link>
         </motion.div>
 
-      </div>
+      </main>
 
       {/* Bottom Navigation */}
       <BottomNav />
+      
+      {/* Coach Rick Drawer */}
+      <CoachRickDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
     </div>
   )
 }

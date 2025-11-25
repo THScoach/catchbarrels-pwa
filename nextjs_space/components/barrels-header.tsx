@@ -38,48 +38,12 @@ export default function BarrelsHeader({ activeTab }: BarrelsHeaderProps) {
 
   return (
     <>
-      {/* Top Bar - Full BARRELS Logo and Menu */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="bg-gradient-to-r from-barrels-black-light to-barrels-black border-b border-barrels-black-lighter sticky top-0 z-20"
-      >
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
-            {/* Left Side - Full BARRELS Logo */}
-            <div className="relative h-20 w-auto">
-              <Image
-                src="/barrels-logo-transparent.png"
-                alt="BARRELS"
-                height={80}
-                width={400}
-                className="object-contain object-left"
-                priority
-              />
-            </div>
-
-            {/* Right Side - Menu Icon */}
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="p-2 rounded-lg bg-barrels-black-light hover:bg-barrels-black-lighter border border-barrels-black-lighter hover:border-barrels-blue transition-all duration-200"
-              aria-label="Open menu"
-            >
-              <Menu className="h-6 w-6 text-barrels-neutral" />
-            </button>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Spacing between Logo and Tabs */}
-      <div className="h-4 bg-barrels-black" />
-
       {/* Three-Tab Navigation Bar */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-barrels-black border-b border-barrels-black-lighter sticky top-[144px] z-10"
+        className="bg-barrels-black border-b border-barrels-black-lighter"
       >
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="grid grid-cols-3 gap-2">
