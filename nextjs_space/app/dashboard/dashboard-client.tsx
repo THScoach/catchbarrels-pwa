@@ -108,7 +108,7 @@ export function DashboardClient({
         </div>
 
         <div className="p-6 space-y-6 max-w-7xl mx-auto">
-          {/* Top Navigation Skeleton */}
+          {/* Top Navigation Skeleton - Dashboard, New Lesson, History */}
           <div className="flex gap-3 justify-center">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-12 w-32 rounded-full" />
@@ -181,6 +181,12 @@ export function DashboardClient({
           className="flex gap-3 justify-center"
         >
           <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#F5A623] to-[#E89815] px-5 py-3 rounded-full shadow-lg h-12 border-2 border-[#F5A623]">
+              <Home className="w-4 h-4 text-white" />
+              <span className="text-white font-medium text-sm">Dashboard</span>
+            </div>
+          </motion.div>
+          <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
             <Link
               href="/video/upload"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-gray-700 to-gray-800 px-5 py-3 rounded-full hover:shadow-lg transition-all duration-200 border border-gray-700 h-12"
@@ -188,12 +194,6 @@ export function DashboardClient({
               <Play className="w-4 h-4 text-white" />
               <span className="text-white font-medium text-sm">New Lesson</span>
             </Link>
-          </motion.div>
-          <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#F5A623] to-[#E89815] px-5 py-3 rounded-full shadow-lg h-12 border-2 border-[#F5A623]">
-              <Home className="w-4 h-4 text-white" />
-              <span className="text-white font-medium text-sm">Dashboard</span>
-            </div>
           </motion.div>
           <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
             <Link
