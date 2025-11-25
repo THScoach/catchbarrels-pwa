@@ -5,6 +5,8 @@
 
 import { prisma } from './db';
 import { compareAssessments, formatComparisonForGamma, type ComparisonSummary } from './assessment-comparison';
+import { computeOnTheBallMetrics, type OnTheBallMetrics } from './on-the-ball-engine';
+import { Decimal } from '@prisma/client/runtime/library';
 
 export async function generateAssessmentReport(
   sessionId: string
@@ -35,6 +37,64 @@ export async function generateAssessmentReport(
 
   // 3. Calculate ball data summary
   const ballDataSummary = calculateBallDataSummary(session.ballData);
+
+  // 3.5. Compute On-The-Ball metrics (contact quality & consistency)
+  let onTheBallMetrics: OnTheBallMetrics | null = null;
+  if (session.ballData && session.ballData.length > 0) {
+    // Get user level for barrel calculation
+    const user = await prisma.user.findUnique({ where: { id: session.userId } });
+    const userLevel = user?.level?.toLowerCase().includes('youth') ? 'youth' :
+                      user?.level?.toLowerCase().includes('college') ? 'college' :
+                      user?.level?.toLowerCase().includes('pro') ? 'pro' : 'hs';
+
+    // Convert ball data to batted ball events
+    const battedBallEvents = session.ballData.map((ball) => ({
+      velo: ball.exitVelocity || 0,
+      la: ball.launchAngle || 0,
+      isFair: ball.result?.toLowerCase() !== 'foul' && (ball.exitVelocity || 0) > 0,
+      isFoul: ball.result?.toLowerCase() === 'foul',
+      isMiss: (ball.exitVelocity || 0) === 0,
+      inZone: undefined, // Not available from assessment ball data
+      level: userLevel,
+    }));
+
+    // Compute metrics
+    onTheBallMetrics = computeOnTheBallMetrics(battedBallEvents, userLevel);
+
+    // Save to player history
+    try {
+      await prisma.playerOnTheBallHistory.create({
+        data: {
+          userId: session.userId,
+          sourceType: 'assessment',
+          sourceId: sessionId,
+          assessmentSessionId: sessionId,
+          sessionDate: session.sessionDate,
+          barrelRate: onTheBallMetrics.barrelRate ? new Decimal(onTheBallMetrics.barrelRate) : null,
+          avgEv: onTheBallMetrics.avgEv ? new Decimal(onTheBallMetrics.avgEv) : null,
+          avgLa: onTheBallMetrics.avgLa ? new Decimal(onTheBallMetrics.avgLa) : null,
+          sdLa: onTheBallMetrics.sdLa ? new Decimal(onTheBallMetrics.sdLa) : null,
+          sdEv: onTheBallMetrics.sdEv ? new Decimal(onTheBallMetrics.sdEv) : null,
+          inzoneBarrelRate: null, // Not available from assessment data
+          inzoneSdLa: null,
+          inzoneSdEv: null,
+          foulPct: onTheBallMetrics.foulPct ? new Decimal(onTheBallMetrics.foulPct) : null,
+          missPct: onTheBallMetrics.missPct ? new Decimal(onTheBallMetrics.missPct) : null,
+          fairPct: onTheBallMetrics.fairPct ? new Decimal(onTheBallMetrics.fairPct) : null,
+          level: userLevel,
+          contextJson: {
+            totalEvents: onTheBallMetrics.totalEvents,
+            barrels: onTheBallMetrics.barrels,
+            fairBalls: onTheBallMetrics.fairBalls,
+            assessmentName: session.sessionName,
+          },
+        },
+      });
+      console.log(`[Report Generator] On-The-Ball metrics saved: Barrel Rate ${(onTheBallMetrics.barrelRate! * 100).toFixed(1)}%, LA SD ${onTheBallMetrics.sdLa?.toFixed(1)}°`);
+    } catch (error) {
+      console.error('[Report Generator] Error saving On-The-Ball metrics:', error);
+    }
+  }
 
   // 4. Generate overall score
   const overallScore = calculateOverallScore(metrics, ballDataSummary);

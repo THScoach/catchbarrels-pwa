@@ -65,6 +65,8 @@ model User {
   assessmentSessions AssessmentSession[] @relation("UserAssessmentSessions")
   timingSessions  TimingSession[] @relation("UserTimingSessions")
   s2Reports       S2CognitionReport[] @relation("UserS2Reports")
+  hittraxSessions HitTraxSession[] @relation("UserHitTraxSessions")
+  onTheBallHistory PlayerOnTheBallHistory[] @relation("UserOnTheBallHistory")
 }
 
 model Video {
@@ -601,6 +603,7 @@ model AssessmentSession {
   swings        SwingAnalysis[]  @relation("SessionSwings")
   ballData      BallDataPoint[]  @relation("SessionBallData")
   report        AssessmentReport?
+  onTheBallHistory PlayerOnTheBallHistory? @relation("AssessmentOnTheBall")
   
   // Analysis Progress
   totalSwings       Int      @default(0)
@@ -1036,4 +1039,122 @@ model S2CognitionReport {
   @@map("s2_cognition_reports")
   @@index([userId])
   @@index([userId, testDate])
+}
+
+// ============================================================================
+// ON-THE-BALL SYSTEM (Contact Quality & Consistency)
+// Implements Statcast-style barrel metrics with level adjustments
+// Works with both HitTrax uploads and BARRELS assessment events
+// ============================================================================
+
+model HitTraxSession {
+  id                  String                      @id @default(uuid())
+  userId              String
+  user                User                        @relation("UserHitTraxSessions", fields: [userId], references: [id], onDelete: Cascade)
+  
+  sessionDate         DateTime                    @default(now())
+  sourceFileName      String?                     @db.Text
+  level               String?                     // "youth" | "hs" | "college" | "pro"
+  notes               String?                     @db.Text
+  
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+  
+  events              HitTraxEvent[]
+  onTheBallHistory    PlayerOnTheBallHistory?
+  
+  @@map("hittrax_sessions")
+  @@index([userId])
+  @@index([sessionDate])
+}
+
+model HitTraxEvent {
+  id                  String           @id @default(uuid())
+  sessionId           String
+  session             HitTraxSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  rowNumber           Int
+  ab                  Int?
+  date                DateTime?
+  timeStamp           String?          @db.Text
+  
+  // Pitch data
+  pitch               Decimal?         @db.Decimal(5,2) // pitch speed
+  strikeZone          Int?             // zone code (4-12, etc.)
+  pType               String?          @db.Text         // pitch type
+  
+  // Ball data
+  velo                Decimal?         @db.Decimal(5,2) // exit velocity
+  la                  Decimal?         @db.Decimal(5,2) // launch angle
+  dist                Decimal?         @db.Decimal(6,2) // distance
+  res                 String?          @db.Text         // result code (HR, 1B-8, Foul, etc.)
+  type                String?          @db.Text         // batted ball type (LD, GB, FB)
+  
+  // Spray data
+  horizAngle          Decimal?         @db.Decimal(6,2)
+  sprayChartX         Decimal?         @db.Decimal(6,2)
+  sprayChartZ         Decimal?         @db.Decimal(6,2)
+  
+  // Derived flags (calculated on insert)
+  isFair              Boolean          @default(false)
+  isFoul              Boolean          @default(false)
+  isMiss              Boolean          @default(false)
+  inZone              Boolean          @default(false)
+  isBarrel            Boolean          @default(false)
+  
+  // Player context
+  batting             String?          @db.Text // L or R
+  playerLevel         String?          @db.Text // youth, hs, college, pro
+  
+  createdAt           DateTime         @default(now())
+  
+  @@map("hittrax_events")
+  @@index([sessionId])
+  @@index([isBarrel])
+  @@index([isFair])
+}
+
+model PlayerOnTheBallHistory {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation("UserOnTheBallHistory", fields: [userId], references: [id], onDelete: Cascade)
+  
+  sourceType            String              @db.Text // "assessment" | "hittrax"
+  sourceId              String              @db.Text // assessment_id or hittrax_session_id
+  
+  // Link to source records (one of these will be set)
+  assessmentSession     AssessmentSession?  @relation("AssessmentOnTheBall", fields: [assessmentSessionId], references: [id], onDelete: Cascade)
+  assessmentSessionId   String?             @unique
+  hittraxSession        HitTraxSession?     @relation(fields: [hittraxSessionId], references: [id], onDelete: Cascade)
+  hittraxSessionId      String?             @unique
+  
+  sessionDate           DateTime
+  
+  // Core metrics (session-level)
+  barrelRate            Decimal?            @db.Decimal(5,4) // 0.0 to 1.0
+  avgEv                 Decimal?            @db.Decimal(5,2) // mph
+  avgLa                 Decimal?            @db.Decimal(5,2) // degrees
+  sdLa                  Decimal?            @db.Decimal(5,2) // degrees (consistency)
+  sdEv                  Decimal?            @db.Decimal(5,2) // mph (consistency)
+  
+  // Optional in-zone metrics
+  inzoneBarrelRate      Decimal?            @db.Decimal(5,4)
+  inzoneSdLa            Decimal?            @db.Decimal(5,2)
+  inzoneSdEv            Decimal?            @db.Decimal(5,2)
+  
+  // Breakdown metrics
+  foulPct               Decimal?            @db.Decimal(5,4) // 0.0 to 1.0
+  missPct               Decimal?            @db.Decimal(5,4) // 0.0 to 1.0
+  fairPct               Decimal?            @db.Decimal(5,4) // 0.0 to 1.0
+  
+  // Context
+  level                 String?             @db.Text // youth, hs, college, pro
+  contextJson           Json?                        // additional filters, notes, etc.
+  
+  createdAt             DateTime            @default(now())
+  
+  @@map("player_on_the_ball_history")
+  @@index([userId])
+  @@index([sessionDate])
+  @@index([sourceType])
 }

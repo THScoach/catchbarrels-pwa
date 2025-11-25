@@ -28,6 +28,13 @@ interface AssessmentSession {
   totalSwings: number;
   successfulSwings: number;
   createdAt: Date;
+  onTheBallHistory?: {
+    barrelRate: any;
+    avgEv: any;
+    avgLa: any;
+    sdLa: any;
+    sdEv: any;
+  } | null;
 }
 
 interface Props {
@@ -610,6 +617,113 @@ export default function ReportClient({ session, report }: Props) {
             </CardContent>
           </Card>
         </div>
+
+        {/* On-The-Ball Section (Contact Quality & Consistency) */}
+        {session.onTheBallHistory && (
+          <Card className="bg-gradient-to-br from-orange-900/20 to-gray-900 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-400">
+                <span className="text-2xl">⚾</span>
+                On-The-Ball (Contact Quality & Consistency)
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                We measure Barrels + consistency, not just max exit velo
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Core Metrics Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {/* Barrel Rate */}
+                  <div className="rounded-lg border border-orange-500/30 bg-gray-800 p-4">
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Barrel Rate</div>
+                    <div className="mt-2 text-3xl font-bold text-orange-400">
+                      {session.onTheBallHistory.barrelRate
+                        ? `${(parseFloat(session.onTheBallHistory.barrelRate.toString()) * 100).toFixed(1)}%`
+                        : 'N/A'}
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500">
+                      % of fair balls that qualify as barrels for your level
+                    </div>
+                  </div>
+
+                  {/* Avg EV */}
+                  <div className="rounded-lg border border-gray-600 bg-gray-800 p-4">
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Avg Exit Velo</div>
+                    <div className="mt-2 text-2xl font-bold text-white">
+                      {session.onTheBallHistory.avgEv
+                        ? parseFloat(session.onTheBallHistory.avgEv.toString()).toFixed(1)
+                        : 'N/A'}
+                      <span className="text-sm text-gray-400"> mph</span>
+                    </div>
+                  </div>
+
+                  {/* Avg LA */}
+                  <div className="rounded-lg border border-gray-600 bg-gray-800 p-4">
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Avg Launch Angle</div>
+                    <div className="mt-2 text-2xl font-bold text-white">
+                      {session.onTheBallHistory.avgLa
+                        ? parseFloat(session.onTheBallHistory.avgLa.toString()).toFixed(1)
+                        : 'N/A'}
+                      <span className="text-sm text-gray-400">°</span>
+                    </div>
+                  </div>
+
+                  {/* LA SD (Consistency) */}
+                  <div className="rounded-lg border border-green-500/30 bg-gray-800 p-4">
+                    <div className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                      LA Consistency
+                      <span className="text-green-400">↓</span>
+                    </div>
+                    <div className="mt-2 text-2xl font-bold text-green-400">
+                      {session.onTheBallHistory.sdLa
+                        ? parseFloat(session.onTheBallHistory.sdLa.toString()).toFixed(1)
+                        : 'N/A'}
+                      <span className="text-sm text-gray-400">° SD</span>
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500">Lower = more consistent launch window</div>
+                  </div>
+
+                  {/* EV SD */}
+                  <div className="rounded-lg border border-gray-600 bg-gray-800 p-4">
+                    <div className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                      EV Consistency
+                      <span className="text-gray-400">↓</span>
+                    </div>
+                    <div className="mt-2 text-2xl font-bold text-white">
+                      {session.onTheBallHistory.sdEv
+                        ? parseFloat(session.onTheBallHistory.sdEv.toString()).toFixed(1)
+                        : 'N/A'}
+                      <span className="text-sm text-gray-400"> mph SD</span>
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500">Lower = more consistent contact quality</div>
+                  </div>
+                </div>
+
+                {/* Explanation Box */}
+                <div className="rounded-md bg-blue-900/20 border border-blue-500/30 p-4">
+                  <h4 className="font-medium text-blue-300 mb-2">Why This Matters</h4>
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    We care about <strong>Barrels and consistency</strong>, not just the biggest exit velo number. Your
+                    goal is to:{' '}
+                    <span className="text-orange-300 font-medium">(1) Raise your Barrel Rate over time</span> and{' '}
+                    <span className="text-green-300 font-medium">
+                      (2) Tighten your Launch Angle SD around a productive window
+                    </span>
+                    , so that your best contact shows up more often in games, not just once in a lab.
+                  </p>
+                  <div className="mt-3 pt-3 border-t border-blue-500/20">
+                    <p className="text-xs text-blue-200/80">
+                      <strong>What's a Barrel?</strong> MLB's top contact-quality bucket: specific exit velocity +
+                      launch angle pairs that historically produce at least a .500 batting average and 1.500 slugging
+                      percentage. We adjust the thresholds for your level.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Detailed Metrics */}
         <Tabs defaultValue="motion" className="w-full">

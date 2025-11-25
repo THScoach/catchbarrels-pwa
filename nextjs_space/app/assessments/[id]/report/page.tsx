@@ -33,6 +33,7 @@ export default async function AssessmentReportPage({
       ballData: {
         orderBy: { createdAt: 'asc' },
       },
+      onTheBallHistory: true,
     },
   });
 
