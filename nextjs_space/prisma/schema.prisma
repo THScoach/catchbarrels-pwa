@@ -63,6 +63,8 @@ model User {
   drillProgress   DrillProgress[]
   assessments     Assessment[]
   assessmentSessions AssessmentSession[] @relation("UserAssessmentSessions")
+  timingSessions  TimingSession[] @relation("UserTimingSessions")
+  s2Reports       S2CognitionReport[] @relation("UserS2Reports")
 }
 
 model Video {
@@ -935,4 +937,103 @@ model AssessmentReport {
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+// ============================================================================
+// Timing & Processing Module (52-Pitch Timing Test)
+// ============================================================================
+
+model TimingSession {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation("UserTimingSessions", fields: [userId], references: [id], onDelete: Cascade)
+  
+  sessionDate     DateTime
+  testType        String   @default("52_pitch_timing")
+  machineDistanceFt Decimal @db.Decimal(5,2)
+  videoFps        Int
+  notes           String?  @db.Text
+  
+  pitches         TimingPitch[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("timing_sessions")
+}
+
+model TimingPitch {
+  id              String   @id @default(uuid())
+  sessionId       String
+  session         TimingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  pitchNumber     Int      // 1-52
+  speedLabel      String   // "90" | "80" | "70" (game-equivalent label)
+  machineSpeedMph Decimal  @db.Decimal(5,2) // actual wheel setting (e.g., 62 for "90 equivalent")
+  timeToPlatMs    Decimal? @db.Decimal(6,2) // computed from distance / speed
+  
+  // Video frame markers
+  frameRelease    Int?     // Frame when ball leaves machine
+  frameLaunch     Int?     // Frame when hips commit (player launches)
+  frameContact    Int?     // Frame of bat-ball contact (or null if miss)
+  
+  // Computed timing metrics
+  decisionTimeMs  Decimal? @db.Decimal(6,2) // (frameLaunch - frameRelease) / fps * 1000
+  bufferMs        Decimal? @db.Decimal(6,2) // timeToPlatMs - decisionTimeMs
+  swingTimeMs     Decimal? @db.Decimal(6,2) // (frameContact - frameLaunch) / fps * 1000
+  
+  // Outcome tracking
+  outcome         String?  // "barrel" | "late" | "early" | "miss" | "foul"
+  exitVelo        Decimal? @db.Decimal(5,2)
+  contactType     String?  // "HC" (Hard Contact) | "WC" (Weak Contact) | "M" (Miss) | "FB" (Foul Ball)
+  resultType      String?  // "LD" (Line Drive) | "FB" (Fly Ball) | "GB" (Ground Ball) | "P" (Pop-up) | "M" (Miss)
+  resultLocation  String?  // "1-9" | "L" (Left) | "R" (Right) | "B" (Back) | "M" (Miss)
+  
+  // HitTrax Integration
+  launchAngle     Decimal? @db.Decimal(5,2)
+  distance        Decimal? @db.Decimal(6,2)
+  
+  // Speed change analysis
+  previousPitchSpeedLabel String? // For transition analysis
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("timing_pitches")
+  @@index([sessionId])
+  @@index([sessionId, pitchNumber])
+}
+
+// ============================================================================
+// S2 Cognition Integration
+// ============================================================================
+
+model S2CognitionReport {
+  id                          String   @id @default(uuid())
+  userId                      String
+  user                        User     @relation("UserS2Reports", fields: [userId], references: [id], onDelete: Cascade)
+  
+  uploadDate                  DateTime @default(now())
+  testDate                    DateTime
+  filePath                    String   @db.Text // stored file location
+  
+  // S2 Cognitive Scores (0-100 or percentile)
+  perceptionSpeedScore        Int?
+  timingControlScore          Int?
+  stoppingControlScore        Int?
+  trajectoryPredictionScore   Int?
+  rhythmControlScore          Int?
+  impulseControlScore         Int?
+  distractionControlScore     Int?
+  instinctiveLearningScore    Int?
+  overallScore                Int?
+  
+  notes                       String?  @db.Text
+  
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+  
+  @@map("s2_cognition_reports")
+  @@index([userId])
+  @@index([userId, testDate])
 }
