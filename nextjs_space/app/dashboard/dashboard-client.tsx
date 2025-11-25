@@ -167,7 +167,7 @@ export default function DashboardClient({
                     Anchor
                   </p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-semibold text-white">
+                    <span className="text-2xl font-bold text-white">
                       {scores?.anchor || 0}
                     </span>
                     <span className="text-[10px] text-barrels-muted uppercase tracking-wide">
@@ -205,7 +205,7 @@ export default function DashboardClient({
                     Engine
                   </p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-semibold text-white">
+                    <span className="text-2xl font-bold text-white">
                       {scores?.engine || 0}
                     </span>
                     <span className="text-[10px] text-barrels-muted uppercase tracking-wide">
@@ -243,7 +243,7 @@ export default function DashboardClient({
                     Whip
                   </p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-semibold text-white">
+                    <span className="text-2xl font-bold text-white">
                       {scores?.whip || 0}
                     </span>
                     <span className="text-[10px] text-barrels-muted uppercase tracking-wide">
