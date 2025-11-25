@@ -337,27 +337,59 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
       const userMessage = { role: 'user' as const, content: message };
       setGoatyMessages(prev => [...prev, userMessage]);
 
-      // Call Coach Rick API with video context
+      // Determine analysis type based on video type
+      const analysisType = video.videoType || 'swing';
+      
+      // Determine analysis intent based on message content
+      let analysisIntent = 'general';
+      if (message.toLowerCase().includes('drill')) {
+        analysisIntent = 'drill_recommendation';
+      } else if (message.toLowerCase().includes('fix') || message.toLowerCase().includes('improve')) {
+        analysisIntent = 'fix_priority';
+      } else if (message.toLowerCase().includes('compare') || message.toLowerCase().includes('previous')) {
+        analysisIntent = 'comparison';
+      } else if (message.toLowerCase().includes('feel') || message.toLowerCase().includes('cue')) {
+        analysisIntent = 'feel_cue';
+      } else if (message.toLowerCase().includes('head') || message.toLowerCase().includes('movement')) {
+        analysisIntent = 'movement_analysis';
+      }
+
+      // Call Coach Rick API with full swing context
       const response = await fetch('/api/coach-rick', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message,
+          swing_id: video.id,
+          analysis_type: analysisType,
+          analysis_intent: analysisIntent,
           videoId: video.id,
           context: {
             scores: {
               overall: video.overallScore,
               anchor: video.anchor,
               engine: video.engine,
-              whip: video.whip
+              whip: video.whip,
+              // Include sub-scores for detailed analysis
+              anchorMotion: video.anchorStance,
+              anchorStability: video.anchorGroundConnection,
+              anchorSequencing: video.anchorLowerBodyMechanics,
+              engineMotion: video.engineHipRotation,
+              engineStability: video.engineCorePower,
+              engineSequencing: video.engineTorsoMechanics,
+              whipMotion: video.whipBatSpeed,
+              whipStability: video.whipConnection,
+              whipSequencing: video.whipBatPath
             },
-            playerReflection
+            playerReflection,
+            videoType: video.videoType,
+            uploadDate: video.uploadDate
           }
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response from GOATY');
+        throw new Error('Failed to get response from AI Coach');
       }
 
       const data = await response.json();
@@ -368,7 +400,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
 
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error('Failed to send message to GOATY');
+      toast.error('Failed to send message to AI Coach');
     } finally {
       setSendingMessage(false);
     }
@@ -800,10 +832,11 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                         onChange={setPlayerReflection}
                       />
 
-                      {/* GOATY Feedback Block (Coach Rick chat) */}
+                      {/* AI Coach Feedback Block */}
                       <GoatyFeedbackBlock
                         messages={goatyMessages}
                         onSendMessage={handleSendGoatyMessage}
+                        hasPreviousSwing={!!video.sessionId}
                       />
 
                       {/* Drill Card */}

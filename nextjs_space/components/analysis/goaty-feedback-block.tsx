@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Mic, MicOff } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 interface Message {
   role: 'system' | 'user' | 'assistant';
@@ -16,11 +17,49 @@ interface Message {
 interface GoatyFeedbackBlockProps {
   messages: Message[];
   onSendMessage: (text: string) => void;
+  hasPreviousSwing?: boolean; // For "Compare to last swing" chip
 }
 
-export function GoatyFeedbackBlock({ messages, onSendMessage }: GoatyFeedbackBlockProps) {
+export function GoatyFeedbackBlock({ messages, onSendMessage, hasPreviousSwing = false }: GoatyFeedbackBlockProps) {
   const [input, setInput] = useState('');
-  const [mode, setMode] = useState<'text' | 'voice'>('text');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize Web Speech API
+  useEffect(() => {
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+
+      recognitionInstance.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        toast.success('Voice captured! Review and tap Send Text.');
+      };
+
+      recognitionInstance.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        toast.error('Voice recording failed. Please try again or use text.');
+        setIsRecording(false);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsRecording(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }
+  }, []);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleSend = () => {
     if (input.trim()) {
@@ -29,11 +68,74 @@ export function GoatyFeedbackBlock({ messages, onSendMessage }: GoatyFeedbackBlo
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+  const handleVoiceRecord = () => {
+    if (!recognition) {
+      toast.error('Voice recording not supported in this browser');
+      return;
     }
+
+    if (isRecording) {
+      recognition.stop();
+      setIsRecording(false);
+    } else {
+      try {
+        recognition.start();
+        setIsRecording(true);
+        toast.info('Listening... Speak now!');
+      } catch (error) {
+        console.error('Failed to start recording:', error);
+        toast.error('Could not start voice recording');
+      }
+    }
+  };
+
+  const quickPrompts = [
+    {
+      label: 'Main thing to fix',
+      fullPrompt: `Based on this swing and the metrics you see (Anchor, Engine, Whip, motion, stability, sequencing), what is the single most important thing I need to fix?
+Keep the answer short, plain language, and give one clear priority for my next rep.`
+    },
+    {
+      label: 'Explain my head movement',
+      fullPrompt: `Explain my head movement in this swing.
+
+How much am I moving compared to what you'd consider stable?
+When in the swing does it move the most?
+Why does that matter for my contact and consistency?
+Use simple language and 2–3 sentences.`
+    },
+    {
+      label: 'Give me one drill',
+      fullPrompt: `Given this swing's scores and motion (Anchor, Engine, Whip, motion/stability/sequencing), recommend one drill that best addresses my biggest problem.
+Include:
+
+The drill name
+What it fixes
+How to do it in 3–4 simple steps.`
+    },
+    {
+      label: 'What should I feel next rep?',
+      fullPrompt: `For my very next rep, tell me exactly what I should focus on or feel.
+Base it on this swing's main flaw.
+Use 1–2 short cues I can remember in the box (for example: 'feel your weight stay inside your feet' or 'feel your hands stay back longer').`
+    }
+  ];
+
+  // Conditionally add "Compare to last swing" if previous swing exists
+  if (hasPreviousSwing) {
+    quickPrompts.push({
+      label: 'Compare to last swing',
+      fullPrompt: `Compare this swing to my previous swing in this same session.
+
+What got better?
+What stayed the same?
+What got worse?
+Keep it to 3 bullet points: better / same / worse.`
+    });
+  }
+
+  const handleQuickPrompt = (fullPrompt: string) => {
+    setInput(fullPrompt);
   };
 
   return (
@@ -44,16 +146,13 @@ export function GoatyFeedbackBlock({ messages, onSendMessage }: GoatyFeedbackBlo
     >
       <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700 p-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">
-            Let's Talk About Your Swing!
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-white mb-1">
+            AI Coach
           </h3>
-          <Tabs value={mode} onValueChange={(v) => setMode(v as 'text' | 'voice')} className="w-auto">
-            <TabsList className="grid w-[120px] grid-cols-2 h-8">
-              <TabsTrigger value="text" className="text-xs">Text</TabsTrigger>
-              <TabsTrigger value="voice" className="text-xs">Voice</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <p className="text-sm text-gray-400">
+            Ask about your swing, get personalized feedback
+          </p>
         </div>
 
         {/* Message area */}
@@ -61,9 +160,9 @@ export function GoatyFeedbackBlock({ messages, onSendMessage }: GoatyFeedbackBlo
           {messages.length === 0 && (
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
               <p className="text-sm text-blue-200">
-                Hey! I'm GOATY, your AI baseball coach. I've just analyzed your swing. 
-                Want to know more about your results, or have questions about improving your game? 
-                Ask me anything!
+                👋 Hey! I'm your AI baseball coach. I've analyzed your swing. 
+                Want to know more about your results or how to improve? 
+                Tap a question below or ask me anything!
               </p>
             </div>
           )}
@@ -77,40 +176,73 @@ export function GoatyFeedbackBlock({ messages, onSendMessage }: GoatyFeedbackBlo
                   : 'bg-gray-700/50 border border-gray-600 mr-8'
               }`}
             >
-              <p className="text-sm text-gray-200">{msg.content}</p>
+              <p className="text-sm text-gray-200 whitespace-pre-wrap">{msg.content}</p>
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Input bar */}
-        <div className="flex gap-2">
-          {mode === 'text' ? (
-            <>
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask GOATY about your swing..."
-                className="flex-1 bg-gray-900/50 border-gray-600 text-white placeholder:text-gray-500"
-              />
-              <Button
-                onClick={handleSend}
-                disabled={!input.trim()}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4"
+        {/* Quick Action Chips */}
+        <div className="mb-4">
+          <p className="text-xs text-gray-400 mb-2">Quick Questions:</p>
+          <div className="flex flex-wrap gap-2">
+            {quickPrompts.map((prompt, idx) => (
+              <Badge
+                key={idx}
+                variant="outline"
+                className="cursor-pointer hover:bg-orange-500/20 border-orange-500/30 text-orange-300 text-xs px-2 py-1"
+                onClick={() => handleQuickPrompt(prompt.fullPrompt)}
               >
-                <Send className="w-4 h-4" />
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="outline"
-              className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              <Mic className="w-4 h-4 mr-2" />
-              Tap to speak
-            </Button>
-          )}
+                {prompt.label}
+              </Badge>
+            ))}
+          </div>
         </div>
+
+        {/* Multiline Text Input */}
+        <Textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Type your question here..."
+          className="mb-3 min-h-[80px] bg-gray-900/50 border-gray-600 text-white placeholder:text-gray-500 resize-none"
+        />
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            onClick={handleSend}
+            disabled={!input.trim()}
+            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Send Text
+          </Button>
+          <Button
+            onClick={handleVoiceRecord}
+            variant="outline"
+            className={`flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 ${
+              isRecording ? 'bg-red-500/20 border-red-500/50 text-red-300' : ''
+            }`}
+          >
+            {isRecording ? (
+              <>
+                <MicOff className="w-4 h-4 mr-2 animate-pulse" />
+                Stop Recording
+              </>
+            ) : (
+              <>
+                <Mic className="w-4 h-4 mr-2" />
+                Record Voice
+              </>
+            )}
+          </Button>
+        </div>
+
+        {isRecording && (
+          <p className="text-xs text-red-300 mt-2 text-center animate-pulse">
+            🎙️ Listening... Speak now!
+          </p>
+        )}
       </Card>
     </motion.div>
   );

@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { message, context, coachingCallId } = await request.json();
+    const { message, context, coachingCallId, swing_id, analysis_type, analysis_intent } = await request.json();
 
     // Get user ID from session (it's added in the session callback)
     const userId = (session.user as any).id;
@@ -287,6 +287,21 @@ Relevant excerpt: ${excerpt.substring(0, 500)}...`;
       }
     }
 
+    // Build context for swing-specific queries
+    let swingContext = '';
+    if (swing_id) {
+      swingContext = `\n\nCURRENT SWING CONTEXT:
+Swing ID: ${swing_id}
+Analysis Type: ${analysis_type || 'general swing'}
+User's Question Intent: ${analysis_intent || 'general inquiry'}
+
+${analysis_intent === 'comparison' ? '⚠️ The user is asking to COMPARE this swing to their previous swing. Look at the progress tracking data above and highlight specific differences in scores!' : ''}
+${analysis_intent === 'fix_priority' ? '⚠️ The user wants to know the SINGLE MOST IMPORTANT thing to fix. Based on their scores, identify the lowest-scoring component and give ONE clear priority!' : ''}
+${analysis_intent === 'drill_recommendation' ? '⚠️ The user wants a SPECIFIC DRILL recommendation. Based on their weakest score, recommend ONE drill with the drill name, what it fixes, and 3-4 simple steps!' : ''}
+${analysis_intent === 'feel_cue' ? '⚠️ The user wants a FEELING or CUE for their next rep. Give them 1-2 short, memorable cues they can think about in the box (e.g., "feel your weight inside your feet")!' : ''}
+${analysis_intent === 'movement_analysis' ? '⚠️ The user is asking about HEAD MOVEMENT or specific body movement. Explain how much they moved, when it happened, and why it matters for contact and consistency!' : ''}`;
+    }
+
     // Build system prompt for Coach Rick
     const systemPrompt = `You are Coach Rick, a friendly and knowledgeable baseball hitting coach who helps players improve their swing. 
 
@@ -299,6 +314,7 @@ IMPORTANT GUIDELINES:
 - If asked about the 4Bs system, explain it simply
 - When you have coaching call transcript context, reference it naturally in your answers
 - ALWAYS reference the player's actual scores when giving advice!
+- Pay attention to the User's Question Intent above and tailor your response accordingly!
 
 THE 4Bs SYSTEM (What We Track):
 1. ANCHOR (Lower Body) - How your legs and hips work
@@ -321,6 +337,7 @@ THE 4Bs SYSTEM (What We Track):
 
 4. EXIT VELOCITY - How hard you hit the ball (measured in MPH)
 
+${swingContext}
 ${userVideoContext}
 ${coachingCallContext}
 ${knowledgeBaseContext}
