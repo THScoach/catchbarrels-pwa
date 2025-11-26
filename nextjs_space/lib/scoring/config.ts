@@ -1,7 +1,10 @@
 /**
- * New Scoring Engine Configuration
+ * New Scoring Engine Configuration: Momentum-Transfer First Model
  * All weights, thresholds, and penalties are exposed here for easy tuning
  * Based on Kwon/THSS principles + single-camera pose data
+ * 
+ * Core Philosophy: Momentum Transfer (60%) drives the score,
+ * with Anchor/Engine/Whip sub-scores (40%) as supporting factors.
  */
 
 // ========================================
@@ -10,7 +13,30 @@
 export const NEW_SCORING_ENGINE_ENABLED = true; // Set to true to enable new scoring
 
 // ========================================
-// CATEGORY WEIGHTS (must sum to 1.0)
+// NEW COMPOSITE WEIGHTS (Momentum-Transfer First)
+// ========================================
+export const COMPOSITE_WEIGHTS = {
+  momentumTransfer: 0.60,  // 60% - How well does Anchor→Engine→Whip transfer energy/speed over time?
+  anchor: 0.15,            // 15% - Lower body momentum setup (pelvis, weight transfer, stability)
+  engine: 0.15,            // 15% - Core/torso momentum amplification (sequence, rotation, posture)
+  whip: 0.10,              // 10% - Arms/bat momentum release (hand path, lag, barrel delivery)
+} as const;
+
+// ========================================
+// MOMENTUM TRANSFER COMPONENT WEIGHTS (must sum to 1.0)
+// ========================================
+export const MOMENTUM_TRANSFER_WEIGHTS = {
+  sequenceOrderScore: 0.30,      // 30% - Correct pelvis→torso→hands→bat order (CRITICAL)
+  pelvisTorsoGapScore: 0.15,     // 15% - Timing gap quality
+  torsoHandsGapScore: 0.15,      // 15% - Timing gap quality
+  handsBatGapScore: 0.10,        // 10% - Timing gap quality
+  decelQualityScore: 0.15,       // 15% - Upstream decel while downstream peaks
+  smoothnessScore: 0.10,         // 10% - Low jerk = smooth flow
+  abcTempoScore: 0.05,           // 5% - A→B→C timing constraints
+} as const;
+
+// ========================================
+// LEGACY CATEGORY WEIGHTS (for backward compatibility)
 // ========================================
 export const CATEGORY_WEIGHTS = {
   tempo: 0.25,        // 25% - Rhythm and timing (A→B→C durations)
@@ -190,9 +216,17 @@ export function getGoatyBandLabel(band: number): string {
 // PENALTIES & MODIFIERS
 // ========================================
 export const PENALTIES = {
-  // Critical feature penalty: cap score if sequence order is broken
-  criticalFeature: {
+  // Momentum Transfer Caps: Prevent high scores with poor timing/sequencing
+  momentumTransferCaps: {
     enabled: true,
+    cap70Threshold: 50,          // If MTS < 50, cap final score at 70
+    cap60Threshold: 40,          // If MTS < 40, cap final score at 60
+    reason: 'Poor momentum transfer cannot be compensated by position alone',
+  },
+  
+  // Critical feature penalty: cap score if sequence order is broken (legacy)
+  criticalFeature: {
+    enabled: false,               // Disabled - superseded by momentum transfer caps
     sequenceOrderThreshold: 40,  // If sequence order score < 40
     capScore: 70,                 // Cap final score at 70
     reason: 'Broken kinematic sequence is a critical flaw',

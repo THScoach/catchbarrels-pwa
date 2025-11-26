@@ -81,11 +81,27 @@ export async function GET(
       videoId: video.id,
       videoTitle: video.title,
       
+      // Momentum Transfer Score (NEW - 60% weight)
+      momentumTransferScore: scoringResult.momentumTransferScore.overall,
+      momentumComponents: scoringResult.momentumTransferScore.components,
+      
+      // Sub-Scores (NEW - 40% weight total)
+      anchorScore: scoringResult.subScores.anchor,
+      engineScore: scoringResult.subScores.engine,
+      whipScore: scoringResult.subScores.whip,
+      
+      // Final Score
+      finalMechanicsScore: scoringResult.mechanicsScore,
+      goatyBand: scoringResult.goatyBand,
+      goatyBandLabel: scoringResult.goatyBandLabel,
+      
       // New scoring engine results
       newScoring: {
         mechanicsScore: scoringResult.mechanicsScore,
         goatyBand: scoringResult.goatyBand,
         goatyBandLabel: scoringResult.goatyBandLabel,
+        momentumTransferScore: scoringResult.momentumTransferScore,
+        subScores: scoringResult.subScores,
         categoryScores: scoringResult.categoryScores,
         legacyScores: scoringResult.legacyScores,
         confidence: scoringResult.confidence,
@@ -110,8 +126,14 @@ export async function GET(
       // Config info
       config: {
         newScoringEngineEnabled: NEW_SCORING_ENGINE_ENABLED,
+        compositWeights: {
+          momentumTransfer: 0.60,
+          anchor: 0.15,
+          engine: 0.15,
+          whip: 0.10,
+        },
         message: NEW_SCORING_ENGINE_ENABLED
-          ? 'New scoring engine is ENABLED in production'
+          ? 'Momentum-Transfer First scoring engine is ENABLED'
           : 'New scoring engine is DISABLED (using old engine in production)',
       },
     });

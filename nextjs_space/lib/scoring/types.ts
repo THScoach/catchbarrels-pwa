@@ -114,6 +114,25 @@ export interface FeatureScore {
 }
 
 // ========================================
+// MOMENTUM TRANSFER SCORING
+// ========================================
+
+export interface MomentumTransferComponents {
+  sequenceOrderScore: number;         // 0-100 (correct pelvis→torso→hands→bat order)
+  pelvisTorsoGapScore: number;        // 0-100 (timing gap quality)
+  torsoHandsGapScore: number;         // 0-100 (timing gap quality)
+  handsBatGapScore: number;           // 0-100 (timing gap quality)
+  decelQualityScore: number;          // 0-100 (upstream decel while downstream peaks)
+  smoothnessScore: number;            // 0-100 (low jerk = smooth momentum flow)
+  abcTempoScore: number;              // 0-100 (A→B→C timing quality)
+}
+
+export interface MomentumTransferScore {
+  overall: number;                    // 0-100 weighted composite
+  components: MomentumTransferComponents;
+}
+
+// ========================================
 // OUTPUT TYPES
 // ========================================
 
@@ -123,6 +142,12 @@ export interface CategoryScores {
   comBalance: number;                 // 0-100
   handPath: number;                   // 0-100
   posture: number;                    // 0-100
+}
+
+export interface SubScores {
+  anchor: number;                     // 0-100 (lower body momentum setup)
+  engine: number;                     // 0-100 (core momentum amplification)
+  whip: number;                       // 0-100 (arms/bat momentum release)
 }
 
 export interface LegacyScores {
@@ -137,7 +162,13 @@ export interface ScoringResult {
   goatyBand: number;                  // -3 to +3
   goatyBandLabel: string;             // "Elite", "Advanced", etc.
   
-  // Category breakdowns
+  // Momentum Transfer (primary driver - 60% weight)
+  momentumTransferScore: MomentumTransferScore;
+  
+  // Sub-scores (Anchor/Engine/Whip - 40% weight total)
+  subScores: SubScores;
+  
+  // Category breakdowns (legacy structure)
   categoryScores: CategoryScores;
   
   // Legacy scores (for UI continuity)
@@ -155,6 +186,8 @@ export interface ScoringResult {
   
   // Applied adjustments
   adjustments: {
+    momentumTransferCapsApplied: boolean;
+    momentumCapLevel?: number;        // 70 or 60
     criticalFeaturePenaltyApplied: boolean;
     lowConfidencePenalty: number;     // Points deducted
     originalScore?: number;           // Before adjustments
@@ -185,10 +218,30 @@ export interface DebugBreakdown {
   // Category aggregation
   categoryBreakdown: CategoryBreakdown[];
   
+  // Momentum Transfer breakdown
+  momentumTransfer: {
+    overall: number;
+    components: MomentumTransferComponents;
+    componentWeights: Record<string, number>;
+  };
+  
+  // Sub-score breakdown (Anchor/Engine/Whip)
+  subScores: {
+    anchor: number;
+    engine: number;
+    whip: number;
+  };
+  
   // Final composite calculation
   composite: {
-    categoryScores: CategoryScores;
-    categoryWeights: Record<string, number>;
+    momentumTransferScore: number;
+    momentumTransferWeight: number;
+    anchorScore: number;
+    anchorWeight: number;
+    engineScore: number;
+    engineWeight: number;
+    whipScore: number;
+    whipWeight: number;
     weightedSum: number;
     beforePenalties: number;
     afterPenalties: number;
@@ -197,6 +250,12 @@ export interface DebugBreakdown {
   
   // Penalties applied
   penalties: {
+    momentumTransferCap?: {
+      applied: boolean;
+      mtScore: number;
+      capLevel: number;
+      reason: string;
+    };
     criticalFeature?: {
       applied: boolean;
       reason: string;

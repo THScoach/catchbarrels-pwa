@@ -1,17 +1,19 @@
 /**
- * New Scoring Engine: Kwon/THSS Aligned Implementation
+ * New Scoring Engine: Momentum-Transfer First Model
  * 
- * This module implements a movement-quality based scoring system for baseball hitting mechanics.
- * Core principles:
- * - Kinematic sequencing (Dr. Kwon): pelvis→torso→hands→bat
- * - A-B-C phases (THSS): Load→Launch→Contact
- * - Movement over position: Reward proper sequence/timing, not just static angles
- * - MLB-calibrated: Elite movers should score 85-95+, amateurs scale down from there
+ * This module implements a momentum-transfer based scoring system for baseball hitting mechanics.
+ * Core philosophy:
+ * - Momentum Transfer (60%): How well does Anchor→Engine→Whip transfer energy/speed over time?
+ * - Sub-scores (40%): Anchor (15%), Engine (15%), Whip (10%) as local momentum factors
+ * - Timing & Sequencing FIRST: Elite movers with good sequencing score 85-95+
+ * - MLB-calibrated: Poor momentum transfer caps scores at 70 or 60, regardless of positions
  */
 
 import {
   CATEGORY_WEIGHTS,
   FEATURE_WEIGHTS,
+  COMPOSITE_WEIGHTS,
+  MOMENTUM_TRANSFER_WEIGHTS,
   THRESHOLDS,
   PENALTIES,
   PHASE_DETECTION,
@@ -35,11 +37,14 @@ import type {
   ExtractedFeatures,
   FeatureScore,
   CategoryScores,
+  SubScores,
   DebugBreakdown,
   JointFrame,
   Joint,
   FeatureScoreDetail,
   CategoryBreakdown,
+  MomentumTransferComponents,
+  MomentumTransferScore,
 } from './types';
 
 // ========================================
@@ -67,28 +72,59 @@ export async function scoreSwing(inputs: ScoringInputs): Promise<ScoringResult> 
     // 5. Score each feature
     const featureScores = scoreFeatures(features);
     
-    // 6. Aggregate into category scores
+    // 6. Aggregate into category scores (legacy structure)
     const categoryScores = aggregateCategoryScores(featureScores);
     
-    // 7. Calculate composite score
-    let mechanicsScore = calculateComposite(categoryScores);
+    // 7. Calculate Momentum Transfer Score (60% weight)
+    const momentumTransferScore = calculateMomentumTransferScore(features, normalizedData, phases, fps);
+    
+    // 8. Calculate Sub-Scores: Anchor/Engine/Whip (40% weight total)
+    const anchorScore = calculateAnchorScore(features, categoryScores);
+    const engineScore = calculateEngineScore(features, categoryScores);
+    const whipScore = calculateWhipScore(features, categoryScores);
+    
+    const subScores: SubScores = {
+      anchor: anchorScore,
+      engine: engineScore,
+      whip: whipScore,
+    };
+    
+    // 9. Calculate composite score (NEW MODEL)
+    let mechanicsScore = calculateComposite(momentumTransferScore, anchorScore, engineScore, whipScore);
     const originalScore = mechanicsScore;
     
-    // 8. Apply penalties
+    // 10. Apply penalties
     const adjustments = {
+      momentumTransferCapsApplied: false,
+      momentumCapLevel: undefined as number | undefined,
       criticalFeaturePenaltyApplied: false,
       lowConfidencePenalty: 0,
       originalScore,
     };
     
-    // 8a. Critical feature penalty (broken sequence)
+    // 10a. Momentum Transfer Caps (NEW)
+    if (PENALTIES.momentumTransferCaps.enabled) {
+      const mtScore = momentumTransferScore.overall;
+      
+      if (mtScore < PENALTIES.momentumTransferCaps.cap60Threshold) {
+        mechanicsScore = Math.min(mechanicsScore, 60);
+        adjustments.momentumTransferCapsApplied = true;
+        adjustments.momentumCapLevel = 60;
+      } else if (mtScore < PENALTIES.momentumTransferCaps.cap70Threshold) {
+        mechanicsScore = Math.min(mechanicsScore, 70);
+        adjustments.momentumTransferCapsApplied = true;
+        adjustments.momentumCapLevel = 70;
+      }
+    }
+    
+    // 10b. Legacy Critical feature penalty (if still enabled)
     const sequenceOrderScore = featureScores.find(f => f.name === 'sequenceOrder')?.score || 0;
     if (PENALTIES.criticalFeature.enabled && sequenceOrderScore < PENALTIES.criticalFeature.sequenceOrderThreshold) {
       mechanicsScore = Math.min(mechanicsScore, PENALTIES.criticalFeature.capScore);
       adjustments.criticalFeaturePenaltyApplied = true;
     }
     
-    // 8b. Low confidence penalty
+    // 10c. Low confidence penalty
     if (PENALTIES.lowConfidence.enabled) {
       if (confidence < PENALTIES.lowConfidence.thresholds.medium) {
         const penalty = confidence < PENALTIES.lowConfidence.thresholds.low ? 10 : 5;
@@ -97,14 +133,14 @@ export async function scoreSwing(inputs: ScoringInputs): Promise<ScoringResult> 
       }
     }
     
-    // 9. Map to GOATY band
+    // 11. Map to GOATY band
     const goatyBand = mapToGoatyBand(mechanicsScore);
     const goatyBandLabel = getGoatyBandLabel(goatyBand);
     
-    // 10. Map to legacy scores
+    // 12. Map to legacy scores (for UI continuity)
     const legacyScores = mapToLegacyScores(categoryScores);
     
-    // 11. Build debug breakdown
+    // 13. Build debug breakdown
     const debugBreakdown = buildDebugBreakdown(
       normalizedData,
       fps,
@@ -113,17 +149,21 @@ export async function scoreSwing(inputs: ScoringInputs): Promise<ScoringResult> 
       features,
       featureScores,
       categoryScores,
+      momentumTransferScore,
+      subScores,
       mechanicsScore,
       adjustments
     );
     
     const duration = Date.now() - startTime;
-    console.log(`[New Scoring Engine] Scored swing in ${duration}ms. Final: ${mechanicsScore}, Band: ${goatyBand}`);
+    console.log(`[Momentum-Transfer Engine] Scored swing in ${duration}ms. MTS: ${momentumTransferScore.overall}, Final: ${mechanicsScore}, Band: ${goatyBand}`);
     
     return {
       mechanicsScore: Math.round(mechanicsScore),
       goatyBand,
       goatyBandLabel,
+      momentumTransferScore,
+      subScores,
       categoryScores,
       legacyScores,
       featureScores,
@@ -134,7 +174,7 @@ export async function scoreSwing(inputs: ScoringInputs): Promise<ScoringResult> 
     };
     
   } catch (error) {
-    console.error('[New Scoring Engine] Error:', error);
+    console.error('[Momentum-Transfer Engine] Error:', error);
     throw error;
   }
 }
@@ -630,10 +670,230 @@ function aggregateCategoryScores(featureScores: FeatureScore[]): CategoryScores 
 }
 
 // ========================================
-// COMPOSITE CALCULATION
+// MOMENTUM TRANSFER SCORING
 // ========================================
 
-function calculateComposite(categoryScores: CategoryScores): number {
+/**
+ * Calculate Momentum Transfer Score: How well does energy/speed transfer
+ * from Anchor→Engine→Whip over time?
+ * 
+ * Uses ONLY single-camera joint data:
+ * - Segment peak order
+ * - Timing gaps between peaks
+ * - Deceleration patterns
+ * - Smoothness (jerk)
+ * - A-B-C tempo
+ */
+function calculateMomentumTransferScore(
+  features: ExtractedFeatures,
+  data: JointFrame[],
+  phases: SwingPhases,
+  fps: number
+): MomentumTransferScore {
+  const components: MomentumTransferComponents = {
+    sequenceOrderScore: 0,
+    pelvisTorsoGapScore: 0,
+    torsoHandsGapScore: 0,
+    handsBatGapScore: 0,
+    decelQualityScore: 0,
+    smoothnessScore: 0,
+    abcTempoScore: 0,
+  };
+  
+  // 1. Sequence Order Score (30% weight)
+  const { sequenceOrder } = features.sequence;
+  const idealOrder = ['pelvis', 'torso', 'hands', 'bat'];
+  
+  let orderScore = 100;
+  let swaps = 0;
+  for (let i = 0; i < idealOrder.length; i++) {
+    if (sequenceOrder[i] !== idealOrder[i]) {
+      swaps++;
+    }
+  }
+  
+  if (swaps === 0) {
+    orderScore = 100; // Perfect order
+  } else if (swaps === 1) {
+    orderScore = 75;  // One adjacent swap
+  } else if (swaps === 2) {
+    orderScore = 50;  // Two segments out of order
+  } else {
+    orderScore = 25;  // Clearly broken
+  }
+  
+  components.sequenceOrderScore = orderScore;
+  
+  // 2. Timing Gap Scores (15% + 15% + 10% = 40% total weight)
+  components.pelvisTorsoGapScore = scoreToleranceBand(
+    features.sequence.pelvisTorsoGap,
+    THRESHOLDS.pelvisTorsoGap
+  );
+  
+  components.torsoHandsGapScore = scoreToleranceBand(
+    features.sequence.torsoHandsGap,
+    THRESHOLDS.torsoHandsGap
+  );
+  
+  components.handsBatGapScore = scoreToleranceBand(
+    features.sequence.handsBatGap,
+    THRESHOLDS.handsBatGap
+  );
+  
+  // 3. Deceleration Quality Score (15% weight)
+  // Check if upstream segments decelerate while downstream peaks
+  components.decelQualityScore = calculateDecelQualityScore(data, phases, fps);
+  
+  // 4. Smoothness Score (10% weight)
+  // Use pelvis jerk as proxy for overall momentum flow smoothness
+  const pelvisJerk = features.comBalance.pelvisJerk;
+  components.smoothnessScore = scoreLessIsBetter(pelvisJerk, THRESHOLDS.pelvisJerk);
+  
+  // 5. A-B-C Tempo Score (5% weight)
+  // Reward consistent A→B and B→C timing
+  const loadDur = features.tempo.loadDuration;
+  const swingDur = features.tempo.swingDuration;
+  const abRatio = features.tempo.abRatio;
+  
+  const loadScore = scoreToleranceBand(loadDur, THRESHOLDS.loadDuration);
+  const swingScore = scoreToleranceBand(swingDur, THRESHOLDS.swingDuration);
+  const ratioScore = scoreToleranceBand(abRatio, THRESHOLDS.abRatio);
+  
+  components.abcTempoScore = (loadScore + swingScore + ratioScore) / 3;
+  
+  // Weighted average of all components
+  const overall =
+    components.sequenceOrderScore * MOMENTUM_TRANSFER_WEIGHTS.sequenceOrderScore +
+    components.pelvisTorsoGapScore * MOMENTUM_TRANSFER_WEIGHTS.pelvisTorsoGapScore +
+    components.torsoHandsGapScore * MOMENTUM_TRANSFER_WEIGHTS.torsoHandsGapScore +
+    components.handsBatGapScore * MOMENTUM_TRANSFER_WEIGHTS.handsBatGapScore +
+    components.decelQualityScore * MOMENTUM_TRANSFER_WEIGHTS.decelQualityScore +
+    components.smoothnessScore * MOMENTUM_TRANSFER_WEIGHTS.smoothnessScore +
+    components.abcTempoScore * MOMENTUM_TRANSFER_WEIGHTS.abcTempoScore;
+  
+  return {
+    overall: Math.round(overall),
+    components,
+  };
+}
+
+/**
+ * Calculate Deceleration Quality Score:
+ * Upstream segments should decelerate while downstream segments peak.
+ */
+function calculateDecelQualityScore(
+  data: JointFrame[],
+  phases: SwingPhases,
+  fps: number
+): number {
+  const pelvisVel = calculatePelvisAngularVelocity(data, fps);
+  const torsoVel = calculateTorsoAngularVelocity(data, fps);
+  const armVel = calculateArmAngularVelocity(data, fps);
+  
+  const pelvisPeak = findPeakIndex(pelvisVel);
+  const torsoPeak = findPeakIndex(torsoVel);
+  const armPeak = findPeakIndex(armVel);
+  
+  let decelQuality = 100;
+  
+  // Check pelvis decel after peak before torso peak
+  if (torsoPeak > pelvisPeak) {
+    const pelvisDecel = pelvisVel[torsoPeak] < pelvisVel[pelvisPeak] * 0.7; // 30% decel
+    if (!pelvisDecel) decelQuality -= 15;
+  } else {
+    decelQuality -= 20; // Wrong order
+  }
+  
+  // Check torso decel after peak before arm peak
+  if (armPeak > torsoPeak) {
+    const torsoDecel = torsoVel[armPeak] < torsoVel[torsoPeak] * 0.7;
+    if (!torsoDecel) decelQuality -= 15;
+  } else {
+    decelQuality -= 20;
+  }
+  
+  return Math.max(0, decelQuality);
+}
+
+// ========================================
+// SUB-SCORES (ANCHOR / ENGINE / WHIP)
+// ========================================
+
+/**
+ * Calculate Anchor Score (Lower Body): 0-100
+ * How well does the lower body set up and launch momentum transfer?
+ */
+function calculateAnchorScore(features: ExtractedFeatures, categoryScores: CategoryScores): number {
+  // Anchor uses COM/Balance features (pelvis trajectory, weight transfer)
+  // and lower-body related posture/stability
+  
+  const anchorComponents = [
+    { score: categoryScores.comBalance, weight: 0.70 },  // Primary: stability, weight transfer
+    { score: categoryScores.posture, weight: 0.30 },     // Secondary: base/posture
+  ];
+  
+  let anchorScore = 0;
+  for (const comp of anchorComponents) {
+    anchorScore += comp.score * comp.weight;
+  }
+  
+  return Math.round(anchorScore);
+}
+
+/**
+ * Calculate Engine Score (Core/Torso): 0-100
+ * Does the torso accept and amplify what the Anchor gives it?
+ */
+function calculateEngineScore(features: ExtractedFeatures, categoryScores: CategoryScores): number {
+  // Engine uses sequence timing (torso rotation) and tempo (efficient transfer)
+  
+  const engineComponents = [
+    { score: categoryScores.sequence, weight: 0.60 },    // Primary: kinematic chain
+    { score: categoryScores.tempo, weight: 0.40 },       // Secondary: A-B-C timing
+  ];
+  
+  let engineScore = 0;
+  for (const comp of engineComponents) {
+    engineScore += comp.score * comp.weight;
+  }
+  
+  return Math.round(engineScore);
+}
+
+/**
+ * Calculate Whip Score (Arms/Bat): 0-100
+ * Did the arms and bat accept upstream energy and release it at the right moment?
+ */
+function calculateWhipScore(features: ExtractedFeatures, categoryScores: CategoryScores): number {
+  // Whip uses hand path efficiency and barrel delivery
+  
+  return Math.round(categoryScores.handPath); // Hand path IS the whip
+}
+
+// ========================================
+// COMPOSITE CALCULATION (NEW MODEL)
+// ========================================
+
+function calculateComposite(
+  momentumTransferScore: MomentumTransferScore,
+  anchorScore: number,
+  engineScore: number,
+  whipScore: number
+): number {
+  const composite =
+    momentumTransferScore.overall * COMPOSITE_WEIGHTS.momentumTransfer +
+    anchorScore * COMPOSITE_WEIGHTS.anchor +
+    engineScore * COMPOSITE_WEIGHTS.engine +
+    whipScore * COMPOSITE_WEIGHTS.whip;
+  
+  return composite;
+}
+
+// ========================================
+// LEGACY COMPOSITE CALCULATION (for backward compatibility)
+// ========================================
+
+function calculateLegacyComposite(categoryScores: CategoryScores): number {
   const composite =
     categoryScores.tempo * CATEGORY_WEIGHTS.tempo +
     categoryScores.sequence * CATEGORY_WEIGHTS.sequence +
@@ -656,6 +916,8 @@ function buildDebugBreakdown(
   features: ExtractedFeatures,
   featureScores: FeatureScore[],
   categoryScores: CategoryScores,
+  momentumTransferScore: MomentumTransferScore,
+  subScores: SubScores,
   finalScore: number,
   adjustments: any
 ): DebugBreakdown {
@@ -692,15 +954,43 @@ function buildDebugBreakdown(
     features,
     featureScores: featureScoreDetails,
     categoryBreakdown: categoryBreakdowns,
+    momentumTransfer: {
+      overall: momentumTransferScore.overall,
+      components: momentumTransferScore.components,
+      componentWeights: MOMENTUM_TRANSFER_WEIGHTS,
+    },
+    subScores: {
+      anchor: subScores.anchor,
+      engine: subScores.engine,
+      whip: subScores.whip,
+    },
     composite: {
-      categoryScores,
-      categoryWeights: CATEGORY_WEIGHTS,
-      weightedSum: finalScore,
+      momentumTransferScore: momentumTransferScore.overall,
+      momentumTransferWeight: COMPOSITE_WEIGHTS.momentumTransfer,
+      anchorScore: subScores.anchor,
+      anchorWeight: COMPOSITE_WEIGHTS.anchor,
+      engineScore: subScores.engine,
+      engineWeight: COMPOSITE_WEIGHTS.engine,
+      whipScore: subScores.whip,
+      whipWeight: COMPOSITE_WEIGHTS.whip,
+      weightedSum: 
+        momentumTransferScore.overall * COMPOSITE_WEIGHTS.momentumTransfer +
+        subScores.anchor * COMPOSITE_WEIGHTS.anchor +
+        subScores.engine * COMPOSITE_WEIGHTS.engine +
+        subScores.whip * COMPOSITE_WEIGHTS.whip,
       beforePenalties: adjustments.originalScore || finalScore,
       afterPenalties: finalScore,
       finalScore,
     },
     penalties: {
+      momentumTransferCap: adjustments.momentumTransferCapsApplied
+        ? {
+            applied: true,
+            mtScore: momentumTransferScore.overall,
+            capLevel: adjustments.momentumCapLevel,
+            reason: PENALTIES.momentumTransferCaps.reason,
+          }
+        : undefined,
       criticalFeature: adjustments.criticalFeaturePenaltyApplied
         ? {
             applied: true,
