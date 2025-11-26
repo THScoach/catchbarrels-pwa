@@ -11,24 +11,24 @@ const inter = Inter({ subsets: ['latin'] });
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'BARRELS - Baseball Swing Analysis',
-  description: 'AI-Powered Baseball Hitting Analysis & Training',
+  title: 'CatchBarrels - Momentum Transfer System',
+  description: 'AI-Powered Baseball Swing Analysis & Momentum Transfer Training',
   manifest: '/manifest.json',
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
   icons: {
-    icon: '/barrels-logo-512.png',
-    shortcut: '/favicon.png',
-    apple: '/barrels-logo-512.png',
+    icon: '/catchbarrels-logo-512.png',
+    shortcut: '/favicon.ico',
+    apple: '/catchbarrels-logo-512.png',
   },
   openGraph: {
-    title: 'BARRELS - Baseball Swing Analysis',
-    description: 'AI-Powered Baseball Hitting Analysis & Training',
-    images: ['/og-image.png'],
+    title: 'CatchBarrels - Momentum Transfer System',
+    description: 'AI-Powered Baseball Swing Analysis & Momentum Transfer Training',
+    images: ['/catchbarrels-logo-512.png'],
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'BARRELS',
+    title: 'CatchBarrels',
   },
 };
 

@@ -45,26 +45,18 @@ export function BarrelsHeader() {
         {/* Left: Logo */}
         <Link
           href="/dashboard"
-          className="flex items-center gap-2"
-          aria-label="Barrels – Catch Barrels"
+          className="flex items-center"
+          aria-label="CatchBarrels – Momentum Transfer System"
         >
-          <div className="relative h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0">
+          <div className="relative h-9 w-auto sm:h-10 flex-shrink-0">
             <Image
-              src="/branding/barrels-mark-only.png"
-              alt="Barrels logo"
-              fill
+              src="/assets/logos/momentum-transfer/logo-horizontal.png"
+              alt="CatchBarrels Momentum Transfer Logo"
+              width={180}
+              height={40}
               className="object-contain"
               priority
             />
-          </div>
-
-          <div className="leading-tight hidden sm:block">
-            <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-100">
-              BARRELS
-            </div>
-            <div className="text-[9px] font-medium uppercase tracking-[0.26em] text-amber-400">
-              CATCH BARRELS
-            </div>
           </div>
         </Link>
 
