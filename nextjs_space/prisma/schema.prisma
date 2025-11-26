@@ -791,7 +791,7 @@ model SwingMetrics {
   pelvisPeakTimingMs  Float?   // When pelvis peaks
   torsoPeakTimingMs   Float?   // When torso peaks
   armPeakTimingMs     Float?   // When arm peaks
-  batPeakTimingMs     Float?   // When bat peaks (should be ~0)
+  batPeakTimingMs     Float?   // When bat peaks (should be approximately 0)
   
   // Timing Gaps
   pelvisToTorsoGapMs  Float?   // Gap between pelvis and torso peaks
