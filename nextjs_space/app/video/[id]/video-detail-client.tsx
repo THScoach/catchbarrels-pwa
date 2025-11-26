@@ -5,20 +5,16 @@ import { BottomNav } from '@/components/bottom-nav';
 import { ScoreCard } from '@/components/score-card';
 import { EnhancedVideoPlayer } from '@/components/enhanced-video-player';
 import { SkeletonExtractor } from '@/components/skeleton-extractor';
-// Removed AutoSkeletonExtractor - replaced with opt-in JointAnalysisPanel
+import { AutoSkeletonExtractor } from '@/components/auto-skeleton-extractor';
 import { JointOverlayCompare } from '@/components/joint-overlay-compare';
-import { JointAnalysisPanel } from '@/components/joint-analysis-panel';
-import { JointOverlayVideoPlayer } from '@/components/joint-overlay-video-player';
-import { JointData } from '@/types/pose';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
-import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock, MessageCircle, Plus } from 'lucide-react';
+import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { calculateProgress, formatProgressChange, getProgressIcon, getProgressColor } from '@/lib/utils';
 import { convertToSwingJointSeries } from '@/lib/joint-utils';
 import { SwingJointSeries } from '@/lib/types';
-
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -30,13 +26,9 @@ import { AnalysisHeader } from '@/components/analysis/analysis-header';
 import { MiniDashboardStrip } from '@/components/analysis/mini-dashboard-strip';
 import { AnalysisResultsCard } from '@/components/analysis/analysis-results-card';
 import { PlayerReflectionBox } from '@/components/analysis/player-reflection-box';
-import { CoachRickDrawer } from '@/components/coach-rick-drawer';
+import { GoatyFeedbackBlock } from '@/components/analysis/goaty-feedback-block';
 import { DrillCard } from '@/components/analysis/drill-card';
 import { AEWCardsSection } from '@/components/analysis/aew-cards-section';
-import { JointOverlayPlaceholder } from '@/components/analysis/joint-overlay-placeholder';
-import { RecommendationEnginePlaceholder } from '@/components/analysis/recommendation-engine-placeholder';
-import { SpineTracerTile } from '@/components/analysis/spine-tracer-tile';
-import { NewAnalysisButton } from '@/components/analysis/new-analysis-button';
 
 // Dynamic import with ssr: false to avoid chunk loading issues with recharts
 const ProgressCharts = dynamic(() => import('@/components/progress-charts').then(mod => ({ default: mod.ProgressCharts })), {
@@ -66,11 +58,6 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
   const [referenceSwing, setReferenceSwing] = useState<SwingJointSeries | null>(null);
   const [extractingSkeleton, setExtractingSkeleton] = useState(false);
   
-  // Joint analysis state (new standardized format)
-  const [jointData, setJointData] = useState<JointData | null>(video?.jointData as JointData || null);
-  const [jointAnalyzed, setJointAnalyzed] = useState(video?.jointAnalyzed || false);
-  const [showJointOverlay, setShowJointOverlay] = useState(false);
-  
   // Convert existing skeleton data to new format on mount
   useEffect(() => {
     if (video?.skeletonData && video?.skeletonExtracted) {
@@ -93,9 +80,10 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
   const [sharingVideo, setSharingVideo] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   
-  // Player reflection and Coach Rick state
+  // Player reflection and GOATY chat state
   const [playerReflection, setPlayerReflection] = useState('');
-  const [isCoachRickOpen, setIsCoachRickOpen] = useState(false);
+  const [goatyMessages, setGoatyMessages] = useState<Array<{role: 'system' | 'user' | 'assistant', content: string}>>([]);
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   // Fetch signed URL for video playback
   useEffect(() => {
@@ -338,6 +326,54 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
     }
   };
 
+  // Handle sending GOATY chat messages
+  const handleSendGoatyMessage = async (message: string) => {
+    if (!message.trim() || sendingMessage) return;
+
+    try {
+      setSendingMessage(true);
+      
+      // Add user message to chat
+      const userMessage = { role: 'user' as const, content: message };
+      setGoatyMessages(prev => [...prev, userMessage]);
+
+      // Call Coach Rick API with video context
+      const response = await fetch('/api/coach-rick', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          videoId: video.id,
+          context: {
+            scores: {
+              overall: video.overallScore,
+              anchor: video.anchor,
+              engine: video.engine,
+              whip: video.whip
+            },
+            playerReflection
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from GOATY');
+      }
+
+      const data = await response.json();
+      
+      // Add assistant response to chat
+      const assistantMessage = { role: 'assistant' as const, content: data.response };
+      setGoatyMessages(prev => [...prev, assistantMessage]);
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message to GOATY');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
   // Fetch model skeleton for comparison (v2 - joint-only)
   const fetchModelSkeleton = async (handedness: string) => {
     try {
@@ -392,7 +428,23 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
           {formatDistanceToNow(new Date(video?.uploadDate), { addSuffix: true })}
         </p>
 
-        {/* Automatic skeleton extraction removed - users now opt-in via Skeleton tab */}
+        {/* Automatic Skeleton Extraction */}
+        {videoUrl && (video?.skeletonStatus === 'PENDING' || video?.skeletonStatus === 'RUNNING') && (
+          <AutoSkeletonExtractor
+            videoId={video.id}
+            videoUrl={videoUrl}
+            onComplete={() => {
+              console.log('[VideoDetail] Auto-extraction complete, reloading page...');
+              window.location.reload();
+            }}
+            onError={(error) => {
+              console.error('[VideoDetail] Auto-extraction failed:', error);
+              toast.error('Skeleton extraction failed', {
+                description: 'Please try the manual extraction option below.',
+              });
+            }}
+          />
+        )}
 
         {/* Share Controls */}
         <Card className="bg-gray-800/50 border-gray-700 p-4 mb-6">
@@ -609,7 +661,8 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
           >
             Analysis
           </button>
-          <button
+          {/* Skeleton tab hidden - MediaPipe errors */}
+          {/* <button
             onClick={() => setActiveTab('skeleton')}
             className={`pb-3 px-1 border-b-2 transition-colors ${
               activeTab === 'skeleton'
@@ -618,7 +671,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
             }`}
           >
             🦴 Skeleton
-          </button>
+          </button> */}
           <button
             onClick={() => setActiveTab('coach')}
             className={`pb-3 px-1 border-b-2 transition-colors ${
@@ -641,11 +694,11 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
           </button>
         </div>
 
-                {activeTab === 'analysis' ? (
+        {activeTab === 'analysis' ? (
           <div>
             {video?.analyzed ? (
-              <div className="space-y-4">
-                {/* Calculate Progress Indicators and determine biggest fix/win */}
+              <div className="space-y-6">
+                {/* Calculate Progress Indicators */}
                 {(() => {
                   const overallProgress = calculateProgress(
                     video?.overallScore,
@@ -667,128 +720,151 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                     previousScores?.whip,
                     personalBests?.whip
                   );
-                  
-                  // Determine biggest fix (lowest score) and biggest win (highest improvement)
-                  const scores = [
-                    { name: 'Anchor', score: video.anchor, change: anchorProgress.change, detail: 'Lower Body & Ground Connection' },
-                    { name: 'Engine', score: video.engine, change: engineProgress.change, detail: 'Hip & Shoulder Rotation' },
-                    { name: 'Whip', score: video.whip, change: whipProgress.change, detail: 'Arm Path & Bat Speed' }
-                  ];
-                  
-                  const biggestFix = scores.reduce((min, curr) => curr.score < min.score ? curr : min);
-                  const biggestWin = scores.reduce((max, curr) => curr.change > max.change ? curr : max);
-                  
-                  // Sample drill recommendation (in real app, this would come from API)
-                  const recommendedDrill = {
-                    name: 'Hip Load & Rotation Drill',
-                    videoUrl: '/drills/hip-rotation-drill.mp4',
-                    thumbnailUrl: '/drills/hip-rotation-thumb.jpg',
-                    steps: [
-                      'Focus on proper setup and alignment',
-                      'Practice slow, controlled movements first',
-                      'Record yourself to check positioning',
-                      'Gradually increase speed as form improves'
-                    ],
-                    category: biggestFix.name,
-                    difficulty: 'Intermediate'
-                  };
+                  const exitVelocityProgress = calculateProgress(
+                    video?.exitVelocity,
+                    previousScores?.exitVelocity,
+                    personalBests?.exitVelocity
+                  );
 
                   return (
                     <>
-                      {/* Analysis Layout - 7 Tiles (Video player shown above tabs) */}
-                      
-                      {/* 1. Coach Rick Analysis */}
-                      <div className="mb-4">
-                        <h2 className="text-xl font-bold text-white mb-3">Coach Rick Analysis</h2>
-                        <Card className="bg-gray-800/50 border-gray-700 p-4">
-                          <div className="flex items-start gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-barrels-gold/20 border-2 border-barrels-gold flex items-center justify-center flex-shrink-0 text-2xl">
-                              🐐
+                      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <h2 className="text-xl font-bold text-white">Overall Score</h2>
+                          {overallProgress.isPersonalBest && (
+                            <div className="flex items-center gap-2 bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full">
+                              <Award className="w-4 h-4" />
+                              <span className="text-sm font-semibold">Personal Best!</span>
                             </div>
-                            <div className="flex-1">
-                              <h3 className="text-white font-semibold mb-1">Coach Rick's Breakdown</h3>
-                              <p className="text-gray-300 text-sm">
-                                Your biggest area for improvement is <strong>{biggestFix.name}</strong> ({biggestFix.detail}). 
-                                {biggestWin.change > 0 && ` Great progress on ${biggestWin.name} - up ${biggestWin.change} points!`}
-                              </p>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-5xl font-bold text-white">{video.overallScore}</div>
+                              {overallProgress.change !== 0 && (
+                                <div className="flex flex-col">
+                                  <span className={`text-2xl font-bold ${getProgressColor(overallProgress.direction, overallProgress.isPersonalBest)}`}>
+                                    {getProgressIcon(overallProgress.direction)} {formatProgressChange(overallProgress.change)}
+                                  </span>
+                                  {previousScores && (
+                                    <span className="text-xs text-gray-500">vs. last swing</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-2xl font-semibold text-[#F5A623] mt-1">{video.tier}</div>
+                          </div>
+                          {video?.exitVelocity && (
+                            <div className="text-right">
+                              <div className="text-gray-400 text-sm">Exit Velocity</div>
+                              <div className="flex items-center gap-2 justify-end">
+                                <div className="text-3xl font-bold text-white">{video.exitVelocity}</div>
+                                {exitVelocityProgress.change !== 0 && (
+                                  <span className={`text-lg font-bold ${getProgressColor(exitVelocityProgress.direction, exitVelocityProgress.isPersonalBest)}`}>
+                                    {getProgressIcon(exitVelocityProgress.direction)}{formatProgressChange(exitVelocityProgress.change)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-gray-400 text-sm">mph</div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Progress Summary */}
+                        {previousScores && (
+                          <div className="mt-4 pt-4 border-t border-gray-700">
+                            <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                              <TrendingUp className="w-4 h-4" />
+                              <span>Progress vs. Previous Swing:</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="bg-gray-900/50 rounded p-2 text-center">
+                                <div className="text-xs text-gray-500 mb-1">Anchor</div>
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-white font-semibold">{video.anchor}</span>
+                                  {anchorProgress.change !== 0 && (
+                                    <span className={`text-xs ${getProgressColor(anchorProgress.direction)}`}>
+                                      {getProgressIcon(anchorProgress.direction)}{formatProgressChange(anchorProgress.change)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="bg-gray-900/50 rounded p-2 text-center">
+                                <div className="text-xs text-gray-500 mb-1">Engine</div>
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-white font-semibold">{video.engine}</span>
+                                  {engineProgress.change !== 0 && (
+                                    <span className={`text-xs ${getProgressColor(engineProgress.direction)}`}>
+                                      {getProgressIcon(engineProgress.direction)}{formatProgressChange(engineProgress.change)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="bg-gray-900/50 rounded p-2 text-center">
+                                <div className="text-xs text-gray-500 mb-1">Whip</div>
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-white font-semibold">{video.whip}</span>
+                                  {whipProgress.change !== 0 && (
+                                    <span className={`text-xs ${getProgressColor(whipProgress.direction)}`}>
+                                      {getProgressIcon(whipProgress.direction)}{formatProgressChange(whipProgress.change)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          <button
-                            onClick={() => setIsCoachRickOpen(true)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-barrels-gold hover:bg-barrels-gold-light text-barrels-black font-medium rounded-lg transition-colors"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            Ask Coach Rick About This Swing
-                          </button>
-                        </Card>
+                        )}
                       </div>
-
-                      {/* 2. Metrics Summary */}
-                      <div className="mb-4">
-                        <h2 className="text-xl font-bold text-white mb-3">Metrics Summary</h2>
-                        <AnalysisResultsCard
-                          scores={{
-                            goat: video.overallScore || 0,
-                            anchor: video.anchor || 0,
-                            engine: video.engine || 0,
-                            whip: video.whip || 0
-                          }}
-                        />
-                        <div className="mt-3">
-                          <AEWCardsSection
-                            anchorScore={video.anchor || 0}
-                            engineScore={video.engine || 0}
-                            whipScore={video.whip || 0}
-                            anchorMetrics={mapAnchorMetricsFromScores({
-                              anchorMotion: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2),
-                              anchorStability: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2),
-                              anchorSequencing: video.anchorLowerBodyMechanics || 0,
-                              anchorStance: video.anchorStance || 0,
-                              anchorWeightShift: video.anchorWeightShift || 0,
-                              anchorGroundConnection: video.anchorGroundConnection || 0,
-                              anchorLowerBodyMechanics: video.anchorLowerBodyMechanics || 0
-                            })}
-                            engineMetrics={mapEngineMetricsFromScores(video)}
-                            whipMetrics={mapWhipMetricsFromScores({
-                              whipMotion: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2),
-                              whipStability: video.whipConnection || 0,
-                              whipSequencing: video.whipBatPath || 0,
-                              whipBatSpeed: video.whipBatSpeed || 0,
-                              whipArmPath: video.whipArmPath || 0,
-                              whipConnection: video.whipConnection || 0
-                            })}
-                          />
-                        </div>
-                      </div>
-
-                      {/* 3. AI Joint Overlay (Placeholder) */}
-                      <div className="mb-4">
-                        <JointOverlayPlaceholder />
-                      </div>
-
-                      {/* 4. Recommendation Engine (Placeholder) */}
-                      <div className="mb-4">
-                        <RecommendationEnginePlaceholder />
-                      </div>
-
-                      {/* 5. Spine & Motion Tracer */}
-                      <div className="mb-4">
-                        <SpineTracerTile />
-                      </div>
-
-                      {/* 6. New Analysis Button */}
-                      <NewAnalysisButton />
-
-                      {/* Personal Bests indicator (keep at bottom) */}
-                      {overallProgress.isPersonalBest && (
-                        <div className="flex items-center justify-center gap-2 bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-lg mb-4">
-                          <Award className="w-5 h-5" />
-                          <span className="text-sm font-semibold">Personal Best Overall Score!</span>
-                        </div>
-                      )}
                     </>
                   );
                 })()}
+
+                <div>
+                  <h2 className="text-lg font-semibold text-white mb-4">Body Metrics Breakdown</h2>
+                  <p className="text-sm text-gray-400 mb-4">Motion (Timing) • Stability • Sequencing</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <ScoreCard 
+                      title="ANCHOR (Feet & Ground)" 
+                      score={video.anchor} 
+                      icon="⚓" 
+                      description="How well you use the ground to stay balanced and create power" 
+                      color="blue"
+                      detailedMetrics={mapAnchorMetricsFromScores({
+                        anchorMotion: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2),
+                        anchorStability: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2),
+                        anchorSequencing: video.anchorLowerBodyMechanics || 0,
+                        anchorStance: video.anchorStance || 0,
+                        anchorWeightShift: video.anchorWeightShift || 0,
+                        anchorGroundConnection: video.anchorGroundConnection || 0,
+                        anchorLowerBodyMechanics: video.anchorLowerBodyMechanics || 0
+                      })}
+                    />
+                    <ScoreCard 
+                      title="ENGINE (Hips & Shoulders)" 
+                      score={video.engine} 
+                      icon="🔄" 
+                      description="How well your hips and shoulders work together to create power" 
+                      color="green"
+                      detailedMetrics={mapEngineMetricsFromScores(video)}
+                    />
+                    <ScoreCard 
+                      title="WHIP (Arms & Bat)" 
+                      score={video.whip} 
+                      icon="⚡" 
+                      description="How well your arms and bat snap through the zone at the right time" 
+                      color="purple"
+                      detailedMetrics={mapWhipMetricsFromScores({
+                        whipMotion: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2),
+                        whipStability: video.whipConnection || 0,
+                        whipSequencing: video.whipBatPath || 0,
+                        whipBatSpeed: video.whipBatSpeed || 0,
+                        whipArmPath: video.whipArmPath || 0,
+                        whipConnection: video.whipConnection || 0
+                      })}
+                    />
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-8 text-center">
@@ -798,8 +874,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
               </div>
             )}
           </div>
-        ) : activeTab === 'skeleton' ? (
-
+        ) : false && activeTab === 'skeleton' ? ( {/* Skeleton tab disabled - MediaPipe errors */}
           <div className="space-y-6">
             <div className="bg-gradient-to-br from-green-500/10 to-yellow-500/10 border border-green-500/30 rounded-lg p-6">
               <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
@@ -869,44 +944,6 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                 </div>
               </div>
             )}
-
-            {/* New Joint Analysis Section */}
-            <div className="space-y-4 mt-6 pt-6 border-t border-gray-700">
-              <div className="bg-gradient-to-br from-barrels-gold/10 to-barrels-gold-light/10 border border-barrels-gold/30 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                  🎯 Joint Overlay Analysis
-                </h2>
-                <p className="text-gray-300 text-sm">
-                  Analyze and display joint positions directly on your video player.
-                </p>
-              </div>
-
-              {videoUrl && (
-                <JointAnalysisPanel
-                  videoId={video.id}
-                  videoUrl={videoUrl}
-                  initialJointData={jointData}
-                  initialAnalyzed={jointAnalyzed}
-                  onAnalysisComplete={(data) => {
-                    setJointData(data);
-                    setJointAnalyzed(true);
-                  }}
-                  onToggleOverlay={setShowJointOverlay}
-                />
-              )}
-
-              {showJointOverlay && jointData && videoUrl && (
-                <div className="space-y-2">
-                  <h3 className="text-white font-semibold text-sm">Video with Joint Overlay</h3>
-                  <JointOverlayVideoPlayer
-                    videoUrl={videoUrl}
-                    jointData={jointData}
-                    showOverlay={showJointOverlay}
-                    impactFrame={video.impactFrame}
-                  />
-                </div>
-              )}
-            </div>
           </div>
         ) : activeTab === 'coach' ? (
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
@@ -958,13 +995,6 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
           </div>
         ) : null}
       </div>
-
-      {/* Coach Rick Drawer */}
-      <CoachRickDrawer
-        isOpen={isCoachRickOpen}
-        onClose={() => setIsCoachRickOpen(false)}
-        context={{ pageType: 'video', videoId: video?.id }}
-      />
 
       <BottomNav />
     </div>
