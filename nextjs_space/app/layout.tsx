@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/sonner';
 import CoachRickChat from '@/components/coach-rick-chat';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -53,7 +54,9 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <Providers>
-          {children}
+          <MainLayout>
+            {children}
+          </MainLayout>
           <CoachRickChat />
           <Toaster position="top-center" richColors />
         </Providers>
