@@ -234,19 +234,50 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Role-based redirect after login
-      // Note: We can't access session/token directly in redirect callback,
-      // so we'll handle this in the login page client-side
-      
-      // Default redirect to dashboard
-      if (url === baseUrl || url === `${baseUrl}/` || url.includes('/auth/login')) {
+      // Handle callback URLs properly
+      try {
+        // If URL is the base URL or login page without a callbackUrl, go to dashboard
+        if (url === baseUrl || url === `${baseUrl}/`) {
+          return `${baseUrl}/dashboard`;
+        }
+        
+        // If it's the login page with a callbackUrl parameter, extract and use it
+        if (url.includes('/auth/login') || url.includes('/auth/admin-login')) {
+          const urlObj = new URL(url);
+          const callbackUrl = urlObj.searchParams.get('callbackUrl');
+          
+          if (callbackUrl) {
+            // If callback URL is relative, prepend baseUrl
+            if (callbackUrl.startsWith('/')) {
+              return `${baseUrl}${callbackUrl}`;
+            }
+            // If callback URL is on same origin, use it
+            if (callbackUrl.startsWith(baseUrl)) {
+              return callbackUrl;
+            }
+          }
+          
+          // No callback URL, default to dashboard
+          return `${baseUrl}/dashboard`;
+        }
+        
+        // Allow relative callback URLs
+        if (url.startsWith('/')) {
+          return `${baseUrl}${url}`;
+        }
+        
+        // Allow callback URLs on the same origin
+        const urlObj = new URL(url);
+        if (urlObj.origin === baseUrl) {
+          return url;
+        }
+        
+        // Default fallback
+        return `${baseUrl}/dashboard`;
+      } catch (error) {
+        console.error('Redirect error:', error);
         return `${baseUrl}/dashboard`;
       }
-      // Allows relative callback URLs
-      if (url.startsWith('/')) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
-      if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
     },
   },
 };

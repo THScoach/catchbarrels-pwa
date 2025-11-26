@@ -61,11 +61,8 @@ export default function LoginClient() {
           description: 'Redirecting...',
         });
         
-        // Small delay to let session update
-        setTimeout(() => {
-          router.push(callbackUrl);
-          router.refresh();
-        }, 100);
+        // Navigate to callback URL (no router.refresh() needed with NextAuth)
+        router.push(callbackUrl);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -111,10 +108,8 @@ export default function LoginClient() {
         toast.error('Login failed');
       } else if (result?.ok) {
         toast.success('Welcome!');
-        setTimeout(() => {
-          router.push(callbackUrl);
-          router.refresh();
-        }, 100);
+        // Navigate to callback URL (no router.refresh() needed with NextAuth)
+        router.push(callbackUrl);
       }
     } catch (error) {
       console.error('Login error:', error);

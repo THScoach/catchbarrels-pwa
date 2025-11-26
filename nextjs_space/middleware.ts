@@ -58,13 +58,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check for admin/coach-only routes (/admin)
+  // Check if user is admin/coach (they get full access to everything)
+  const userRole = (token as any).role || 'player';
+  const isAdmin = userRole === 'admin' || userRole === 'coach';
+  
+  // Admin/Coach access control
   if (pathname.startsWith('/admin')) {
-    const userRole = (token as any).role || 'player';
-    const hasAdminAccess = userRole === 'admin' || userRole === 'coach';
-    
-    if (!hasAdminAccess) {
-      // Not authorized - redirect to dashboard with error message
+    if (!isAdmin) {
+      // Not authorized for admin area - redirect to dashboard with error message
       const dashboardUrl = new URL('/dashboard', request.url);
       dashboardUrl.searchParams.set('error', 'unauthorized');
       return NextResponse.redirect(dashboardUrl);
@@ -74,7 +75,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // User is authenticated - check product ownership for player routes
+  // Admins/coaches bypass product gating - they have full access
+  if (isAdmin) {
+    return NextResponse.next();
+  }
+
+  // Regular user - check product ownership for player routes
   const membershipTier = (token as any).membershipTier || 'free';
   const membershipStatus = (token as any).membershipStatus || 'inactive';
   
