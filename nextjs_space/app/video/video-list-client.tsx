@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { staggerContainer, fadeInUp, cardHover } from '@/lib/animations';
-import { BottomNav } from '@/components/bottom-nav';
 import { Video, Upload, VideoIcon, RefreshCw, Award } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -62,7 +61,6 @@ export function VideoListClient({ videos }: any) {
           </div>
         </div>
 
-        <BottomNav />
       </div>
     );
   }
@@ -240,7 +238,6 @@ export function VideoListClient({ videos }: any) {
         </motion.div>
       </div>
 
-      <BottomNav />
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Upload, Target, FileText, Play, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { BottomNav } from '@/components/bottom-nav';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -69,7 +68,7 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="p-4 space-y-6 max-w-4xl mx-auto mt-6">
         {!activeLesson ? (
           // Initial State - No Active Lesson
@@ -255,7 +254,6 @@ export default function LessonNewClient({ activeLesson, user }: LessonNewClientP
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

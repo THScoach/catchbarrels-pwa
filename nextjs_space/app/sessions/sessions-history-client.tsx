@@ -12,7 +12,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { BottomNav } from '@/components/bottom-nav';
 import { Badge } from '@/components/ui/badge';
 import { format, formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
@@ -70,7 +69,6 @@ export default function SessionsHistoryClient({
             ))}
           </div>
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -203,7 +201,6 @@ export default function SessionsHistoryClient({
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

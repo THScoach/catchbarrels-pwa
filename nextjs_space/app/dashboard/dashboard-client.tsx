@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import { Upload, TrendingUp, Play, ChevronRight, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { BottomNav } from '@/components/bottom-nav'
 import { CoachRickDrawer } from '@/components/coach-rick-drawer'
 import { Tile, TileHeader } from '@/components/ui/tile'
 import { PrimaryButton, SecondaryButton } from '@/components/ui/barrels-button'
@@ -48,7 +47,7 @@ export default function DashboardClient({
   const alternateDrills = recommendedDrills?.slice(1, 4) || []
 
   return (
-    <div className="min-h-screen bg-barrels-bg pb-24">
+    <div className="min-h-screen bg-barrels-bg">
       <main className="p-4 space-y-6 max-w-4xl mx-auto pt-4 mt-4">
 
         {/* Hero BARREL Score - Two Column Layout */}
@@ -360,7 +359,6 @@ export default function DashboardClient({
       </main>
 
       {/* Bottom Navigation */}
-      <BottomNav />
       
       {/* Coach Rick Drawer */}
       <CoachRickDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />

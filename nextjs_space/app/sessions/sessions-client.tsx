@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BottomNav } from '@/components/bottom-nav';
 import { OnFormImportPanel } from '@/components/onform/onform-import-panel';
 import {
   Calendar,
@@ -192,7 +191,6 @@ export default function SessionsClient({ sessions, userId }: SessionsClientProps
         onImported={handleOnFormImported}
       />
 
-      <BottomNav />
     </div>
   );
 }

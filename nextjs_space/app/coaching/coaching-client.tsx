@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import { Video, Calendar, Clock, Tag, Search, Play } from 'lucide-react';
-import { BottomNav } from '@/components/bottom-nav';
 import CoachRickChat from '@/components/coach-rick-chat';
 import { format } from 'date-fns';
 
@@ -306,7 +305,6 @@ export default function CoachingClient({ sessions }: { sessions: CoachingCall[] 
         )}
       </div>
 
-      <BottomNav />
       
       {/* Coach Rick Integration - Show when viewing a session with transcript */}
       {selectedSession?.transcript && (

@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { BookOpen, Play, FileText, Search, ChevronDown, ChevronRight, Library } from 'lucide-react';
-import { BottomNav } from '@/components/bottom-nav';
 import CoachRickChat from '@/components/coach-rick-chat';
 import { CourseCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -106,7 +105,6 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
             </div>
           </div>
         </div>
-        <BottomNav />
       </>
     );
   }
@@ -418,7 +416,6 @@ export default function LibraryClient({ courses }: { courses: Course[] }) {
         )}
       </div>
 
-      <BottomNav />
       <CoachRickChat />
     </>
   );

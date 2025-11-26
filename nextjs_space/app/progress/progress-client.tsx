@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
-import { BottomNav } from '@/components/bottom-nav';
 import { format } from 'date-fns';
 import { ChartSkeleton, StatCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -62,7 +61,6 @@ export function ProgressClient({ progress }: any) {
           </div>
         </div>
 
-        <BottomNav />
       </div>
     );
   }
@@ -128,7 +126,6 @@ export function ProgressClient({ progress }: any) {
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

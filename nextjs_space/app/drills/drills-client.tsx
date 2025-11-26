@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { staggerContainer, fadeInUp, cardHover, buttonVariants } from '@/lib/animations';
-import { BottomNav } from '@/components/bottom-nav';
 import { Target, Search, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { DrillCardSkeleton, Skeleton } from '@/components/ui/skeleton';
@@ -66,7 +65,6 @@ export function DrillsClient({ drills }: any) {
           </div>
         </div>
 
-        <BottomNav />
       </div>
     );
   }
@@ -202,7 +200,6 @@ export function DrillsClient({ drills }: any) {
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

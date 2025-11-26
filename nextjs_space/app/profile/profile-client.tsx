@@ -3,7 +3,6 @@
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { BottomNav } from '@/components/bottom-nav';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -269,7 +268,6 @@ export function ProfileClient({ user, assessments }: any) {
         </Tabs>
       </div>
 
-      <BottomNav />
     </div>
   );
 }

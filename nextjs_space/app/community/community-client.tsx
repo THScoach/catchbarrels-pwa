@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, Share2, TrendingUp, Filter, Loader2, Zap, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import { BottomNav } from '@/components/bottom-nav';
 import Link from 'next/link';
 
 interface CommunityVideo {
@@ -258,7 +257,6 @@ export default function CommunityClient() {
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }
