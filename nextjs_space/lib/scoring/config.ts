@@ -7,7 +7,7 @@
 // ========================================
 // FEATURE FLAG
 // ========================================
-export const NEW_SCORING_ENGINE_ENABLED = false; // Set to true to enable new scoring
+export const NEW_SCORING_ENGINE_ENABLED = true; // Set to true to enable new scoring
 
 // ========================================
 // CATEGORY WEIGHTS (must sum to 1.0)
