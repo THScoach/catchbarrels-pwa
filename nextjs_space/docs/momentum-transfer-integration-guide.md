@@ -405,9 +405,9 @@ http://localhost:3000/api/dev/momentum-transfer/test
 
 ## DeepAgent Integration Specifics
 
-### Three DeepAgent Skills
+### Four DeepAgent Skills
 
-The BARRELS system uses **three complementary DeepAgent skills** for complete coaching:
+The BARRELS system uses **four complementary DeepAgent skills** for complete coaching:
 
 #### Skill #1: Data Interpreter
 **File:** `docs/coach-rick-data-interpreter-prompt.md`  
@@ -451,6 +451,20 @@ The BARRELS system uses **three complementary DeepAgent skills** for complete co
 - ✅ You need to know which Flow Path to work on
 - ✅ You have (optionally) a drill library
 
+#### Skill #4: Model Comparison
+**File:** `docs/coach-rick-model-comparison-prompt.md`  
+**Skill Name:** `MomentumTransfer.ModelComparison`  
+**Use Case:** When you want to compare athlete to pro model  
+**Input:** Athlete swing + Model swing data  
+**Output:** 4-section breakdown (Summary, Flow Comparison, Timing, Focus)  
+**Processing:** Side-by-side flow analysis
+
+**Use when:**
+- ✅ You have both athlete and model swing data
+- ✅ You want side-by-side flow comparison
+- ✅ You need to show where model is smoother
+- ✅ You want feedback based on model differences
+
 ### Quick Decision Guide
 
 ```
@@ -466,10 +480,15 @@ What do you need?
 │     "Explain my Momentum Transfer Score"
 │     Output: 5-section conversational explanation
 │
-└─ Drill recommendations
-    → Use Skill #3 (Drill Recommender)
-      "What should I work on?"
-      Output: Focus + category + specific drills
+├─ Drill recommendations
+│   → Use Skill #3 (Drill Recommender)
+│     "What should I work on?"
+│     Output: Focus + category + specific drills
+│
+└─ Compare to professional model
+    → Use Skill #4 (Model Comparison)
+      "How does my swing compare to [Pro]?"
+      Output: Summary + Flow Comparison + Timing + Focus
 ```
 
 ### Abacus.AI API Call Structure (Explainer)
@@ -647,6 +666,7 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
 | `coach-rick-data-interpreter-prompt.md` | **Skill #1:** Data Interpreter (raw metrics → coaching) |
 | `coach-rick-momentum-transfer-explainer-v2.md` | **Skill #2:** Explainer (scores → explanation) |
 | `coach-rick-drill-recommender-prompt.md` | **Skill #3:** Drill Recommender (scores → drill recommendations) |
+| `coach-rick-model-comparison-prompt.md` | **Skill #4:** Model Comparison (athlete vs model → comparison) |
 | `momentum-transfer-mock-data.json` | Test examples (Tiny, 14U, etc.) |
 | `momentum-transfer-ui-copy.md` | UI text strings |
 | `momentum-transfer-integration-guide.md` | This file |

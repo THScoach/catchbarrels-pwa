@@ -1,7 +1,7 @@
 # Momentum Transfer System — Complete Package ✅
 
 **Date:** November 26, 2025  
-**Version:** 3.0 (Final)  
+**Version:** 4.0 (Final)  
 **Status:** 🎯 Production Ready
 
 ---
@@ -14,7 +14,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 1. **JSON Schema & Types** — Complete data structure specification
 2. **Mock Data** — 5 realistic swing examples for testing
-3. **DeepAgent Skills** — Three complementary AI skills for complete coaching
+3. **DeepAgent Skills** — Four complementary AI skills for complete coaching
 4. **UI Copy** — All text strings for consistent branding
 5. **Integration Guide** — Step-by-step implementation roadmap
 
@@ -87,7 +87,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 4. Skill #3: Coach Rick Drill Recommender ⭐ NEW
+### 4. Skill #3: Coach Rick Drill Recommender ⭐
 **File:** `coach-rick-drill-recommender-prompt.md`  
 **Skill Name:** `MomentumTransfer.DrillRecommender`  
 **Size:** Large (~12 pages)
@@ -111,7 +111,31 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 5. Mock Data for Testing
+### 5. Skill #4: Coach Rick Model Comparison ⭐ NEW
+**File:** `coach-rick-model-comparison-prompt.md`  
+**Skill Name:** `MomentumTransfer.ModelComparison`  
+**Size:** Large (~8 pages)
+
+**Contents:**
+- DeepAgent system prompt for athlete vs model comparison
+- Side-by-side Flow Path analysis (Ground/Power/Barrel)
+- 4-section output format (Summary, Flow Comparison, Timing, Focus)
+- Worked examples (youth vs pro, college vs pro)
+- Gap analysis logic for identifying primary leak
+- API endpoint implementation
+- Testing checklist
+
+**Use this for:** Comparing athlete swings to professional model swings
+
+**When to use:**
+- ✅ You have both athlete and model swing data
+- ✅ You want side-by-side flow comparison
+- ✅ You need to show where model is smoother
+- ✅ You want feedback based on model differences
+
+---
+
+### 6. Mock Data for Testing
 **File:** `momentum-transfer-mock-data.json`  
 **Size:** Medium (~5 pages JSON)
 
@@ -129,7 +153,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 6. UI Copy Guide
+### 7. UI Copy Guide
 **File:** `momentum-transfer-ui-copy.md`  
 **Size:** Large (~10 pages)
 
@@ -148,7 +172,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 7. Integration Guide
+### 8. Integration Guide
 **File:** `momentum-transfer-integration-guide.md`  
 **Size:** Comprehensive (~20 pages)
 
@@ -188,13 +212,15 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
    docs/momentum-transfer-mock-data.json
    ```
 
-4. **Configure All Three DeepAgent Skills**
+4. **Configure All Four DeepAgent Skills**
    - **Skill #1 (Data Interpreter):** `coach-rick-data-interpreter-prompt.md`
      - For raw swing data → coaching breakdown
    - **Skill #2 (Explainer):** `coach-rick-momentum-transfer-explainer-v2.md`
      - For pre-computed scores → conversational explanation
    - **Skill #3 (Drill Recommender):** `coach-rick-drill-recommender-prompt.md`
      - For drill recommendations based on weakest flow
+   - **Skill #4 (Model Comparison):** `coach-rick-model-comparison-prompt.md`
+     - For athlete vs professional model comparison
 
 5. **Get UI Copy**
    ```
@@ -216,10 +242,15 @@ What do you need?
 │     Input: momentumTransferScore object
 │     Output: 5-section conversational explanation
 │
-└─ Drill recommendations
-    → Skill #3 (Drill Recommender)
-      Input: scores + optional drill library
-      Output: Focus + category + specific drills
+├─ Drill recommendations
+│   → Skill #3 (Drill Recommender)
+│     Input: scores + optional drill library
+│     Output: Focus + category + specific drills
+│
+└─ Compare to professional model
+    → Skill #4 (Model Comparison)
+      Input: athlete + model swing data
+      Output: Summary + Flow Comparison + Timing + Focus
 ```
 
 ---
@@ -342,6 +373,49 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
 1. 🔍 Main Focus (energy leak explanation)
 2. 🏋️ Drill Category (Ground/Power/Barrel Flow)
 3. 🛠️ Drills (2-3 specific recommendations OR category-only)
+
+---
+
+#### Skill #4: Model Comparison (Athlete vs Model → Comparison)
+
+**Skill Name:** `MomentumTransfer.ModelComparison`  
+**When to use:** Compare to professional model  
+**Output:** 4-section breakdown (Summary, Flow Comparison, Timing, Focus)
+
+```typescript
+// When you need model comparison
+const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${process.env.ABACUSAI_API_KEY}`,
+  },
+  body: JSON.stringify({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: MODEL_COMPARISON_PROMPT,  // From coach-rick-model-comparison-prompt.md
+      },
+      {
+        role: 'user',
+        content: `Compare swings:\n\n${JSON.stringify({
+          athleteSwing: athleteData,
+          modelSwing: modelData
+        }, null, 2)}`,
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 700,
+  }),
+});
+```
+
+**Output Sections:**
+1. 🧾 Overall Summary (score difference + energy flow story)
+2. 🔍 Flow Path Comparison (Ground/Power/Barrel side-by-side)
+3. ⏱️ Timing & Sequence Differences
+4. 🧠 Next Session Focus (1 cue + 1 drill category)
 
 ---
 
@@ -578,10 +652,11 @@ GROUP BY weakest_flow;
 
 ✅ **Complete JSON schema** with detailed submetrics  
 ✅ **5 realistic mock examples** across all levels  
-✅ **3 DeepAgent skills** for complete coaching:
+✅ **4 DeepAgent skills** for complete coaching:
   - Skill #1: Data Interpreter (raw metrics → coaching)
   - Skill #2: Explainer (scores → explanation)
-  - Skill #3: Drill Recommender (scores → drill recommendations)  
+  - Skill #3: Drill Recommender (scores → drill recommendations)
+  - Skill #4: Model Comparison (athlete vs model → comparison)  
 ✅ **All UI copy** for cards, tooltips, and CTAs  
 ✅ **Step-by-step integration guide**  
 ✅ **Flow Path Model™ branding** fully integrated  
@@ -602,7 +677,8 @@ docs/
 ├── momentum-transfer-scoring.md                         # JSON schema & types
 ├── coach-rick-data-interpreter-prompt.md               # Skill #1: Data Interpreter ⭐
 ├── coach-rick-momentum-transfer-explainer-v2.md        # Skill #2: Explainer ⭐
-├── coach-rick-drill-recommender-prompt.md              # Skill #3: Drill Recommender ⭐ NEW
+├── coach-rick-drill-recommender-prompt.md              # Skill #3: Drill Recommender ⭐
+├── coach-rick-model-comparison-prompt.md               # Skill #4: Model Comparison ⭐ NEW
 ├── momentum-transfer-mock-data.json                     # Test examples
 ├── momentum-transfer-ui-copy.md                         # UI text strings
 ├── momentum-transfer-integration-guide.md               # Implementation roadmap
@@ -617,7 +693,7 @@ docs/
 **Ready For:** DeepAgent integration, UI implementation, production deployment
 
 **Last Updated:** November 26, 2025  
-**Version:** 3.0 (Final - All 3 Skills)
+**Version:** 4.0 (Final - All 4 Skills)
 
 ---
 
