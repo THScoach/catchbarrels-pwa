@@ -405,9 +405,9 @@ http://localhost:3000/api/dev/momentum-transfer/test
 
 ## DeepAgent Integration Specifics
 
-### Four DeepAgent Skills
+### Five DeepAgent Skills
 
-The BARRELS system uses **four complementary DeepAgent skills** for complete coaching:
+The BARRELS system uses **five complementary DeepAgent skills** for complete coaching:
 
 #### Skill #1: Data Interpreter
 **File:** `docs/coach-rick-data-interpreter-prompt.md`  
@@ -465,6 +465,20 @@ The BARRELS system uses **four complementary DeepAgent skills** for complete coa
 - ✅ You need to show where model is smoother
 - ✅ You want feedback based on model differences
 
+#### Skill #5: Weekly Training Plan
+**File:** `docs/coach-rick-weekly-plan-prompt.md`  
+**Skill Name:** `MomentumTransfer.WeeklyPlan`  
+**Use Case:** When you want to create weekly training plan  
+**Input:** Athlete profile + Recent swing data + Trend analysis  
+**Output:** 4-section breakdown (Week Summary, Themes, 7-Day Plan, Check-In Questions)  
+**Processing:** Identifies primary leak + Creates progressive daily sessions
+
+**Use when:**
+- ✅ You have recent swing data (2-3+ swings)
+- ✅ You want structured weekly training plan
+- ✅ You need daily session structure (20-40 minutes)
+- ✅ You want to focus on primary energy leak
+
 ### Quick Decision Guide
 
 ```
@@ -485,10 +499,15 @@ What do you need?
 │     "What should I work on?"
 │     Output: Focus + category + specific drills
 │
-└─ Compare to professional model
-    → Use Skill #4 (Model Comparison)
-      "How does my swing compare to [Pro]?"
-      Output: Summary + Flow Comparison + Timing + Focus
+├─ Compare to professional model
+│   → Use Skill #4 (Model Comparison)
+│     "How does my swing compare to [Pro]?"
+│     Output: Summary + Flow Comparison + Timing + Focus
+│
+└─ Create weekly training plan
+    → Use Skill #5 (Weekly Plan)
+      "Give me a week of training"
+      Output: Week Summary + Themes + 7-Day Plan + Check-In Questions
 ```
 
 ### Abacus.AI API Call Structure (Explainer)
@@ -667,6 +686,7 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
 | `coach-rick-momentum-transfer-explainer-v2.md` | **Skill #2:** Explainer (scores → explanation) |
 | `coach-rick-drill-recommender-prompt.md` | **Skill #3:** Drill Recommender (scores → drill recommendations) |
 | `coach-rick-model-comparison-prompt.md` | **Skill #4:** Model Comparison (athlete vs model → comparison) |
+| `coach-rick-weekly-plan-prompt.md` | **Skill #5:** Weekly Plan (recent data → 7-day training plan) |
 | `momentum-transfer-mock-data.json` | Test examples (Tiny, 14U, etc.) |
 | `momentum-transfer-ui-copy.md` | UI text strings |
 | `momentum-transfer-integration-guide.md` | This file |

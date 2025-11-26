@@ -1,7 +1,7 @@
 # Momentum Transfer System — Complete Package ✅
 
 **Date:** November 26, 2025  
-**Version:** 4.0 (Final)  
+**Version:** 5.0 (Final)  
 **Status:** 🎯 Production Ready
 
 ---
@@ -14,7 +14,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 1. **JSON Schema & Types** — Complete data structure specification
 2. **Mock Data** — 5 realistic swing examples for testing
-3. **DeepAgent Skills** — Four complementary AI skills for complete coaching
+3. **DeepAgent Skills** — Five complementary AI skills for complete coaching
 4. **UI Copy** — All text strings for consistent branding
 5. **Integration Guide** — Step-by-step implementation roadmap
 
@@ -111,7 +111,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 5. Skill #4: Coach Rick Model Comparison ⭐ NEW
+### 5. Skill #4: Coach Rick Model Comparison ⭐
 **File:** `coach-rick-model-comparison-prompt.md`  
 **Skill Name:** `MomentumTransfer.ModelComparison`  
 **Size:** Large (~8 pages)
@@ -135,7 +135,32 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 6. Mock Data for Testing
+### 6. Skill #5: Coach Rick Weekly Training Plan ⭐ NEW
+**File:** `coach-rick-weekly-plan-prompt.md`  
+**Skill Name:** `MomentumTransfer.WeeklyPlan`  
+**Size:** Medium (~6 pages)
+
+**Contents:**
+- DeepAgent system prompt for weekly training plan generation
+- 7-day structured plan format with daily sessions
+- Primary theme identification from recent swing data
+- 4-section output format (Week Summary, Themes, 7-Day Plan, Check-In Questions)
+- Worked examples (youth hitter, high school player)
+- Realistic session structure (20-40 minutes, basic equipment)
+- Game day and recovery day accommodation
+- Testing checklist
+
+**Use this for:** Creating actionable weekly training plans from recent swing data
+
+**When to use:**
+- ✅ You have recent swing data (2-3+ swings analyzed)
+- ✅ You want structured weekly training plan
+- ✅ You need daily session structure (20-40 minutes)
+- ✅ You want to focus on primary energy leak
+
+---
+
+### 7. Mock Data for Testing
 **File:** `momentum-transfer-mock-data.json`  
 **Size:** Medium (~5 pages JSON)
 
@@ -153,7 +178,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 7. UI Copy Guide
+### 8. UI Copy Guide
 **File:** `momentum-transfer-ui-copy.md`  
 **Size:** Large (~10 pages)
 
@@ -172,7 +197,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 8. Integration Guide
+### 9. Integration Guide
 **File:** `momentum-transfer-integration-guide.md`  
 **Size:** Comprehensive (~20 pages)
 
@@ -212,7 +237,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
    docs/momentum-transfer-mock-data.json
    ```
 
-4. **Configure All Four DeepAgent Skills**
+4. **Configure All Five DeepAgent Skills**
    - **Skill #1 (Data Interpreter):** `coach-rick-data-interpreter-prompt.md`
      - For raw swing data → coaching breakdown
    - **Skill #2 (Explainer):** `coach-rick-momentum-transfer-explainer-v2.md`
@@ -221,6 +246,8 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
      - For drill recommendations based on weakest flow
    - **Skill #4 (Model Comparison):** `coach-rick-model-comparison-prompt.md`
      - For athlete vs professional model comparison
+   - **Skill #5 (Weekly Plan):** `coach-rick-weekly-plan-prompt.md`
+     - For 7-day training plan generation from recent data
 
 5. **Get UI Copy**
    ```
@@ -247,10 +274,15 @@ What do you need?
 │     Input: scores + optional drill library
 │     Output: Focus + category + specific drills
 │
-└─ Compare to professional model
-    → Skill #4 (Model Comparison)
-      Input: athlete + model swing data
-      Output: Summary + Flow Comparison + Timing + Focus
+├─ Compare to professional model
+│   → Skill #4 (Model Comparison)
+│     Input: athlete + model swing data
+│     Output: Summary + Flow Comparison + Timing + Focus
+│
+└─ Create weekly training plan
+    → Skill #5 (Weekly Plan)
+      Input: athlete profile + recent swing data + trend
+      Output: Week Summary + Themes + 7-Day Plan + Check-In Questions
 ```
 
 ---
@@ -416,6 +448,46 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
 2. 🔍 Flow Path Comparison (Ground/Power/Barrel side-by-side)
 3. ⏱️ Timing & Sequence Differences
 4. 🧠 Next Session Focus (1 cue + 1 drill category)
+
+---
+
+#### Skill #5: Weekly Plan (Recent Data → 7-Day Training Plan)
+
+**Skill Name:** `MomentumTransfer.WeeklyPlan`  
+**When to use:** Create weekly training plan  
+**Output:** 4-section breakdown (Week Summary, Themes, 7-Day Plan, Check-In Questions)
+
+```typescript
+// When you need weekly training plan
+const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${process.env.ABACUSAI_API_KEY}`,
+  },
+  body: JSON.stringify({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: WEEKLY_PLAN_PROMPT,  // From coach-rick-weekly-plan-prompt.md
+      },
+      {
+        role: 'user',
+        content: `Create weekly plan:\n\n${JSON.stringify(weeklyData, null, 2)}`,
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 1200,
+  }),
+});
+```
+
+**Output Sections:**
+1. 🧾 Week Summary (2-4 sentences on primary focus)
+2. 🎯 Main Themes (1-2 themes tied to Flow Paths)
+3. 📅 7-Day Plan (daily sessions with drill categories)
+4. 🧠 Check-In Questions (3-5 reflection prompts)
 
 ---
 
@@ -652,11 +724,12 @@ GROUP BY weakest_flow;
 
 ✅ **Complete JSON schema** with detailed submetrics  
 ✅ **5 realistic mock examples** across all levels  
-✅ **4 DeepAgent skills** for complete coaching:
+✅ **5 DeepAgent skills** for complete coaching:
   - Skill #1: Data Interpreter (raw metrics → coaching)
   - Skill #2: Explainer (scores → explanation)
   - Skill #3: Drill Recommender (scores → drill recommendations)
-  - Skill #4: Model Comparison (athlete vs model → comparison)  
+  - Skill #4: Model Comparison (athlete vs model → comparison)
+  - Skill #5: Weekly Plan (recent data → 7-day training plan)  
 ✅ **All UI copy** for cards, tooltips, and CTAs  
 ✅ **Step-by-step integration guide**  
 ✅ **Flow Path Model™ branding** fully integrated  
@@ -678,7 +751,8 @@ docs/
 ├── coach-rick-data-interpreter-prompt.md               # Skill #1: Data Interpreter ⭐
 ├── coach-rick-momentum-transfer-explainer-v2.md        # Skill #2: Explainer ⭐
 ├── coach-rick-drill-recommender-prompt.md              # Skill #3: Drill Recommender ⭐
-├── coach-rick-model-comparison-prompt.md               # Skill #4: Model Comparison ⭐ NEW
+├── coach-rick-model-comparison-prompt.md               # Skill #4: Model Comparison ⭐
+├── coach-rick-weekly-plan-prompt.md                    # Skill #5: Weekly Plan ⭐ NEW
 ├── momentum-transfer-mock-data.json                     # Test examples
 ├── momentum-transfer-ui-copy.md                         # UI text strings
 ├── momentum-transfer-integration-guide.md               # Implementation roadmap
@@ -693,7 +767,7 @@ docs/
 **Ready For:** DeepAgent integration, UI implementation, production deployment
 
 **Last Updated:** November 26, 2025  
-**Version:** 4.0 (Final - All 4 Skills)
+**Version:** 5.0 (Final - All 5 Skills)
 
 ---
 
