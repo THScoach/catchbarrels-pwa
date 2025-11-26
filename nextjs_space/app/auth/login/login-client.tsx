@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -91,14 +92,23 @@ export default function LoginClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
-        <div className="text-center">
-          <h1 className="text-5xl font-bold text-white mb-2">
-            <span className="text-[#F5A623]">BARRELS</span>
-          </h1>
-          <p className="text-gray-400 text-lg">Baseball Training & Analysis</p>
+        <div className="text-center space-y-4">
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/branding/logo-primary-dark.png"
+              alt="CatchBarrels"
+              width={280}
+              height={70}
+              className="object-contain"
+              priority
+            />
+          </div>
+          <p className="text-xl text-gray-300 font-medium">
+            Track your momentum, not just your stats.
+          </p>
         </div>
 
         {/* Login Card */}

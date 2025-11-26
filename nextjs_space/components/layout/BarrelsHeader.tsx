@@ -48,12 +48,25 @@ export function BarrelsHeader() {
           className="flex items-center"
           aria-label="CatchBarrels – Momentum Transfer System"
         >
-          <div className="relative h-9 w-auto sm:h-10 flex-shrink-0">
+          {/* Desktop: Horizontal Logo */}
+          <div className="hidden sm:block relative h-10 w-auto flex-shrink-0">
             <Image
-              src="/assets/logos/momentum-transfer/logo-header.png"
-              alt="CatchBarrels Momentum Transfer Logo"
-              width={180}
-              height={45}
+              src="/branding/logo-horizontal.png"
+              alt="CatchBarrels Logo"
+              width={240}
+              height={60}
+              className="object-contain h-full w-auto"
+              priority
+            />
+          </div>
+          
+          {/* Mobile: Icon Only */}
+          <div className="sm:hidden relative h-9 w-9 flex-shrink-0">
+            <Image
+              src="/branding/logo-mark-icon.png"
+              alt="CatchBarrels"
+              width={40}
+              height={40}
               className="object-contain"
               priority
             />

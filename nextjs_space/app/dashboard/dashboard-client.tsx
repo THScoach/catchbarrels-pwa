@@ -50,19 +50,24 @@ export default function DashboardClient({
     <div className="min-h-screen bg-barrels-bg">
       <main className="p-4 space-y-6 max-w-4xl mx-auto pt-4 mt-4">
         
-        {/* Welcome Message */}
+        {/* Welcome Message with Branding */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="text-center space-y-2"
+          className="text-center space-y-3"
         >
           <h1 className="text-2xl md:text-3xl font-bold text-white">
             Welcome back, {user?.name?.split(' ')[0] || 'Player'}.
           </h1>
-          <p className="text-barrels-muted text-sm md:text-base">
-            Let's build better momentum today.
-          </p>
+          <div className="space-y-1">
+            <h2 className="text-lg md:text-xl font-semibold text-barrels-gold">
+              CatchBarrels Momentum Dashboard
+            </h2>
+            <p className="text-barrels-muted text-sm md:text-base max-w-2xl mx-auto">
+              Built by Coach Rick to measure how well you move energy, not just how hard you swing.
+            </p>
+          </div>
         </motion.div>
 
         {/* Primary Action - Start New Session */}
