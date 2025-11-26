@@ -7,6 +7,7 @@ import { UploadErrorState } from '@/components/ui/error-state';
 import { OnFormImportPanel } from '@/components/onform/onform-import-panel';
 import { toast } from 'sonner';
 import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info, Zap } from 'lucide-react';
+import { HelpBeacon } from '@/components/help/HelpBeacon';
 
 export function VideoUploadClient() {
   const router = useRouter();
@@ -406,6 +407,12 @@ export function VideoUploadClient() {
       </div>
 
       <BottomNav />
+
+      {/* Help Beacon */}
+      <HelpBeacon 
+        pageId="video-upload"
+        variant="icon"
+      />
     </div>
   );
 }

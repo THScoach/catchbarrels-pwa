@@ -18,6 +18,7 @@ import { convertToSwingJointSeries } from '@/lib/joint-utils';
 import { SwingJointSeries } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { HelpBeacon } from '@/components/help/HelpBeacon';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { mapEngineMetricsFromScores, mapAnchorMetricsFromScores, mapWhipMetricsFromScores } from '@/lib/engine-metrics-config';
@@ -952,6 +953,18 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
       </div>
 
       <BottomNav />
+
+      {/* Help Beacon */}
+      <HelpBeacon 
+        pageId="video-detail"
+        contextData={{
+          sessionId: video.id,
+          momentumTransferScore: video.overallScore || 0,
+          weakestFlowPath: 'Timing & Rhythm', // Could be calculated from scores
+          strongestFlowPath: 'Sequence & Braking', // Could be calculated from scores
+        }}
+        variant="icon"
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { PrimaryButton, SecondaryButton } from '@/components/ui/barrels-button'
 import { Pill } from '@/components/ui/pill'
 import { ScoreItem, ScoreGrid } from '@/components/ui/score-item'
 import { FourBTile } from '@/components/four-b-tile'
+import { HelpBeacon } from '@/components/help/HelpBeacon'
 
 interface DashboardClientProps {
   user: any
@@ -481,6 +482,12 @@ export default function DashboardClient({
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)}
         context={{ pageType: 'dashboard' }}
+      />
+
+      {/* Help Beacon */}
+      <HelpBeacon 
+        pageId="dashboard"
+        variant="icon"
       />
     </div>
   )

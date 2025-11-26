@@ -18,6 +18,7 @@ import { AdminSessionDetail } from '@/lib/admin/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { HelpBeacon } from '@/components/help/HelpBeacon';
 
 interface SessionDetailClientProps {
   session: AdminSessionDetail;
@@ -366,6 +367,24 @@ export default function SessionDetailClient({ session }: SessionDetailClientProp
           </Card>
         </div>
       </div>
+
+      {/* Help Beacon */}
+      <HelpBeacon 
+        pageId="admin-session"
+        contextData={{
+          sessionId: session.id,
+          playerName: session.playerName,
+          momentumTransferScore: session.momentumScore,
+          timing: session.timing,
+          sequence: session.sequence,
+          stability: session.stability,
+          directional: session.directional,
+          posture: session.posture,
+          weakestCategory: session.weakestCategory,
+          strongestCategory: session.strongestCategory,
+        }}
+        variant="icon"
+      />
     </div>
   );
 }

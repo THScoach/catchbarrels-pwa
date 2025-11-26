@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { AdminDashboardData } from '@/lib/admin/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { HelpBeacon } from '@/components/help/HelpBeacon';
 
 interface AdminDashboardClientProps {
   data: AdminDashboardData;
@@ -238,6 +239,16 @@ export default function AdminDashboardClient({ data }: AdminDashboardClientProps
           </CardContent>
         </Card>
       </div>
+
+      {/* Help Beacon */}
+      <HelpBeacon 
+        pageId="admin-dashboard"
+        contextData={{
+          rosterSize: data.totalAthletes,
+          flaggedSessions: data.recentSessions.filter(s => s.flagged).length,
+        }}
+        variant="icon"
+      />
     </div>
   );
 }
