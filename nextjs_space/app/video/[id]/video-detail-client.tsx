@@ -7,6 +7,9 @@ import { EnhancedVideoPlayer } from '@/components/enhanced-video-player';
 import { SkeletonExtractor } from '@/components/skeleton-extractor';
 import { AutoSkeletonExtractor } from '@/components/auto-skeleton-extractor';
 import { JointOverlayCompare } from '@/components/joint-overlay-compare';
+import { JointAnalysisPanel } from '@/components/joint-analysis-panel';
+import { JointOverlayVideoPlayer } from '@/components/joint-overlay-video-player';
+import { JointData } from '@/types/pose';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
 import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock, MessageCircle, Plus } from 'lucide-react';
@@ -62,6 +65,11 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
   const [currentSwing, setCurrentSwing] = useState<SwingJointSeries | null>(null);
   const [referenceSwing, setReferenceSwing] = useState<SwingJointSeries | null>(null);
   const [extractingSkeleton, setExtractingSkeleton] = useState(false);
+  
+  // Joint analysis state (new standardized format)
+  const [jointData, setJointData] = useState<JointData | null>(video?.jointData as JointData || null);
+  const [jointAnalyzed, setJointAnalyzed] = useState(video?.jointAnalyzed || false);
+  const [showJointOverlay, setShowJointOverlay] = useState(false);
   
   // Convert existing skeleton data to new format on mount
   useEffect(() => {
@@ -877,6 +885,44 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                 </div>
               </div>
             )}
+
+            {/* New Joint Analysis Section */}
+            <div className="space-y-4 mt-6 pt-6 border-t border-gray-700">
+              <div className="bg-gradient-to-br from-barrels-gold/10 to-barrels-gold-light/10 border border-barrels-gold/30 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                  🎯 Joint Overlay Analysis
+                </h2>
+                <p className="text-gray-300 text-sm">
+                  Analyze and display joint positions directly on your video player.
+                </p>
+              </div>
+
+              {videoUrl && (
+                <JointAnalysisPanel
+                  videoId={video.id}
+                  videoUrl={videoUrl}
+                  initialJointData={jointData}
+                  initialAnalyzed={jointAnalyzed}
+                  onAnalysisComplete={(data) => {
+                    setJointData(data);
+                    setJointAnalyzed(true);
+                  }}
+                  onToggleOverlay={setShowJointOverlay}
+                />
+              )}
+
+              {showJointOverlay && jointData && videoUrl && (
+                <div className="space-y-2">
+                  <h3 className="text-white font-semibold text-sm">Video with Joint Overlay</h3>
+                  <JointOverlayVideoPlayer
+                    videoUrl={videoUrl}
+                    jointData={jointData}
+                    showOverlay={showJointOverlay}
+                    impactFrame={video.impactFrame}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         ) : activeTab === 'coach' ? (
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">

@@ -101,6 +101,12 @@ model Video {
   skeletonStatus  String    @default("PENDING") // "PENDING" | "RUNNING" | "COMPLETE" | "FAILED"
   skeletonErrorMessage String?  // Error details if extraction failed
   
+  // Joint Data (Standardized format for joint overlay)
+  jointData          Json?     // Standardized joint format: [{timestamp, frameIndex, joints: [{name, x, y, z, confidence}]}]
+  jointAnalyzed      Boolean   @default(false)
+  jointAnalysisDate  DateTime?
+  jointAnalysisSource String?  // "mediapipe" | "abacus" - which system analyzed the joints
+  
   // Analysis data - 4Bs Body Metrics (mock for prototype)
   analyzed        Boolean   @default(false)
   
