@@ -405,7 +405,23 @@ http://localhost:3000/api/dev/momentum-transfer/test
 
 ## DeepAgent Integration Specifics
 
-### Abacus.AI API Call Structure
+### Two DeepAgent Prompts
+
+The BARRELS system uses **two different DeepAgent prompts** for different use cases:
+
+#### 1. Momentum Transfer Explainer
+**File:** `docs/coach-rick-momentum-transfer-prompt.md`  
+**Use Case:** When you have a pre-computed `momentumTransferScore` object  
+**Input:** Clean, structured JSON with overall/groundFlow/powerFlow/barrelFlow  
+**Output:** Player-facing explanation with snapshot, edges, opportunities, gameplan
+
+#### 2. Data Interpreter
+**File:** `docs/coach-rick-data-interpreter-prompt.md`  
+**Use Case:** When you have raw swing metrics and need to interpret them  
+**Input:** Raw JSON with timing, sequence, stability, barrel path metrics  
+**Output:** 3-section breakdown (Card, Explanation, Next Step)
+
+### Abacus.AI API Call Structure (Explainer)
 
 ```typescript
 const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
@@ -419,7 +435,7 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
     messages: [
       {
         role: 'system',
-        content: COACH_RICK_SYSTEM_PROMPT,
+        content: COACH_RICK_EXPLAINER_PROMPT,  // From momentum-transfer-prompt.md
       },
       {
         role: 'user',
@@ -428,6 +444,33 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
     ],
     temperature: 0.7,
     max_tokens: 500,
+  }),
+});
+```
+
+### Abacus.AI API Call Structure (Data Interpreter)
+
+```typescript
+const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${process.env.ABACUSAI_API_KEY}`,
+  },
+  body: JSON.stringify({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: DATA_INTERPRETER_PROMPT,  // From data-interpreter-prompt.md
+      },
+      {
+        role: 'user',
+        content: `Analyze this swing:\n\n${JSON.stringify(swingData, null, 2)}`,
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 600,
   }),
 });
 ```
@@ -523,7 +566,8 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
 | File | Purpose |
 |------|---------|
 | `momentum-transfer-scoring.md` | Complete JSON schema reference |
-| `coach-rick-momentum-transfer-prompt.md` | DeepAgent system prompt |
+| `coach-rick-momentum-transfer-prompt.md` | DeepAgent Explainer system prompt |
+| `coach-rick-data-interpreter-prompt.md` | DeepAgent Data Interpreter prompt |
 | `momentum-transfer-mock-data.json` | Test examples (Tiny, 14U, etc.) |
 | `momentum-transfer-ui-copy.md` | UI text strings |
 | `momentum-transfer-integration-guide.md` | This file |
