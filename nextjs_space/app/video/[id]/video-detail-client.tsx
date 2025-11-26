@@ -5,7 +5,7 @@ import { BottomNav } from '@/components/bottom-nav';
 import { ScoreCard } from '@/components/score-card';
 import { EnhancedVideoPlayer } from '@/components/enhanced-video-player';
 import { SkeletonExtractor } from '@/components/skeleton-extractor';
-import { AutoSkeletonExtractor } from '@/components/auto-skeleton-extractor';
+// Removed AutoSkeletonExtractor - replaced with opt-in JointAnalysisPanel
 import { JointOverlayCompare } from '@/components/joint-overlay-compare';
 import { JointAnalysisPanel } from '@/components/joint-analysis-panel';
 import { JointOverlayVideoPlayer } from '@/components/joint-overlay-video-player';
@@ -392,23 +392,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
           {formatDistanceToNow(new Date(video?.uploadDate), { addSuffix: true })}
         </p>
 
-        {/* Automatic Skeleton Extraction */}
-        {videoUrl && (video?.skeletonStatus === 'PENDING' || video?.skeletonStatus === 'RUNNING') && (
-          <AutoSkeletonExtractor
-            videoId={video.id}
-            videoUrl={videoUrl}
-            onComplete={() => {
-              console.log('[VideoDetail] Auto-extraction complete, reloading page...');
-              window.location.reload();
-            }}
-            onError={(error) => {
-              console.error('[VideoDetail] Auto-extraction failed:', error);
-              toast.error('Skeleton extraction failed', {
-                description: 'Please try the manual extraction option below.',
-              });
-            }}
-          />
-        )}
+        {/* Automatic skeleton extraction removed - users now opt-in via Skeleton tab */}
 
         {/* Share Controls */}
         <Card className="bg-gray-800/50 border-gray-700 p-4 mb-6">
