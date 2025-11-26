@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, Target, TrendingUp, Play, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
-import BarrelsHeader from '@/components/barrels-header';
 import { BottomNav } from '@/components/bottom-nav';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -37,7 +36,6 @@ export default function LessonHistoryClient({ lessons, user }: LessonHistoryClie
   if (lessons.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pb-24">
-        <BarrelsHeader activeTab="history" />
         <div className="p-4 max-w-4xl mx-auto mt-6">
           <EmptyState
             icon={Calendar}
@@ -54,8 +52,6 @@ export default function LessonHistoryClient({ lessons, user }: LessonHistoryClie
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pb-24">
-      <BarrelsHeader activeTab="history" />
-
       <div className="p-4 space-y-6 max-w-4xl mx-auto mt-6">
         {/* Progress Chart */}
         <motion.div

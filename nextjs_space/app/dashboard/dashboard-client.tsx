@@ -3,11 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Upload, TrendingUp, Play, ChevronRight, FileText, Menu } from 'lucide-react'
+import { Upload, TrendingUp, Play, ChevronRight, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { BottomNav } from '@/components/bottom-nav'
-import BarrelsHeader from '@/components/barrels-header'
 import { CoachRickDrawer } from '@/components/coach-rick-drawer'
 import { Tile, TileHeader } from '@/components/ui/tile'
 import { PrimaryButton, SecondaryButton } from '@/components/ui/barrels-button'
@@ -50,29 +49,6 @@ export default function DashboardClient({
 
   return (
     <div className="min-h-screen bg-barrels-bg pb-24">
-      {/* BARRELS Header with Logo */}
-      <header className="px-4 pt-4 pb-3 border-b border-barrels-border bg-gradient-to-r from-barrels-surface to-barrels-bg">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <img 
-            src="/barrels-logo-transparent.png" 
-            alt="BARRELS"
-            className="h-10 w-auto"
-          />
-          
-          {/* Menu Button */}
-          <button
-            onClick={() => setIsDrawerOpen(true)}
-            className="p-2 rounded-lg bg-barrels-surface hover:bg-barrels-border border border-barrels-border hover:border-barrels-blue transition-all duration-200"
-            aria-label="Open menu"
-          >
-            <Menu className="h-6 w-6 text-barrels-text" />
-          </button>
-        </div>
-      </header>
-
-      {/* BARRELS Navigation */}
-      <BarrelsHeader activeTab="dashboard" />
-
       <main className="p-4 space-y-6 max-w-4xl mx-auto pt-4 mt-4">
 
         {/* Hero BARREL Score - Two Column Layout */}
