@@ -3,9 +3,9 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 // import { PrismaAdapter } from '@next-auth/prisma-adapter'; // Not used with CredentialsProvider + JWT
 import { prisma } from './db';
 import bcrypt from 'bcryptjs';
+import { getWhopUserMemberships, getWhopProductTier } from './whop-client';
 
-// PHASE 1: Simple credentials auth for prototype
-// PHASE 5: Will add Whop OAuth provider here for subscription management
+// PHASE 5: Whop OAuth integration for subscription management
 
 export const authOptions: NextAuthOptions = {
   // Note: PrismaAdapter is incompatible with CredentialsProvider + JWT strategy
@@ -57,11 +57,32 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-    // Phase 5: Add Whop OAuth provider here
-    // WhopProvider({
-    //   clientId: process.env.WHOP_CLIENT_ID,
-    //   clientSecret: process.env.WHOP_CLIENT_SECRET,
-    // }),
+    // Whop OAuth Provider
+    {
+      id: 'whop',
+      name: 'Whop',
+      type: 'oauth',
+      clientId: process.env.WHOP_CLIENT_ID,
+      clientSecret: process.env.WHOP_CLIENT_SECRET,
+      authorization: {
+        url: 'https://data.whop.com/api/v3/oauth/authorize',
+        params: {
+          scope: 'openid profile email',
+          response_type: 'code',
+        },
+      },
+      token: 'https://data.whop.com/api/v3/oauth/token',
+      userinfo: 'https://api.whop.com/api/v2/me',
+      profile(profile: any) {
+        return {
+          id: profile.id,
+          name: profile.name || profile.username,
+          email: profile.email,
+          username: profile.username,
+          whopUserId: profile.id,
+        };
+      },
+    } as any,
   ],
   session: {
     strategy: 'jwt',
@@ -71,17 +92,93 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/login',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.username = (user as any).username;
+        token.whopUserId = (user as any).whopUserId;
       }
+      
+      // If this is a Whop OAuth login, sync membership data
+      if (account?.provider === 'whop' && token.whopUserId) {
+        try {
+          // Find or create user in database
+          let dbUser = await prisma.user.findUnique({
+            where: { whopUserId: token.whopUserId as string },
+          });
+
+          if (!dbUser) {
+            // Create new user from Whop OAuth data
+            dbUser = await prisma.user.create({
+              data: {
+                username: token.username as string || token.email as string || `whop_${token.whopUserId}`,
+                email: token.email as string,
+                name: token.name as string,
+                whopUserId: token.whopUserId as string,
+                membershipTier: 'free',
+                membershipStatus: 'inactive',
+                profileComplete: false,
+              },
+            });
+          }
+
+          // Sync membership data from Whop
+          const memberships = await getWhopUserMemberships(token.whopUserId as string);
+          const activeMemberships = memberships.filter((m) => m.valid);
+
+          if (activeMemberships.length > 0) {
+            // Get highest tier membership
+            const tierPriority: Record<string, number> = {
+              elite: 3,
+              pro: 2,
+              athlete: 1,
+              free: 0,
+            };
+
+            let highestTier = 'free';
+            let highestMembership = activeMemberships[0];
+
+            for (const membership of activeMemberships) {
+              const tier = getWhopProductTier(membership.productId);
+              if (tierPriority[tier] > tierPriority[highestTier]) {
+                highestTier = tier;
+                highestMembership = membership;
+              }
+            }
+
+            // Update user with membership info
+            await prisma.user.update({
+              where: { id: dbUser.id },
+              data: {
+                whopMembershipId: highestMembership.id,
+                membershipTier: highestTier,
+                membershipStatus: 'active',
+                membershipExpiresAt: highestMembership.expiresAt
+                  ? new Date(highestMembership.expiresAt)
+                  : null,
+                lastWhopSync: new Date(),
+              },
+            });
+
+            token.membershipTier = highestTier;
+            token.membershipStatus = 'active';
+          }
+
+          token.id = dbUser.id;
+        } catch (error) {
+          console.error('Error syncing Whop membership:', error);
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).username = token.username;
+        (session.user as any).whopUserId = token.whopUserId;
+        (session.user as any).membershipTier = token.membershipTier;
+        (session.user as any).membershipStatus = token.membershipStatus;
       }
       return session;
     },

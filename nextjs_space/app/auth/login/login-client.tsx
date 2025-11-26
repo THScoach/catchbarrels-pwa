@@ -166,6 +166,34 @@ export default function LoginClient() {
               </Button>
             </form>
 
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-700"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-800/50 text-gray-400">or</span>
+              </div>
+            </div>
+
+            {/* Whop OAuth Button */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => signIn('whop', { callbackUrl: '/dashboard' })}
+              disabled={loading}
+              className="w-full border-[#F5A623]/30 text-white hover:bg-[#F5A623]/10 hover:border-[#F5A623]"
+            >
+              <svg 
+                className="w-5 h-5 mr-2" 
+                viewBox="0 0 24 24" 
+                fill="currentColor"
+              >
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+              </svg>
+              Sign in with Whop
+            </Button>
+
             {/* Quick Login (Dev Only) */}
             <div className="mt-6 pt-6 border-t border-gray-700">
               <p className="text-sm text-gray-500 mb-3">Quick login for testing:</p>
@@ -195,7 +223,7 @@ export default function LoginClient() {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
-          <p>Phase 1 Prototype • Whop OAuth coming in Phase 5</p>
+          <p>Secure login powered by Whop OAuth</p>
         </div>
       </div>
     </div>
