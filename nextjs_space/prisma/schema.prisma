@@ -138,6 +138,10 @@ model Video {
   
   exitVelocity    Int?      // mph
   
+  // New Scoring Engine (Kwon/THSS aligned)
+  newScoringBreakdown Json?  // Full debug breakdown from new scoring engine
+  goatyBand           Int?   // -3 to +3 band from new scoring engine
+  
   // AI Coach feedback
   coachFeedback   String?
   
