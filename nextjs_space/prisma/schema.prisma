@@ -69,6 +69,7 @@ model User {
   onTheBallHistory PlayerOnTheBallHistory[] @relation("UserOnTheBallHistory")
   trainingSessions TrainingSession[] @relation("UserTrainingSessions")
   playerLessons    PlayerLesson[] @relation("UserPlayerLessons")
+  brainTestSessions BrainTestSession[] @relation("UserBrainTestSessions")
 }
 
 model Video {
@@ -1251,4 +1252,41 @@ model ModelSwing {
   createdAt     DateTime @default(now())
   
   @@map("model_swings")
+}
+
+// Brain Test - Cognitive assessment system
+enum BrainTestType {
+  GO_NO_GO
+}
+
+model BrainTestSession {
+  id           String           @id @default(cuid())
+  userId       String
+  user         User             @relation("UserBrainTestSessions", fields: [userId], references: [id], onDelete: Cascade)
+  athleteId    String?
+  type         BrainTestType
+  startedAt    DateTime         @default(now())
+  completedAt  DateTime?
+  trials       BrainTestTrial[]
+  summaryJson  Json?
+  
+  @@map("brain_test_sessions")
+  @@index([userId])
+  @@index([completedAt])
+}
+
+model BrainTestTrial {
+  id          String           @id @default(cuid())
+  session     BrainTestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId   String
+  index       Int
+  stimulus    Json             // e.g. { pitchZone, isSwingPitch }
+  response    Json             // e.g. { keyPressed, reacted }
+  isCorrect   Boolean
+  reactionMs  Int?
+  createdAt   DateTime         @default(now())
+  
+  @@map("brain_test_trials")
+  @@index([sessionId])
+  @@index([createdAt])
 }

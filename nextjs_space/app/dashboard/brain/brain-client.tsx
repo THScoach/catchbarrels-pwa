@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Brain, TrendingUp, Calendar } from 'lucide-react'
+import { ArrowLeft, Brain, TrendingUp, Calendar, CheckCircle2 } from 'lucide-react'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
 import {
   LineChart,
   Line,
@@ -36,6 +37,20 @@ interface BrainDashboardClientProps {
 
 export default function BrainDashboardClient({ data }: BrainDashboardClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Check if test was just completed
+  useEffect(() => {
+    if (searchParams?.get('brainTest') === 'done') {
+      toast.success('Brain test completed!', {
+        description: 'Your results have been saved. Check your progress below.',
+        icon: <CheckCircle2 className="w-5 h-5" />,
+      })
+      
+      // Remove query param from URL
+      router.replace('/dashboard/brain')
+    }
+  }, [searchParams, router])
 
   // Prepare chart data
   const chartData = data.sessions
@@ -175,8 +190,19 @@ export default function BrainDashboardClient({ data }: BrainDashboardClientProps
             <span className="text-xs text-barrels-muted">{data.testsCompleted} tests</span>
           </div>
 
-          <div className="space-y-2">
-            {data.sessions.map((session, index) => (
+          {data.sessions.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-barrels-gold/20 to-barrels-gold-light/10 flex items-center justify-center">
+                <Brain className="w-8 h-8 text-barrels-gold" />
+              </div>
+              <p className="text-white font-semibold mb-1">No tests yet</p>
+              <p className="text-sm text-barrels-muted">
+                Take your first THS Brain Speed test to track your cognitive performance
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {data.sessions.map((session, index) => (
               <motion.div
                 key={session.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -204,7 +230,8 @@ export default function BrainDashboardClient({ data }: BrainDashboardClientProps
                 </div>
               </motion.div>
             ))}
-          </div>
+            </div>
+          )}
         </motion.div>
 
         {/* CTA - Start New Test */}
@@ -212,13 +239,10 @@ export default function BrainDashboardClient({ data }: BrainDashboardClientProps
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
-          className="w-full h-12 rounded-full font-semibold text-base transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-          style={{
-            backgroundColor: '#2979FF',
-            color: '#FFFFFF',
-          }}
+          onClick={() => router.push('/brain-test/go-no-go')}
+          className="w-full h-12 rounded-full font-semibold text-base transition-all duration-200 hover:brightness-110 active:scale-[0.98] bg-gradient-to-r from-barrels-gold to-barrels-gold-light text-black"
         >
-          Start New Brain Test
+          Take THS Brain Speed Test
         </motion.button>
       </main>
     </div>
