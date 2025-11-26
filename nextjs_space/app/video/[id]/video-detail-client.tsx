@@ -42,7 +42,7 @@ const ProgressCharts = dynamic(() => import('@/components/progress-charts').then
 });
 
 export function VideoDetailClient({ video, previousScores, personalBests, userHeight, userHandedness }: any) {
-  const [activeTab, setActiveTab] = useState<'analysis' | 'coach' | 'skeleton' | 'progress'>('analysis');
+  const [activeTab, setActiveTab] = useState<'overview' | 'motion' | 'breakdown' | 'drills' | 'history'>('overview');
   const [assessmentHistory, setAssessmentHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
@@ -267,9 +267,9 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
     }
   };
 
-  // Load assessment history when progress tab is selected
+  // Load assessment history when history tab is selected
   useEffect(() => {
-    if (activeTab === 'progress' && assessmentHistory.length === 0) {
+    if (activeTab === 'history' && assessmentHistory.length === 0) {
       fetchAssessmentHistory();
     }
   }, [activeTab]);
@@ -635,50 +635,60 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-4 mb-6 border-b border-gray-700">
+        <div className="flex space-x-4 mb-6 border-b border-gray-700 overflow-x-auto">
           <button
-            onClick={() => setActiveTab('analysis')}
-            className={`pb-3 px-1 border-b-2 transition-colors ${
-              activeTab === 'analysis'
-                ? 'border-[#F5A623] text-white'
+            onClick={() => setActiveTab('overview')}
+            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'overview'
+                ? 'border-barrels-gold text-white'
                 : 'border-transparent text-gray-400'
             }`}
           >
-            Analysis
+            Overview
           </button>
           <button
-            onClick={() => setActiveTab('skeleton')}
-            className={`pb-3 px-1 border-b-2 transition-colors ${
-              activeTab === 'skeleton'
-                ? 'border-[#F5A623] text-white'
+            onClick={() => setActiveTab('motion')}
+            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'motion'
+                ? 'border-barrels-gold text-white'
                 : 'border-transparent text-gray-400'
             }`}
           >
-            🎯 Motion
+            Motion
           </button>
           <button
-            onClick={() => setActiveTab('coach')}
-            className={`pb-3 px-1 border-b-2 transition-colors ${
-              activeTab === 'coach'
-                ? 'border-[#F5A623] text-white'
+            onClick={() => setActiveTab('breakdown')}
+            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'breakdown'
+                ? 'border-barrels-gold text-white'
                 : 'border-transparent text-gray-400'
             }`}
           >
-            Coach Rick AI
+            Breakdown
           </button>
           <button
-            onClick={() => setActiveTab('progress')}
-            className={`pb-3 px-1 border-b-2 transition-colors ${
-              activeTab === 'progress'
-                ? 'border-[#F5A623] text-white'
+            onClick={() => setActiveTab('drills')}
+            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'drills'
+                ? 'border-barrels-gold text-white'
                 : 'border-transparent text-gray-400'
             }`}
           >
-            📈 Progress
+            Drills
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'history'
+                ? 'border-barrels-gold text-white'
+                : 'border-transparent text-gray-400'
+            }`}
+          >
+            History
           </button>
         </div>
 
-        {activeTab === 'analysis' ? (
+        {activeTab === 'overview' ? (
           <div>
             {video?.analyzed ? (
               <div className="space-y-6">
@@ -858,14 +868,14 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
               </div>
             )}
           </div>
-        ) : activeTab === 'skeleton' ? (
+        ) : activeTab === 'motion' ? (
           <MotionTab
             videoId={video.id}
             videoUrl={videoUrl || ''}
             initialJointData={video.jointData as any}
             jointAnalyzed={video.jointAnalyzed || false}
           />
-        ) : activeTab === 'coach' ? (
+        ) : activeTab === 'breakdown' ? (
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-12 h-12 bg-[#F5A623] rounded-full flex items-center justify-center">
@@ -902,7 +912,32 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
               </div>
             )}
           </div>
-        ) : activeTab === 'progress' ? (
+        ) : activeTab === 'drills' ? (
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+            <h3 className="text-white font-semibold text-xl mb-4">Recommended Drills</h3>
+            <div className="space-y-4">
+              {/* Placeholder for drill recommendations based on analysis */}
+              <div className="bg-gray-900 rounded-lg p-4">
+                <h4 className="text-barrels-gold font-medium mb-2">Hip Rotation Drill</h4>
+                <p className="text-gray-300 text-sm">
+                  Focus on improving hip-shoulder separation for better power transfer.
+                </p>
+              </div>
+              <div className="bg-gray-900 rounded-lg p-4">
+                <h4 className="text-barrels-gold font-medium mb-2">Bat Path Optimization</h4>
+                <p className="text-gray-300 text-sm">
+                  Work on maintaining a more efficient bat path through the zone.
+                </p>
+              </div>
+              <div className="bg-gray-900 rounded-lg p-4">
+                <h4 className="text-barrels-gold font-medium mb-2">Balance & Stability</h4>
+                <p className="text-gray-300 text-sm">
+                  Strengthen your foundation with lower body stability exercises.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : activeTab === 'history' ? (
           <div className="space-y-6">
             {loadingHistory ? (
               <div className="text-center py-12">

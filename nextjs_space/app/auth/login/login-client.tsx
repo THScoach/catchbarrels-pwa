@@ -41,7 +41,6 @@ export default function LoginClient() {
           description: 'Redirecting to dashboard...',
         });
         router.push('/dashboard');
-        router.refresh();
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -72,7 +71,6 @@ export default function LoginClient() {
       } else if (result?.ok) {
         toast.success('Welcome!');
         router.push('/dashboard');
-        router.refresh();
       }
     } catch (error) {
       console.error('Login error:', error);

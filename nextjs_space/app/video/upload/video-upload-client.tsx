@@ -78,13 +78,29 @@ export function VideoUploadClient() {
       xhr.addEventListener('load', () => {
         if (xhr.status === 200) {
           setSuccess(true);
-          toast.success('Upload successful!', {
-            description: 'Your swing is being analyzed. This may take a few moments.',
-          });
-          setTimeout(() => {
-            router.push('/video');
-            router.refresh();
-          }, 1500);
+          
+          // Parse response to get video ID
+          try {
+            const response = JSON.parse(xhr.responseText);
+            const videoId = response.id || response.videoId;
+            
+            toast.success('Upload successful!', {
+              description: 'Redirecting to analysis view...',
+            });
+            
+            // Navigate directly to the video detail page for analysis
+            setTimeout(() => {
+              router.push(`/video/${videoId}`);
+            }, 1000);
+          } catch (err) {
+            console.error('Failed to parse upload response:', err);
+            toast.success('Upload successful!', {
+              description: 'Your swing is being analyzed.',
+            });
+            setTimeout(() => {
+              router.push('/video');
+            }, 1500);
+          }
         } else if (xhr.status >= 500) {
           // Server error - catastrophic failure
           setCatastrophicError(true);

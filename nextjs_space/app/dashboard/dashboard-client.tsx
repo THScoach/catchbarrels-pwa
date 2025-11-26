@@ -49,6 +49,35 @@ export default function DashboardClient({
   return (
     <div className="min-h-screen bg-barrels-bg">
       <main className="p-4 space-y-6 max-w-4xl mx-auto pt-4 mt-4">
+        
+        {/* Welcome Message */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="text-center space-y-2"
+        >
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
+            Welcome back, {user?.name?.split(' ')[0] || 'Player'}.
+          </h1>
+          <p className="text-barrels-muted text-sm md:text-base">
+            Let's build better momentum today.
+          </p>
+        </motion.div>
+
+        {/* Primary Action - Start New Session */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Link href="/lesson/new">
+            <button className="w-full h-16 rounded-xl bg-gradient-to-r from-barrels-gold to-barrels-gold-light text-barrels-black font-bold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-3 shadow-lg">
+              <Upload className="w-6 h-6" />
+              Start New Session
+            </button>
+          </Link>
+        </motion.div>
 
         {/* Hero BARREL Score - Two Column Layout */}
         <motion.div
@@ -248,6 +277,73 @@ export default function DashboardClient({
           </div>
         </motion.div>
 
+        {/* Quick Stats Tiles */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-3"
+        >
+          {/* Sessions This Week */}
+          <div className="bg-barrels-surface border border-barrels-border rounded-xl p-4">
+            <div className="text-barrels-muted text-xs uppercase tracking-wide mb-2">
+              This Week
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {/* Mock data - replace with real data */}
+              5
+            </div>
+            <div className="text-barrels-muted text-xs mt-1">
+              Sessions
+            </div>
+          </div>
+
+          {/* Average Momentum Transfer (30 days) */}
+          <div className="bg-barrels-surface border border-barrels-border rounded-xl p-4">
+            <div className="text-barrels-muted text-xs uppercase tracking-wide mb-2">
+              30-Day Avg
+            </div>
+            <div className="text-2xl font-bold text-barrels-gold">
+              {scores?.barrel || 0}
+            </div>
+            <div className="text-barrels-muted text-xs mt-1">
+              Momentum
+            </div>
+          </div>
+
+          {/* Best Session */}
+          <div className="bg-barrels-surface border border-barrels-border rounded-xl p-4">
+            <div className="text-barrels-muted text-xs uppercase tracking-wide mb-2">
+              Best Session
+            </div>
+            <div className="text-2xl font-bold text-emerald-400">
+              {Math.min((scores?.barrel || 0) + 8, 100)}
+            </div>
+            <div className="text-barrels-muted text-xs mt-1">
+              Score
+            </div>
+          </div>
+
+          {/* Last Update */}
+          <div className="bg-barrels-surface border border-barrels-border rounded-xl p-4">
+            <div className="text-barrels-muted text-xs uppercase tracking-wide mb-2">
+              Last Update
+            </div>
+            <div className="text-sm font-bold text-white">
+              {latestAssessmentDate 
+                ? format(new Date(latestAssessmentDate), 'MMM d')
+                : 'N/A'
+              }
+            </div>
+            <div className="text-barrels-muted text-xs mt-1">
+              {latestAssessmentDate 
+                ? format(new Date(latestAssessmentDate), 'yyyy')
+                : 'No data'
+              }
+            </div>
+          </div>
+        </motion.div>
+
         {/* 4B System Tile */}
         <FourBTile />
 
@@ -356,12 +452,31 @@ export default function DashboardClient({
           </Link>
         </motion.div>
 
+        {/* Need Help? */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.6 }}
+          className="text-center py-4"
+        >
+          <button
+            onClick={() => setIsDrawerOpen(true)}
+            className="text-barrels-gold hover:text-barrels-gold-light text-sm font-medium transition-colors"
+          >
+            Need help? Ask Coach Rick →
+          </button>
+        </motion.div>
+
       </main>
 
       {/* Bottom Navigation */}
       
       {/* Coach Rick Drawer */}
-      <CoachRickDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+      <CoachRickDrawer 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)}
+        context={{ pageType: 'dashboard' }}
+      />
     </div>
   )
 }
