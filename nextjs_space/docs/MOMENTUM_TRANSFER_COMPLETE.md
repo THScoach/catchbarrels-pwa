@@ -39,29 +39,9 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 2. Coach Rick Momentum Transfer Explainer
-**File:** `coach-rick-momentum-transfer-prompt.md`  
-**Size:** Medium (~8 pages)
-
-**Contents:**
-- DeepAgent system prompt for pre-computed scores
-- Interpretation rules for Flow Path scores
-- Output format specifications
-- 2 worked examples (Elite Pro, Developing Youth)
-- UI integration examples
-- Testing checklist
-
-**Use this for:** Explaining already-computed Momentum Transfer scores to players
-
-**When to use:**
-- ✅ You have `momentumTransferScore` object computed
-- ✅ You want conversational explanation
-- ✅ You need "biggest edge" and "biggest opportunity" analysis
-
----
-
-### 3. Coach Rick Data Interpreter Prompt ⭐ NEW
+### 2. Skill #1: Coach Rick Data Interpreter ⭐
 **File:** `coach-rick-data-interpreter-prompt.md`  
+**Skill Name:** `MomentumTransfer.DataInterpreter`  
 **Size:** Large (~12 pages)
 
 **Contents:**
@@ -80,6 +60,30 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 - ✅ You have sequence data (order, flags)
 - ✅ You have stability metrics (headMove, pelvisJerk)
 - ✅ You want AI to interpret raw data and build the narrative
+
+---
+
+### 3. Skill #2: Coach Rick Momentum Transfer Explainer ⭐
+**File:** `coach-rick-momentum-transfer-explainer-v2.md`  
+**Skill Name:** `MomentumTransfer.Explainer`  
+**Size:** Large (~12 pages)
+
+**Contents:**
+- DeepAgent system prompt for pre-computed scores
+- Interpretation rules for Flow Path scores
+- 5-section output format (Summary, Snapshot, Edge, Opportunity, Gameplan)
+- Worked examples (Elite Pro, Developing Youth)
+- UI integration examples
+- API endpoint implementation
+- Testing checklist
+
+**Use this for:** Explaining already-computed Momentum Transfer scores to players
+
+**When to use:**
+- ✅ You have `momentumTransferScore` object computed
+- ✅ You want conversational explanation
+- ✅ You need "Edge" and "Opportunity" analysis
+- ✅ You want actionable gameplan with cue + drill category
 
 ---
 
@@ -160,48 +164,42 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
    docs/momentum-transfer-mock-data.json
    ```
 
-4. **Choose Your DeepAgent Prompt**
-   - **Explainer:** `coach-rick-momentum-transfer-prompt.md`
-   - **Interpreter:** `coach-rick-data-interpreter-prompt.md`
+4. **Configure Both DeepAgent Skills**
+   - **Skill #1 (Data Interpreter):** `coach-rick-data-interpreter-prompt.md`
+     - For raw swing data → coaching breakdown
+   - **Skill #2 (Explainer):** `coach-rick-momentum-transfer-explainer-v2.md`
+     - For pre-computed scores → conversational explanation
 
 5. **Get UI Copy**
    ```
    docs/momentum-transfer-ui-copy.md
    ```
 
+### Quick Decision: Which Skill to Use?
+
+```
+Do you have pre-computed scores?
+│
+├─ YES → Use Skill #2 (Explainer)
+│         MomentumTransfer.Explainer
+│         Input: momentumTransferScore object
+│         Output: 5-section explanation
+│
+└─ NO  → Use Skill #1 (Data Interpreter)
+          MomentumTransfer.DataInterpreter
+          Input: raw timing/sequence/stability metrics
+          Output: 3-section coaching breakdown
+```
+
 ---
 
 ### For DeepAgent Integration
 
-#### Option 1: Explainer (Pre-computed Scores)
+#### Skill #1: Data Interpreter (Raw Metrics → Coaching)
 
-```typescript
-// When you already have momentumTransferScore computed
-const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${process.env.ABACUSAI_API_KEY}`,
-  },
-  body: JSON.stringify({
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'system',
-        content: EXPLAINER_PROMPT,  // From coach-rick-momentum-transfer-prompt.md
-      },
-      {
-        role: 'user',
-        content: `Explain my swing\n\n${JSON.stringify(momentumTransferScore, null, 2)}`,
-      },
-    ],
-    temperature: 0.7,
-    max_tokens: 500,
-  }),
-});
-```
-
-#### Option 2: Data Interpreter (Raw Metrics)
+**Skill Name:** `MomentumTransfer.DataInterpreter`  
+**When to use:** Raw swing data analysis  
+**Output:** 3-section coaching breakdown
 
 ```typescript
 // When you have raw swing data
@@ -228,6 +226,52 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
   }),
 });
 ```
+
+**Output Sections:**
+1. 🔢 Momentum Transfer Card
+2. 🎥 Simple Coaching Explanation (Ground/Power/Barrel)
+3. 🧠 Next Step Guidance
+
+---
+
+#### Skill #2: Explainer (Pre-computed Scores → Explanation)
+
+**Skill Name:** `MomentumTransfer.Explainer`  
+**When to use:** Explaining existing scores  
+**Output:** 5-section conversational explanation
+
+```typescript
+// When you already have momentumTransferScore computed
+const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${process.env.ABACUSAI_API_KEY}`,
+  },
+  body: JSON.stringify({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: EXPLAINER_PROMPT,  // From coach-rick-momentum-transfer-explainer-v2.md
+      },
+      {
+        role: 'user',
+        content: `Explain my swing:\n\n${JSON.stringify(momentumTransferScore, null, 2)}`,
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 500,
+  }),
+});
+```
+
+**Output Sections:**
+1. 🧾 Summary
+2. 🔍 Snapshot
+3. 💪 Your Edge
+4. 🎯 Your Opportunity
+5. 🧠 Gameplan
 
 ---
 
@@ -464,7 +508,9 @@ GROUP BY weakest_flow;
 
 ✅ **Complete JSON schema** with detailed submetrics  
 ✅ **5 realistic mock examples** across all levels  
-✅ **2 DeepAgent prompts** for different scenarios  
+✅ **2 DeepAgent skills** for different scenarios:
+  - Skill #1: Data Interpreter (raw metrics → coaching)
+  - Skill #2: Explainer (scores → explanation)  
 ✅ **All UI copy** for cards, tooltips, and CTAs  
 ✅ **Step-by-step integration guide**  
 ✅ **Flow Path Model™ branding** fully integrated  
@@ -482,13 +528,13 @@ GROUP BY weakest_flow;
 
 ```
 docs/
-├── momentum-transfer-scoring.md                    # JSON schema & types
-├── coach-rick-momentum-transfer-prompt.md          # Explainer prompt
-├── coach-rick-data-interpreter-prompt.md           # Data interpreter prompt ⭐ NEW
-├── momentum-transfer-mock-data.json                # Test examples
-├── momentum-transfer-ui-copy.md                    # UI text strings
-├── momentum-transfer-integration-guide.md          # Implementation roadmap
-└── MOMENTUM_TRANSFER_COMPLETE.md                   # This file
+├── momentum-transfer-scoring.md                         # JSON schema & types
+├── coach-rick-data-interpreter-prompt.md               # Skill #1: Data Interpreter ⭐
+├── coach-rick-momentum-transfer-explainer-v2.md        # Skill #2: Explainer ⭐
+├── momentum-transfer-mock-data.json                     # Test examples
+├── momentum-transfer-ui-copy.md                         # UI text strings
+├── momentum-transfer-integration-guide.md               # Implementation roadmap
+└── MOMENTUM_TRANSFER_COMPLETE.md                        # This file
 ```
 
 ---

@@ -405,21 +405,49 @@ http://localhost:3000/api/dev/momentum-transfer/test
 
 ## DeepAgent Integration Specifics
 
-### Two DeepAgent Prompts
+### Two DeepAgent Skills
 
-The BARRELS system uses **two different DeepAgent prompts** for different use cases:
+The BARRELS system uses **two complementary DeepAgent skills** for different use cases:
 
-#### 1. Momentum Transfer Explainer
-**File:** `docs/coach-rick-momentum-transfer-prompt.md`  
-**Use Case:** When you have a pre-computed `momentumTransferScore` object  
-**Input:** Clean, structured JSON with overall/groundFlow/powerFlow/barrelFlow  
-**Output:** Player-facing explanation with snapshot, edges, opportunities, gameplan
-
-#### 2. Data Interpreter
+#### Skill #1: Data Interpreter
 **File:** `docs/coach-rick-data-interpreter-prompt.md`  
+**Skill Name:** `MomentumTransfer.DataInterpreter`  
 **Use Case:** When you have raw swing metrics and need to interpret them  
 **Input:** Raw JSON with timing, sequence, stability, barrel path metrics  
-**Output:** 3-section breakdown (Card, Explanation, Next Step)
+**Output:** 3-section breakdown (Card, Explanation, Next Step)  
+**Processing:** Builds the energy flow narrative from raw data
+
+**Use when:**
+- ✅ You have raw timing metrics (pelvisTorsoGapMs, etc.)
+- ✅ You have sequence/stability/barrel path data
+- ✅ You want AI to calculate Ground/Power/Barrel Flow story
+- ✅ You need structured coaching breakdown
+
+#### Skill #2: Momentum Transfer Explainer
+**File:** `docs/coach-rick-momentum-transfer-explainer-v2.md`  
+**Skill Name:** `MomentumTransfer.Explainer`  
+**Use Case:** When you have a pre-computed `momentumTransferScore` object  
+**Input:** Clean, structured JSON with overall/groundFlow/powerFlow/barrelFlow scores  
+**Output:** 5-section breakdown (Summary, Snapshot, Edge, Opportunity, Gameplan)  
+**Processing:** Explains existing scores conversationally
+
+**Use when:**
+- ✅ You have `momentumTransferScore` object computed
+- ✅ You want conversational explanation
+- ✅ You need "Edge" and "Opportunity" analysis
+- ✅ You want actionable gameplan with cue + drill
+
+### Quick Decision Guide
+
+```
+Do you have pre-computed scores?
+│
+├─ YES → Use Skill #2 (Explainer)
+│         "Explain my Momentum Transfer Score of 82"
+│
+└─ NO  → Use Skill #1 (Data Interpreter)
+          "Analyze my swing data and build the story"
+```
 
 ### Abacus.AI API Call Structure (Explainer)
 
@@ -566,8 +594,8 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
 | File | Purpose |
 |------|---------|
 | `momentum-transfer-scoring.md` | Complete JSON schema reference |
-| `coach-rick-momentum-transfer-prompt.md` | DeepAgent Explainer system prompt |
-| `coach-rick-data-interpreter-prompt.md` | DeepAgent Data Interpreter prompt |
+| `coach-rick-data-interpreter-prompt.md` | **Skill #1:** Data Interpreter (raw metrics → coaching) |
+| `coach-rick-momentum-transfer-explainer-v2.md` | **Skill #2:** Explainer (scores → explanation) |
 | `momentum-transfer-mock-data.json` | Test examples (Tiny, 14U, etc.) |
 | `momentum-transfer-ui-copy.md` | UI text strings |
 | `momentum-transfer-integration-guide.md` | This file |
