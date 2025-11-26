@@ -9,6 +9,8 @@ import { SkeletonExtractor } from '@/components/skeleton-extractor';
 import { JointOverlayCompare } from '@/components/joint-overlay-compare';
 import { MotionTab } from '@/components/motion-tab';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
+import { BarrelsTabs } from '@/components/ui/barrels-tabs';
+import { RickTip } from '@/components/ui/rick-tip';
 import { toast } from 'sonner';
 import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock } from 'lucide-react';
 import Link from 'next/link';
@@ -636,61 +638,26 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-4 mb-6 border-b border-gray-700 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'overview'
-                ? 'border-barrels-gold text-white'
-                : 'border-transparent text-gray-400'
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('motion')}
-            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'motion'
-                ? 'border-barrels-gold text-white'
-                : 'border-transparent text-gray-400'
-            }`}
-          >
-            Motion
-          </button>
-          <button
-            onClick={() => setActiveTab('breakdown')}
-            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'breakdown'
-                ? 'border-barrels-gold text-white'
-                : 'border-transparent text-gray-400'
-            }`}
-          >
-            Breakdown
-          </button>
-          <button
-            onClick={() => setActiveTab('drills')}
-            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'drills'
-                ? 'border-barrels-gold text-white'
-                : 'border-transparent text-gray-400'
-            }`}
-          >
-            Drills
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`pb-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'history'
-                ? 'border-barrels-gold text-white'
-                : 'border-transparent text-gray-400'
-            }`}
-          >
-            History
-          </button>
-        </div>
+        <BarrelsTabs
+          tabs={[
+            { id: 'overview', label: 'Overview' },
+            { id: 'motion', label: 'Motion' },
+            { id: 'breakdown', label: 'Breakdown' },
+            { id: 'drills', label: 'Drills' },
+            { id: 'history', label: 'History' },
+          ]}
+          activeTab={activeTab}
+          onTabChange={(tabId) => setActiveTab(tabId as any)}
+          className="mb-6"
+        />
 
         {activeTab === 'overview' ? (
-          <div>
+          <div className="space-y-6">
+            <RickTip
+              variant="compact"
+              text="Look at your Flow Path strengths first — that's where your swing creates or leaks energy."
+            />
+            
             {video?.analyzed ? (
               <div className="space-y-6">
                 {/* Calculate Progress Indicators */}
@@ -870,15 +837,26 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
             )}
           </div>
         ) : activeTab === 'motion' ? (
-          <MotionTab
-            videoId={video.id}
-            videoUrl={videoUrl || ''}
-            initialJointData={video.jointData as any}
-            jointAnalyzed={video.jointAnalyzed || false}
-          />
+          <div className="space-y-6">
+            <RickTip
+              variant="compact"
+              text="Gold dots show your joint flow. Watch how your hips start the sequence and energy transfers through your body."
+            />
+            <MotionTab
+              videoId={video.id}
+              videoUrl={videoUrl || ''}
+              initialJointData={video.jointData as any}
+              jointAnalyzed={video.jointAnalyzed || false}
+            />
+          </div>
         ) : activeTab === 'breakdown' ? (
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-            <div className="flex items-center space-x-3 mb-4">
+          <div className="space-y-6">
+            <RickTip
+              variant="compact"
+              text="This is the simplified version of your biomechanics. Use it to guide your next reps."
+            />
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+              <div className="flex items-center space-x-3 mb-4">
               <div className="w-12 h-12 bg-[#F5A623] rounded-full flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
@@ -912,10 +890,16 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                 )}
               </div>
             )}
+            </div>
           </div>
         ) : activeTab === 'drills' ? (
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-            <h3 className="text-white font-semibold text-xl mb-4">Recommended Drills</h3>
+          <div className="space-y-6">
+            <RickTip
+              variant="compact"
+              text="Pick one drill and stay with it for a week. Consistency builds movement patterns."
+            />
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+              <h3 className="text-white font-semibold text-xl mb-4">Recommended Drills</h3>
             <div className="space-y-4">
               {/* Placeholder for drill recommendations based on analysis */}
               <div className="bg-gray-900 rounded-lg p-4">
@@ -936,6 +920,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                   Strengthen your foundation with lower body stability exercises.
                 </p>
               </div>
+            </div>
             </div>
           </div>
         ) : activeTab === 'history' ? (

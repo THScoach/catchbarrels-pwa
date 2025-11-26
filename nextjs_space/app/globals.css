@@ -2,13 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mobile Touch Optimizations */
+/* BARRELS Design System - Spacing Scale */
 :root {
   /* iOS safe area insets */
   --sat: env(safe-area-inset-top);
   --sab: env(safe-area-inset-bottom);
   --sal: env(safe-area-inset-left);
   --sar: env(safe-area-inset-right);
+  
+  /* Spacing System */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+  
+  /* Brand Colors - BARRELS */
+  --barrels-gold: #E8B14E;
+  --barrels-gold-light: #F5C76E;
+  --barrels-black: #000000;
+  --barrels-dark-gray: #1A1A1A;
+  --barrels-light-gray: #D1D5DB;
+  --barrels-error: #DC2626;
+  --barrels-success: #22C55E;
+  
+  /* Animation Timing */
+  --transition-fast: 150ms;
+  --transition-base: 200ms;
+  --transition-slow: 300ms;
 }
 
 /* Minimum touch target size (44x44px for iOS) */

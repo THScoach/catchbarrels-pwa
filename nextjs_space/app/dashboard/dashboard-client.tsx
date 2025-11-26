@@ -8,7 +8,8 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { CoachRickDrawer } from '@/components/coach-rick-drawer'
 import { Tile, TileHeader } from '@/components/ui/tile'
-import { PrimaryButton, SecondaryButton } from '@/components/ui/barrels-button'
+import { BarrelsButton } from '@/components/ui/barrels-button'
+import { RickTip } from '@/components/ui/rick-tip'
 import { Pill } from '@/components/ui/pill'
 import { ScoreItem, ScoreGrid } from '@/components/ui/score-item'
 import { FourBTile } from '@/components/four-b-tile'
@@ -103,17 +104,23 @@ export default function DashboardClient({
           </div>
         </motion.div>
 
+        {/* Coach Rick Tip */}
+        <RickTip
+          variant="compact"
+          text="Every swing is a data point. Try to record 15 clean swings per session to get the most accurate momentum analysis."
+        />
+
         {/* Primary Action - Start New Session */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
         >
-          <Link href="/lesson/new">
-            <button className="w-full h-16 rounded-xl bg-gradient-to-r from-barrels-gold to-barrels-gold-light text-barrels-black font-bold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-3 shadow-lg">
-              <Upload className="w-6 h-6" />
+          <Link href="/lesson/new" className="block">
+            <BarrelsButton variant="primary" size="lg" className="w-full">
+              <Upload className="w-6 h-6 mr-2" />
               Start New Session
-            </button>
+            </BarrelsButton>
           </Link>
         </motion.div>
 
@@ -132,10 +139,10 @@ export default function DashboardClient({
             <p className="text-gray-300 mb-6 max-w-lg mx-auto">
               Complete one swing session to unlock your Momentum Transfer Score, Flow Path analysis, and personalized coaching from Coach Rick.
             </p>
-            <Link href="/video/upload">
-              <button className="bg-gradient-to-r from-barrels-gold to-barrels-gold-light hover:from-barrels-gold-light hover:to-barrels-gold text-black font-bold py-3 px-8 rounded-lg text-lg transition-all transform hover:scale-105">
+            <Link href="/video/upload" className="inline-block">
+              <BarrelsButton variant="primary" size="lg">
                 Start My First Session →
-              </button>
+              </BarrelsButton>
             </Link>
           </motion.div>
         ) : (
@@ -461,9 +468,10 @@ export default function DashboardClient({
                   </div>
                 </div>
                 <Link href={`/drills/${primaryDrill.id}`}>
-                  <PrimaryButton icon={ChevronRight}>
+                  <BarrelsButton variant="primary">
                     View Drill Details
-                  </PrimaryButton>
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </BarrelsButton>
                 </Link>
               </Tile>
 
@@ -474,9 +482,9 @@ export default function DashboardClient({
                   <div className="flex flex-wrap gap-2">
                     {alternateDrills.map((drill: any) => (
                       <Link key={drill.id} href={`/drills/${drill.id}`}>
-                        <SecondaryButton className="w-auto">
+                        <BarrelsButton variant="secondary" className="w-auto">
                           {drill.name}
-                        </SecondaryButton>
+                        </BarrelsButton>
                       </Link>
                     ))}
                   </div>
@@ -500,15 +508,17 @@ export default function DashboardClient({
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           <Link href="/lesson/new">
-            <PrimaryButton icon={Upload} className="h-14 text-base">
+            <BarrelsButton variant="primary" size="lg" className="w-full">
+              <Upload className="w-5 h-5 mr-2" />
               Start New Lesson
-            </PrimaryButton>
+            </BarrelsButton>
           </Link>
           
           <Link href="/assessments/new">
-            <SecondaryButton icon={FileText} className="w-full h-14 text-base">
+            <BarrelsButton variant="secondary" size="lg" className="w-full">
+              <FileText className="w-5 h-5 mr-2" />
               View Full Report
-            </SecondaryButton>
+            </BarrelsButton>
           </Link>
         </motion.div>
 

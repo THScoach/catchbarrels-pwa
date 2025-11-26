@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { BottomNav } from '@/components/bottom-nav';
 import { UploadErrorState } from '@/components/ui/error-state';
 import { OnFormImportPanel } from '@/components/onform/onform-import-panel';
+import { RickTip } from '@/components/ui/rick-tip';
+import { BarrelsButton } from '@/components/ui/barrels-button';
 import { toast } from 'sonner';
 import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info, Zap } from 'lucide-react';
 import { HelpBeacon } from '@/components/help/HelpBeacon';
@@ -204,8 +206,14 @@ export function VideoUploadClient() {
 
   return (
     <div className="min-h-screen bg-[#1a2332] pb-20">
-      <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-6">New Analysis</h1>
+      <div className="p-6 max-w-2xl mx-auto space-y-6">
+        <h1 className="text-2xl font-bold text-white">New Analysis</h1>
+
+        {/* Coach Rick Tip */}
+        <RickTip
+          variant="compact"
+          text="Record from chest-high, slightly offset from the pitcher's side — best angle for Momentum Transfer analysis."
+        />
 
         {/* Mode Switcher Tabs */}
         <div className="mb-6 grid grid-cols-2 gap-2 p-1 bg-gray-800/50 rounded-lg">
