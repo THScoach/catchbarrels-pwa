@@ -60,6 +60,12 @@ model User {
   
   profileComplete Boolean   @default(false)
   
+  // FTUE/Onboarding Tracking (Work Order #10)
+  completedOnboarding Boolean  @default(false)  // Has user finished FTUE flow?
+  onboardingVersion   String?  // "A", "B", "C" for A/B testing
+  onboardingStep      Int      @default(0)      // 0=not started, 1=profile, 2=first session, 3=complete
+  firstSessionCompleted Boolean @default(false) // Has user uploaded their first swing?
+  
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   

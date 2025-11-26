@@ -14,15 +14,27 @@ export function VideoUploadClient() {
   const [mode, setMode] = useState<'upload' | 'onform'>('upload');
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [catastrophicError, setCatastrophicError] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoType, setVideoType] = useState<string>('');
   const [progress, setProgress] = useState(0);
+  const [analysisStep, setAnalysisStep] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // OnForm import states
   const [showOnFormPanel, setShowOnFormPanel] = useState(false);
+
+  // Analysis steps for progress display
+  const analysisSteps = [
+    { label: 'Extracting joints', duration: 1500 },
+    { label: 'Measuring timing', duration: 1200 },
+    { label: 'Calculating flow paths', duration: 1300 },
+    { label: 'Scoring momentum transfer', duration: 1000 },
+  ];
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,20 +91,34 @@ export function VideoUploadClient() {
       xhr.addEventListener('load', () => {
         if (xhr.status === 200) {
           setSuccess(true);
+          setUploading(false);
           
           // Parse response to get video ID
           try {
             const response = JSON.parse(xhr.responseText);
             const videoId = response.id || response.videoId;
+            setUploadedVideoId(videoId);
             
             toast.success('Upload successful!', {
-              description: 'Redirecting to analysis view...',
+              description: 'Starting analysis...',
             });
             
-            // Navigate directly to the video detail page for analysis
-            setTimeout(() => {
-              router.push(`/video/${videoId}`);
-            }, 1000);
+            // Start analyzing animation
+            setAnalyzing(true);
+            
+            // Simulate analysis steps
+            let currentStep = 0;
+            const stepInterval = setInterval(() => {
+              if (currentStep < analysisSteps.length - 1) {
+                currentStep++;
+                setAnalysisStep(currentStep);
+              } else {
+                clearInterval(stepInterval);
+                // Analysis complete - show view report button
+                setAnalysisComplete(true);
+              }
+            }, 1500); // Show each step for 1.5 seconds
+            
           } catch (err) {
             console.error('Failed to parse upload response:', err);
             toast.success('Upload successful!', {
@@ -262,11 +288,56 @@ export function VideoUploadClient() {
         {/* Upload Mode */}
         {mode === 'upload' && (
           <div className="bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-lg p-12 text-center">
-          {success ? (
+          {analysisComplete && uploadedVideoId ? (
+            <div className="space-y-6">
+              <CheckCircle className="w-20 h-20 text-barrels-gold mx-auto" />
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-white">Your Analysis is Ready!</h2>
+                <p className="text-gray-300">View your Momentum Transfer Score and coaching insights.</p>
+              </div>
+              <button
+                onClick={() => router.push(`/video/${uploadedVideoId}`)}
+                className="bg-gradient-to-r from-barrels-gold to-barrels-gold-light hover:from-barrels-gold-light hover:to-barrels-gold text-black font-bold py-3 px-8 rounded-lg text-lg transition-all transform hover:scale-105"
+              >
+                View Report →
+              </button>
+            </div>
+          ) : analyzing ? (
+            <div className="space-y-6">
+              <Loader2 className="w-16 h-16 text-barrels-gold mx-auto animate-spin" />
+              <div className="space-y-2">
+                <p className="text-white text-xl font-semibold">Analyzing your swing...</p>
+                <div className="max-w-md mx-auto space-y-2">
+                  {analysisSteps.map((step, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
+                        index === analysisStep
+                          ? 'bg-barrels-gold/20 text-barrels-gold'
+                          : index < analysisStep
+                          ? 'text-green-400'
+                          : 'text-gray-500'
+                      }`}
+                    >
+                      {index < analysisStep ? (
+                        <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                      ) : index === analysisStep ? (
+                        <Loader2 className="w-5 h-5 flex-shrink-0 animate-spin" />
+                      ) : (
+                        <div className="w-5 h-5 flex-shrink-0 rounded-full border-2 border-gray-600" />
+                      )}
+                      <span className="font-medium">• {step.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm">This usually takes 30-60 seconds</p>
+            </div>
+          ) : success ? (
             <div className="space-y-4">
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
               <p className="text-white text-lg">Upload successful!</p>
-              <p className="text-gray-400">Analyzing your swing...</p>
+              <p className="text-gray-400">Preparing analysis...</p>
             </div>
           ) : uploading ? (
             <div className="space-y-4">

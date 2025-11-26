@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Upload, TrendingUp, Play, ChevronRight, FileText } from 'lucide-react'
+import { Upload, TrendingUp, Play, ChevronRight, FileText, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { CoachRickDrawer } from '@/components/coach-rick-drawer'
@@ -13,6 +13,7 @@ import { Pill } from '@/components/ui/pill'
 import { ScoreItem, ScoreGrid } from '@/components/ui/score-item'
 import { FourBTile } from '@/components/four-b-tile'
 import { HelpBeacon } from '@/components/help/HelpBeacon'
+import { FTUEModal } from '@/components/onboarding/ftue-modal'
 
 interface DashboardClientProps {
   user: any
@@ -42,6 +43,37 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [showFTUE, setShowFTUE] = useState(false)
+  const [onboardingChecked, setOnboardingChecked] = useState(false)
+
+  // Check if user needs onboarding
+  useEffect(() => {
+    async function checkOnboarding() {
+      try {
+        const response = await fetch('/api/onboarding/status');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.needsOnboarding) {
+            setShowFTUE(true);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check onboarding status:', error);
+      } finally {
+        setOnboardingChecked(true);
+      }
+    }
+
+    checkOnboarding();
+  }, []);
+
+  const handleOnboardingComplete = () => {
+    setShowFTUE(false);
+    router.refresh(); // Refresh to update user data
+  };
+
+  // Check if user has completed their first session
+  const hasFirstSession = user?.firstSessionCompleted || scores?.barrel > 0;
 
   // Primary drill is the first in the list
   const primaryDrill = recommendedDrills?.[0]
@@ -85,16 +117,37 @@ export default function DashboardClient({
           </Link>
         </motion.div>
 
-        {/* Hero BARREL Score - Two Column Layout */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="rounded-2xl bg-barrels-surface border border-barrels-border p-4 md:p-5 text-barrels-text"
-        >
-          <div className="flex gap-4 md:gap-6 items-stretch">
-            {/* LEFT: Circular BARREL Score Gauge */}
-            <div className="flex-1 flex flex-col items-center justify-center">
+        {/* Hero BARREL Score - Two Column Layout OR First Session CTA */}
+        {!hasFirstSession ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="rounded-2xl bg-gradient-to-br from-barrels-gold/10 to-barrels-gold-light/5 border border-barrels-gold/30 p-8 text-center"
+          >
+            <Sparkles className="w-12 h-12 text-barrels-gold mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Unlock Your Momentum Transfer Score
+            </h2>
+            <p className="text-gray-300 mb-6 max-w-lg mx-auto">
+              Complete one swing session to unlock your Momentum Transfer Score, Flow Path analysis, and personalized coaching from Coach Rick.
+            </p>
+            <Link href="/video/upload">
+              <button className="bg-gradient-to-r from-barrels-gold to-barrels-gold-light hover:from-barrels-gold-light hover:to-barrels-gold text-black font-bold py-3 px-8 rounded-lg text-lg transition-all transform hover:scale-105">
+                Start My First Session →
+              </button>
+            </Link>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="rounded-2xl bg-barrels-surface border border-barrels-border p-4 md:p-5 text-barrels-text"
+          >
+            <div className="flex gap-4 md:gap-6 items-stretch">
+              {/* LEFT: Circular BARREL Score Gauge */}
+              <div className="flex-1 flex flex-col items-center justify-center">
               <div className="relative flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
                 {/* SVG Circular Ring */}
                 <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -282,6 +335,7 @@ export default function DashboardClient({
             </div>
           </div>
         </motion.div>
+        )}
 
         {/* Quick Stats Tiles */}
         <motion.div
@@ -489,6 +543,15 @@ export default function DashboardClient({
         pageId="dashboard"
         variant="icon"
       />
+
+      {/* FTUE Onboarding Modal */}
+      {showFTUE && (
+        <FTUEModal
+          open={showFTUE}
+          onComplete={handleOnboardingComplete}
+          userEmail={user?.email}
+        />
+      )}
     </div>
   )
 }
