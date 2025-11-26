@@ -5,7 +5,7 @@ import { BottomNav } from '@/components/bottom-nav';
 import { ScoreCard } from '@/components/score-card';
 import { EnhancedVideoPlayer } from '@/components/enhanced-video-player';
 import { SkeletonExtractor } from '@/components/skeleton-extractor';
-import { AutoSkeletonExtractor } from '@/components/auto-skeleton-extractor';
+// Removed AutoSkeletonExtractor - replaced with opt-in only
 import { JointOverlayCompare } from '@/components/joint-overlay-compare';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
@@ -428,23 +428,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
           {formatDistanceToNow(new Date(video?.uploadDate), { addSuffix: true })}
         </p>
 
-        {/* Automatic Skeleton Extraction */}
-        {videoUrl && (video?.skeletonStatus === 'PENDING' || video?.skeletonStatus === 'RUNNING') && (
-          <AutoSkeletonExtractor
-            videoId={video.id}
-            videoUrl={videoUrl}
-            onComplete={() => {
-              console.log('[VideoDetail] Auto-extraction complete, reloading page...');
-              window.location.reload();
-            }}
-            onError={(error) => {
-              console.error('[VideoDetail] Auto-extraction failed:', error);
-              toast.error('Skeleton extraction failed', {
-                description: 'Please try the manual extraction option below.',
-              });
-            }}
-          />
-        )}
+        {/* Automatic skeleton extraction removed - users now opt-in via Skeleton tab */}
 
         {/* Share Controls */}
         <Card className="bg-gray-800/50 border-gray-700 p-4 mb-6">
@@ -661,8 +645,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
           >
             Analysis
           </button>
-          {/* Skeleton tab hidden - MediaPipe errors */}
-          {/* <button
+          <button
             onClick={() => setActiveTab('skeleton')}
             className={`pb-3 px-1 border-b-2 transition-colors ${
               activeTab === 'skeleton'
@@ -671,7 +654,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
             }`}
           >
             🦴 Skeleton
-          </button> */}
+          </button>
           <button
             onClick={() => setActiveTab('coach')}
             className={`pb-3 px-1 border-b-2 transition-colors ${
@@ -874,7 +857,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
               </div>
             )}
           </div>
-        ) : false && activeTab === 'skeleton' ? ( {/* Skeleton tab disabled - MediaPipe errors */}
+        ) : activeTab === 'skeleton' ? (
           <div className="space-y-6">
             <div className="bg-gradient-to-br from-green-500/10 to-yellow-500/10 border border-green-500/30 rounded-lg p-6">
               <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
