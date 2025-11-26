@@ -405,9 +405,9 @@ http://localhost:3000/api/dev/momentum-transfer/test
 
 ## DeepAgent Integration Specifics
 
-### Two DeepAgent Skills
+### Three DeepAgent Skills
 
-The BARRELS system uses **two complementary DeepAgent skills** for different use cases:
+The BARRELS system uses **three complementary DeepAgent skills** for complete coaching:
 
 #### Skill #1: Data Interpreter
 **File:** `docs/coach-rick-data-interpreter-prompt.md`  
@@ -437,16 +437,39 @@ The BARRELS system uses **two complementary DeepAgent skills** for different use
 - ✅ You need "Edge" and "Opportunity" analysis
 - ✅ You want actionable gameplan with cue + drill
 
+#### Skill #3: Drill Recommender
+**File:** `docs/coach-rick-drill-recommender-prompt.md`  
+**Skill Name:** `MomentumTransfer.DrillRecommender`  
+**Use Case:** When you need specific drill recommendations  
+**Input:** Momentum Transfer scores + optional drill library  
+**Output:** 3-section breakdown (Focus, Category, Drills)  
+**Processing:** Identifies weakest flow + recommends drills
+
+**Use when:**
+- ✅ You have Momentum Transfer scores
+- ✅ You want drill recommendations
+- ✅ You need to know which Flow Path to work on
+- ✅ You have (optionally) a drill library
+
 ### Quick Decision Guide
 
 ```
-Do you have pre-computed scores?
+What do you need?
 │
-├─ YES → Use Skill #2 (Explainer)
-│         "Explain my Momentum Transfer Score of 82"
+├─ Raw swing data analysis
+│   → Use Skill #1 (Data Interpreter)
+│     "Analyze my swing data"
+│     Output: 3-section coaching breakdown
 │
-└─ NO  → Use Skill #1 (Data Interpreter)
-          "Analyze my swing data and build the story"
+├─ Explain pre-computed scores
+│   → Use Skill #2 (Explainer)
+│     "Explain my Momentum Transfer Score"
+│     Output: 5-section conversational explanation
+│
+└─ Drill recommendations
+    → Use Skill #3 (Drill Recommender)
+      "What should I work on?"
+      Output: Focus + category + specific drills
 ```
 
 ### Abacus.AI API Call Structure (Explainer)
@@ -499,6 +522,33 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
     ],
     temperature: 0.7,
     max_tokens: 600,
+  }),
+});
+```
+
+### Abacus.AI API Call Structure (Drill Recommender)
+
+```typescript
+const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${process.env.ABACUSAI_API_KEY}`,
+  },
+  body: JSON.stringify({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: DRILL_RECOMMENDER_PROMPT,  // From drill-recommender-prompt.md
+      },
+      {
+        role: 'user',
+        content: `Recommend drills:\n\n${JSON.stringify(drillData, null, 2)}`,
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 400,
   }),
 });
 ```
@@ -596,6 +646,7 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
 | `momentum-transfer-scoring.md` | Complete JSON schema reference |
 | `coach-rick-data-interpreter-prompt.md` | **Skill #1:** Data Interpreter (raw metrics → coaching) |
 | `coach-rick-momentum-transfer-explainer-v2.md` | **Skill #2:** Explainer (scores → explanation) |
+| `coach-rick-drill-recommender-prompt.md` | **Skill #3:** Drill Recommender (scores → drill recommendations) |
 | `momentum-transfer-mock-data.json` | Test examples (Tiny, 14U, etc.) |
 | `momentum-transfer-ui-copy.md` | UI text strings |
 | `momentum-transfer-integration-guide.md` | This file |

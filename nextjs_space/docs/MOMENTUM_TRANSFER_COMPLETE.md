@@ -1,7 +1,7 @@
 # Momentum Transfer System — Complete Package ✅
 
 **Date:** November 26, 2025  
-**Version:** 2.0 (Final)  
+**Version:** 3.0 (Final)  
 **Status:** 🎯 Production Ready
 
 ---
@@ -14,7 +14,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 1. **JSON Schema & Types** — Complete data structure specification
 2. **Mock Data** — 5 realistic swing examples for testing
-3. **DeepAgent Prompts** — Two AI prompts for different use cases
+3. **DeepAgent Skills** — Three complementary AI skills for complete coaching
 4. **UI Copy** — All text strings for consistent branding
 5. **Integration Guide** — Step-by-step implementation roadmap
 
@@ -87,7 +87,31 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 4. Mock Data for Testing
+### 4. Skill #3: Coach Rick Drill Recommender ⭐ NEW
+**File:** `coach-rick-drill-recommender-prompt.md`  
+**Skill Name:** `MomentumTransfer.DrillRecommender`  
+**Size:** Large (~12 pages)
+
+**Contents:**
+- DeepAgent system prompt for drill recommendations
+- Decision logic for identifying weakest Flow Path
+- 3-section output format (Focus, Category, Drills)
+- Worked examples (with and without drill library)
+- Drill library structure specification
+- API endpoint implementation
+- Testing checklist
+
+**Use this for:** Recommending specific drills based on weakest Flow Path
+
+**When to use:**
+- ✅ You have Momentum Transfer scores
+- ✅ You want drill recommendations
+- ✅ You need to know which Flow Path to work on
+- ✅ You have (optionally) a drill library to choose from
+
+---
+
+### 5. Mock Data for Testing
 **File:** `momentum-transfer-mock-data.json`  
 **Size:** Medium (~5 pages JSON)
 
@@ -105,7 +129,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 5. UI Copy Guide
+### 6. UI Copy Guide
 **File:** `momentum-transfer-ui-copy.md`  
 **Size:** Large (~10 pages)
 
@@ -124,7 +148,7 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 
 ---
 
-### 6. Integration Guide
+### 7. Integration Guide
 **File:** `momentum-transfer-integration-guide.md`  
 **Size:** Comprehensive (~20 pages)
 
@@ -164,11 +188,13 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
    docs/momentum-transfer-mock-data.json
    ```
 
-4. **Configure Both DeepAgent Skills**
+4. **Configure All Three DeepAgent Skills**
    - **Skill #1 (Data Interpreter):** `coach-rick-data-interpreter-prompt.md`
      - For raw swing data → coaching breakdown
    - **Skill #2 (Explainer):** `coach-rick-momentum-transfer-explainer-v2.md`
      - For pre-computed scores → conversational explanation
+   - **Skill #3 (Drill Recommender):** `coach-rick-drill-recommender-prompt.md`
+     - For drill recommendations based on weakest flow
 
 5. **Get UI Copy**
    ```
@@ -178,17 +204,22 @@ This is the **complete Momentum Transfer scoring and coaching system** for the B
 ### Quick Decision: Which Skill to Use?
 
 ```
-Do you have pre-computed scores?
+What do you need?
 │
-├─ YES → Use Skill #2 (Explainer)
-│         MomentumTransfer.Explainer
-│         Input: momentumTransferScore object
-│         Output: 5-section explanation
+├─ Raw swing data analysis
+│   → Skill #1 (Data Interpreter)
+│     Input: timing/sequence/stability metrics
+│     Output: 3-section coaching breakdown
 │
-└─ NO  → Use Skill #1 (Data Interpreter)
-          MomentumTransfer.DataInterpreter
-          Input: raw timing/sequence/stability metrics
-          Output: 3-section coaching breakdown
+├─ Explain pre-computed scores
+│   → Skill #2 (Explainer)
+│     Input: momentumTransferScore object
+│     Output: 5-section conversational explanation
+│
+└─ Drill recommendations
+    → Skill #3 (Drill Recommender)
+      Input: scores + optional drill library
+      Output: Focus + category + specific drills
 ```
 
 ---
@@ -272,6 +303,45 @@ const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
 3. 💪 Your Edge
 4. 🎯 Your Opportunity
 5. 🧠 Gameplan
+
+---
+
+#### Skill #3: Drill Recommender (Scores → Drill Recommendations)
+
+**Skill Name:** `MomentumTransfer.DrillRecommender`  
+**When to use:** Drill recommendations  
+**Output:** 3-section breakdown (Focus, Category, Drills)
+
+```typescript
+// When you need drill recommendations
+const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${process.env.ABACUSAI_API_KEY}`,
+  },
+  body: JSON.stringify({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: DRILL_RECOMMENDER_PROMPT,  // From coach-rick-drill-recommender-prompt.md
+      },
+      {
+        role: 'user',
+        content: `Recommend drills:\n\n${JSON.stringify(drillData, null, 2)}`,
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 400,
+  }),
+});
+```
+
+**Output Sections:**
+1. 🔍 Main Focus (energy leak explanation)
+2. 🏋️ Drill Category (Ground/Power/Barrel Flow)
+3. 🛠️ Drills (2-3 specific recommendations OR category-only)
 
 ---
 
@@ -508,9 +578,10 @@ GROUP BY weakest_flow;
 
 ✅ **Complete JSON schema** with detailed submetrics  
 ✅ **5 realistic mock examples** across all levels  
-✅ **2 DeepAgent skills** for different scenarios:
+✅ **3 DeepAgent skills** for complete coaching:
   - Skill #1: Data Interpreter (raw metrics → coaching)
-  - Skill #2: Explainer (scores → explanation)  
+  - Skill #2: Explainer (scores → explanation)
+  - Skill #3: Drill Recommender (scores → drill recommendations)  
 ✅ **All UI copy** for cards, tooltips, and CTAs  
 ✅ **Step-by-step integration guide**  
 ✅ **Flow Path Model™ branding** fully integrated  
@@ -531,6 +602,7 @@ docs/
 ├── momentum-transfer-scoring.md                         # JSON schema & types
 ├── coach-rick-data-interpreter-prompt.md               # Skill #1: Data Interpreter ⭐
 ├── coach-rick-momentum-transfer-explainer-v2.md        # Skill #2: Explainer ⭐
+├── coach-rick-drill-recommender-prompt.md              # Skill #3: Drill Recommender ⭐ NEW
 ├── momentum-transfer-mock-data.json                     # Test examples
 ├── momentum-transfer-ui-copy.md                         # UI text strings
 ├── momentum-transfer-integration-guide.md               # Implementation roadmap
@@ -545,7 +617,7 @@ docs/
 **Ready For:** DeepAgent integration, UI implementation, production deployment
 
 **Last Updated:** November 26, 2025  
-**Version:** 2.0 (Final)
+**Version:** 3.0 (Final - All 3 Skills)
 
 ---
 
