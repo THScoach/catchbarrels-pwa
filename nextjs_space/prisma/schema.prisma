@@ -1238,3 +1238,17 @@ model PlayerOnTheBallHistory {
   @@index([sessionDate])
   @@index([sourceType])
 }
+
+// Model Swing - Reference swings from pro players for comparison
+model ModelSwing {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  videoUrl      String?
+  jointData     Json
+  hitterName    String?
+  handedness    String?  // "right" | "left"
+  createdAt     DateTime @default(now())
+  
+  @@map("model_swings")
+}

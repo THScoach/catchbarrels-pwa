@@ -2,13 +2,21 @@
 
 import React, { useEffect, useRef } from "react";
 import type { JointFrame } from "@/lib/joints/types";
+import { findFrame, scaleModelToPlayer, drawSkeleton } from "@/lib/joints/compare";
 
 interface Props {
   videoRef: React.RefObject<HTMLVideoElement>;
-  frames: JointFrame[];
+  playerData: JointFrame[];
+  modelData?: JointFrame[];
+  showModel?: boolean;
 }
 
-export const JointOverlayCanvas: React.FC<Props> = ({ videoRef, frames }) => {
+export const JointOverlayCanvas: React.FC<Props> = ({ 
+  videoRef, 
+  playerData, 
+  modelData, 
+  showModel = false 
+}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Resize canvas to match video element
@@ -32,7 +40,7 @@ export const JointOverlayCanvas: React.FC<Props> = ({ videoRef, frames }) => {
   useEffect(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || frames.length === 0) return;
+    if (!video || !canvas || playerData.length === 0) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -42,41 +50,86 @@ export const JointOverlayCanvas: React.FC<Props> = ({ videoRef, frames }) => {
 
       const currentTimeMs = video.currentTime * 1000;
 
-      // Find the closest frame by timestamp
-      let closest = frames[0];
-      let minDiff = Math.abs(frames[0].timestamp - currentTimeMs);
+      // Find player frame
+      const playerFrame = findFrame(playerData, currentTimeMs);
 
-      for (const frame of frames) {
-        const diff = Math.abs(frame.timestamp - currentTimeMs);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closest = frame;
-        }
+      // Find and scale model frame if enabled
+      let scaledModelJoints: any[] = [];
+      if (showModel && modelData && modelData.length > 0) {
+        const modelFrame = findFrame(modelData, currentTimeMs);
+        scaledModelJoints = scaleModelToPlayer(playerFrame.joints, modelFrame.joints);
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw joints: simple circles
-      ctx.strokeStyle = "#E8B14E"; // BARRELS gold
+      // Convert joints to dictionary for skeleton drawing
+      const playerJointsDict: Record<string, any> = {};
+      const modelJointsDict: Record<string, any> = {};
+
+      for (const joint of playerFrame.joints) {
+        playerJointsDict[joint.name] = {
+          x: joint.x * canvas.width,
+          y: joint.y * canvas.height,
+          confidence: joint.confidence,
+        };
+      }
+
+      for (const joint of scaledModelJoints) {
+        modelJointsDict[joint.name] = {
+          x: joint.x * canvas.width,
+          y: joint.y * canvas.height,
+          confidence: joint.confidence,
+        };
+      }
+
+      // Draw model skeleton first (so player overlays on top)
+      if (showModel && scaledModelJoints.length > 0) {
+        // Draw model skeleton lines
+        drawSkeleton(ctx, modelJointsDict, "#89CFF0", 2); // Light blue
+        
+        // Draw model joints
+        ctx.fillStyle = "#89CFF0";
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 1;
+        
+        for (const joint of scaledModelJoints) {
+          if (joint.confidence > 0.3) {
+            const x = joint.x * canvas.width;
+            const y = joint.y * canvas.height;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw player skeleton
+      drawSkeleton(ctx, playerJointsDict, "#E8B14E", 3); // BARRELS gold, thicker
+      
+      // Draw player joints
       ctx.fillStyle = "#E8B14E";
+      ctx.strokeStyle = "#FFFFFF";
       ctx.lineWidth = 2;
 
-      for (const joint of closest.joints) {
-        const x = joint.x * canvas.width;
-        const y = joint.y * canvas.height;
+      for (const joint of playerFrame.joints) {
+        if (joint.confidence > 0.3) {
+          const x = joint.x * canvas.width;
+          const y = joint.y * canvas.height;
 
-        // Draw circle for each joint
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
 
-        // Optionally draw joint name
-        if (joint.confidence > 0.5) {
-          ctx.fillStyle = "white";
-          ctx.font = "10px sans-serif";
-          ctx.fillText(joint.name, x + 8, y - 8);
-          ctx.fillStyle = "#E8B14E";
+          // Optionally draw joint name for high confidence joints
+          if (joint.confidence > 0.7 && !showModel) {
+            ctx.fillStyle = "white";
+            ctx.font = "10px sans-serif";
+            ctx.fillText(joint.name, x + 8, y - 8);
+            ctx.fillStyle = "#E8B14E";
+          }
         }
       }
 
@@ -85,7 +138,7 @@ export const JointOverlayCanvas: React.FC<Props> = ({ videoRef, frames }) => {
 
     const id = requestAnimationFrame(render);
     return () => cancelAnimationFrame(id);
-  }, [videoRef, frames]);
+  }, [videoRef, playerData, modelData, showModel]);
 
   return (
     <canvas
