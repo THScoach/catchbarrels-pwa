@@ -371,7 +371,7 @@ export default function LoginClient() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleQuickLogin('admin@barrels.com', 'admin123', true)}
+                  onClick={() => handleQuickLogin('coach@catchbarrels.app', 'CoachBarrels2024!', true)}
                   disabled={loading}
                   className="text-xs border-[#F5A623]/30 text-[#F5A623] hover:bg-[#F5A623]/10 hover:border-[#F5A623]"
                 >

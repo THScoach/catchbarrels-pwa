@@ -35,9 +35,11 @@ Add these lines to your `.env` file in the `nextjs_space` directory:
 
 ```bash
 # Admin Credentials
-ADMIN_EMAIL="your-email@catchbarrels.app"
-ADMIN_PASSWORD="your-secure-password"
+ADMIN_EMAIL="coach@catchbarrels.app"
+ADMIN_PASSWORD="CoachBarrels2024!"
 ```
+
+**Note**: These are the production admin credentials. Keep them secure and do not share publicly.
 
 ### Step 2: Run the Admin Seed Script
 
