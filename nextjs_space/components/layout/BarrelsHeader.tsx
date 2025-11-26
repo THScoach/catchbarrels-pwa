@@ -50,10 +50,10 @@ export function BarrelsHeader() {
         >
           <div className="relative h-9 w-auto sm:h-10 flex-shrink-0">
             <Image
-              src="/assets/logos/momentum-transfer/logo-horizontal.png"
+              src="/assets/logos/momentum-transfer/logo-header.png"
               alt="CatchBarrels Momentum Transfer Logo"
               width={180}
-              height={40}
+              height={45}
               className="object-contain"
               priority
             />
