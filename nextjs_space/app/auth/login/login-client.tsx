@@ -160,6 +160,7 @@ export default function LoginClient() {
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-900/50">
                 <TabsTrigger 
                   value="athlete"
+                  onClick={() => setLoginMode('athlete')}
                   className="data-[state=active]:bg-[#F5A623] data-[state=active]:text-white"
                 >
                   <LogIn className="w-4 h-4 mr-2" />
@@ -167,6 +168,7 @@ export default function LoginClient() {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="admin"
+                  onClick={() => setLoginMode('admin')}
                   className="data-[state=active]:bg-[#F5A623] data-[state=active]:text-white"
                 >
                   <Shield className="w-4 h-4 mr-2" />

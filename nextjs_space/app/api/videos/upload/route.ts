@@ -28,6 +28,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Video type is required' }, { status: 400 });
     }
 
+    // Validate file type
+    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv', 'video/webm'];
+    if (!validTypes.includes(videoFile.type) && !videoFile.name.match(/\.(mp4|mov|avi|wmv|webm)$/i)) {
+      return NextResponse.json(
+        { error: 'Invalid file type. Please upload MP4, MOV, AVI, WMV, or WEBM files.' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file size (max 500MB)
+    const maxSize = 500 * 1024 * 1024;
+    if (videoFile.size > maxSize) {
+      return NextResponse.json(
+        { error: 'File too large. Maximum size is 500MB.' },
+        { status: 413 }
+      );
+    }
+
+    console.log(`[Video Upload] Starting upload for user ${(session.user as any).id}: ${videoFile.name}`);
+
     // Convert file to buffer
     const bytes = await videoFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -37,8 +57,18 @@ export async function POST(request: NextRequest) {
     const sanitizedName = videoFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileName = `videos/${timestamp}-${sanitizedName}`;
 
-    // Upload to S3
-    const cloudStoragePath = await uploadFile(buffer, fileName);
+    // Upload to S3 with error handling
+    let cloudStoragePath: string;
+    try {
+      cloudStoragePath = await uploadFile(buffer, fileName);
+      console.log(`[Video Upload] S3 upload successful: ${cloudStoragePath}`);
+    } catch (s3Error) {
+      console.error('[Video Upload] S3 upload failed:', s3Error);
+      return NextResponse.json(
+        { error: 'Failed to upload video to storage. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     // Create video record in database
     const video = await prisma.video.create({
@@ -127,16 +157,30 @@ export async function POST(request: NextRequest) {
             coachFeedback: `Nice swing! Your ${metricNames[strongestMetric]} is your strongest component. Keep working on consistency across all three areas.`,
           },
         });
+        
+        console.log(`[Video Upload] Analysis complete for video ${video.id}`);
       } catch (error) {
         console.error('Error updating video analysis:', error);
       }
     }, 5000); // 5 seconds to simulate processing time
 
-    return NextResponse.json({ video, message: 'Video uploaded successfully' }, { status: 200 });
-  } catch (error) {
-    console.error('Video upload error:', error);
+    // Return video with id at top level for easier client parsing
     return NextResponse.json(
-      { error: 'Failed to upload video' },
+      { 
+        id: video.id,
+        videoId: video.id, // Backwards compatibility
+        video,
+        message: 'Video uploaded successfully'
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error('[Video Upload] Error:', error);
+    
+    // Return more specific error message
+    const errorMessage = error?.message || 'Failed to upload video';
+    return NextResponse.json(
+      { error: errorMessage, details: 'Please check your file and try again.' },
       { status: 500 }
     );
   }
