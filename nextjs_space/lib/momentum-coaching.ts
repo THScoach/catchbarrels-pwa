@@ -1,16 +1,25 @@
 /**
  * Momentum Transfer Coaching Explanations
  * 
+ * BARRELS Flow Path Model™:
+ * - Ground Flow (Ground → Hips)
+ * - Power Flow (Hips → Torso)
+ * - Barrel Flow (Torso → Barrel)
+ * 
  * Generates simple, actionable coaching text based on momentum transfer scores.
  * Logic designed by Coach Rick for the BARRELS app.
  */
 
 export interface MomentumScores {
   momentumTransferScore: number;      // 0-100
-  anchorScore: number;                // 0-100
-  engineScore: number;                // 0-100
-  whipScore: number;                  // 0-100
+  groundFlowScore: number;            // 0-100 (Ground → Hips)
+  powerFlowScore: number;             // 0-100 (Hips → Torso)
+  barrelFlowScore: number;            // 0-100 (Torso → Barrel)
   goatyBandLabel: string;             // "Elite", "Advanced", etc.
+  // Legacy field names for backward compatibility
+  anchorScore?: number;
+  engineScore?: number;
+  whipScore?: number;
 }
 
 export interface CoachingExplanation {
@@ -24,7 +33,22 @@ export interface CoachingExplanation {
  * Generate coaching explanation based on momentum transfer scores
  */
 export function generateMomentumCoaching(scores: MomentumScores): CoachingExplanation {
-  const { momentumTransferScore, anchorScore, engineScore, whipScore, goatyBandLabel } = scores;
+  const { 
+    momentumTransferScore, 
+    groundFlowScore, 
+    powerFlowScore, 
+    barrelFlowScore, 
+    goatyBandLabel,
+    // Fallback to legacy names if new ones aren't provided
+    anchorScore,
+    engineScore,
+    whipScore
+  } = scores;
+  
+  // Use new field names, with fallback to legacy
+  const ground = groundFlowScore ?? anchorScore ?? 0;
+  const power = powerFlowScore ?? engineScore ?? 0;
+  const barrel = barrelFlowScore ?? whipScore ?? 0;
   
   // Step 1: Overall line based on MTS
   let overallLine = '';
@@ -42,10 +66,10 @@ export function generateMomentumCoaching(scores: MomentumScores): CoachingExplan
   }
   
   // Step 2: Identify where the main leak is
-  const leaks: Array<{ zone: 'anchor' | 'engine' | 'whip'; score: number; gap: number }> = [
-    { zone: 'anchor', score: anchorScore, gap: momentumTransferScore - anchorScore },
-    { zone: 'engine', score: engineScore, gap: momentumTransferScore - engineScore },
-    { zone: 'whip', score: whipScore, gap: momentumTransferScore - whipScore },
+  const leaks: Array<{ zone: 'groundFlow' | 'powerFlow' | 'barrelFlow'; score: number; gap: number }> = [
+    { zone: 'groundFlow', score: ground, gap: momentumTransferScore - ground },
+    { zone: 'powerFlow', score: power, gap: momentumTransferScore - power },
+    { zone: 'barrelFlow', score: barrel, gap: momentumTransferScore - barrel },
   ];
   
   // Sort by largest gap (biggest leak)
@@ -58,24 +82,24 @@ export function generateMomentumCoaching(scores: MomentumScores): CoachingExplan
   const mainLeak = leaks[0];
   if (mainLeak.gap >= 10) {
     switch (mainLeak.zone) {
-      case 'anchor':
-        leakLine = "Your lower body is late or unstable, so the hips can't pass clean energy up the chain.";
+      case 'groundFlow':
+        leakLine = "Your ground flow is inconsistent—the lower body isn't holding or loading long enough for clean hip initiation.";
         nextStep = "Next step: Learn to **load into the ground and hold it** so your hips can fire at the right time.";
         break;
         
-      case 'engine':
-        leakLine = "Your core is not fully picking up what the hips start. You're either dumping the torso early or not rotating through.";
+      case 'powerFlow':
+        leakLine = "Your power flow has a leak—the core isn't fully accepting what the hips started. You're either dumping early or spinning flat.";
         nextStep = "Next step: Learn to **let the hips start and the torso follow**, instead of everything spinning together.";
         break;
         
-      case 'whip':
-        leakLine = "The barrel isn't catching the wave of energy. Your hands and bat are either too early, too late, or off path.";
-        nextStep = "Next step: Learn to **let the barrel snap late**, so you catch the energy instead of muscling it.";
+      case 'barrelFlow':
+        leakLine = "Your barrel flow is mistimed—the hands and bat aren't catching the wave of energy from the core.";
+        nextStep = "Next step: Learn to **let the barrel snap late**, so it catches the energy instead of forcing it.";
         break;
     }
   } else {
     // No major leak - everything is balanced
-    leakLine = "Your energy flow through Anchor → Engine → Whip is balanced.";
+    leakLine = "Your energy flow through Ground Flow → Power Flow → Barrel Flow is balanced.";
     nextStep = "Next step: Focus on **consistency** and let the pattern settle in with reps.";
   }
   

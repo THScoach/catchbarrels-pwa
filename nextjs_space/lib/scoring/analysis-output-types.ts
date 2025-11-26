@@ -1,6 +1,11 @@
 /**
  * TypeScript interfaces for the standardized Momentum Transfer JSON output
  * 
+ * BARRELS Flow Path Model™:
+ * - Ground Flow (Ground → Hips)
+ * - Power Flow (Hips → Torso)
+ * - Barrel Flow (Torso → Barrel)
+ * 
  * This is the data contract between:
  * - Scoring engine (newScoringEngine.ts)
  * - UI components (MomentumTransferCard)
@@ -26,7 +31,7 @@ export interface MomentumTransferScore {
 
 export interface SubScore {
   score: number;              // 0-100
-  label: string;              // e.g., "Ground → Hips"
+  label: string;              // e.g., "Ground Flow" or "Power Flow"
   leakSeverity: LeakSeverity;
 }
 
@@ -43,9 +48,12 @@ export interface TimingData {
 }
 
 export interface FlagsData {
-  mainLeak: 'anchor' | 'engine' | 'whip' | 'none';
-  secondaryLeak: 'anchor' | 'engine' | 'whip' | null;
+  mainLeak: 'groundFlow' | 'powerFlow' | 'barrelFlow' | 'none';
+  secondaryLeak: 'groundFlow' | 'powerFlow' | 'barrelFlow' | null;
   sequenceBroken: boolean;
+  // Legacy field names for backward compatibility
+  mainLeakLegacy?: 'anchor' | 'engine' | 'whip' | 'none';
+  secondaryLeakLegacy?: 'anchor' | 'engine' | 'whip' | null;
 }
 
 export interface CoachSummary {
@@ -59,9 +67,13 @@ export interface MomentumTransferAnalysis {
   athlete: AthleteInfo;
   scores: {
     momentumTransfer: MomentumTransferScore;
-    anchor: SubScore;
-    engine: SubScore;
-    whip: SubScore;
+    groundFlow: SubScore;      // NEW: Ground → Hips
+    powerFlow: SubScore;       // NEW: Hips → Torso
+    barrelFlow: SubScore;      // NEW: Torso → Barrel
+    // Legacy field names for backward compatibility
+    anchor?: SubScore;
+    engine?: SubScore;
+    whip?: SubScore;
   };
   timing: TimingData;
   flags: FlagsData;

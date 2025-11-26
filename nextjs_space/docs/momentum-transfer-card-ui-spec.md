@@ -1,385 +1,455 @@
 # Momentum Transfer Card — UI Specification
-
-**Version:** 1.0  
-**Last Updated:** November 26, 2024
+## BARRELS Flow Path Model™
 
 ---
 
 ## Overview
 
-The **Momentum Transfer Card** is the primary visual component for displaying swing analysis results in the BARRELS app. It shows the Momentum Transfer Score (the master metric) along with Anchor/Engine/Whip sub-scores and AI-generated coaching feedback.
+The **Momentum Transfer Card** is the primary visual representation of swing quality in the BARRELS app. It displays:
+
+1. **Momentum Transfer Score** (0-100) — the master metric
+2. **Flow Path Breakdown** — Ground Flow, Power Flow, Barrel Flow
+3. **Leak Indicators** — visual severity markers for energy leaks
+4. **Coaching Summary** — AI-generated explanation from Coach Rick
+
+This document defines the exact layout, microcopy, JSON-to-UI mapping, and integration instructions.
 
 ---
 
-## 1. Visual Layout
+## BARRELS Flow Path Model™
 
-The card appears at the **TOP** of every swing report, above detailed metrics and drill recommendations.
+The BARRELS system measures energy transfer through three phases:
+
+### **Ground Flow** (Ground → Hips)
+- How well the lower body loads and initiates momentum
+- Weight: 15% of final score
+- Visual Color: Electric Gold
+
+### **Power Flow** (Hips → Torso)
+- How well the core accepts and amplifies hip energy
+- Weight: 15% of final score
+- Visual Color: Electric Blue
+
+### **Barrel Flow** (Torso → Barrel)
+- How well the arms/bat receive and release energy
+- Weight: 10% of final score
+- Visual Color: Green
+
+### **Momentum Transfer Score**
+- Master metric combining all three flows
+- Weight: 60% of final score
+- Measures timing, sequencing, and overall energy flow quality
+
+---
+
+## Card Layout
 
 ```
-┌──────────────────────────────────────────────┐
-│ ⚡ MOMENTUM TRANSFER          [Advanced]     │
-│                                              │
-│   87                                         │
-│   How cleanly energy passes Ground→Barrel    │
-│                                              │
-│   Anchor  ▓▓▓▓▓░░░░░  72  (Ground → Hips)   │
-│   Engine  ▓▓▓▓▓▓▓▓▓░  90  (Hips → Torso)    │
-│   Whip    ▓▓▓▓▓▓▓▓░░  85  (Torso → Barrel)  │
-│                                              │
-│   "Your energy flows well, with a small leak │
-│    in the lower half."                       │
-└──────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│  ⚡ MOMENTUM TRANSFER         [Elite]       │  ← Header + Badge
+│                                             │
+│     94                                      │  ← Main Score (huge)
+│     How cleanly your swing passes energy    │  ← Subtitle
+│     Ground → Hips → Torso → Barrel          │
+│                                             │
+│  Ground Flow  ████████████████  92          │  ← Sub-score bar
+│  Power Flow   ████████████████  96          │
+│  Barrel Flow  ████████████████  93          │
+│                                             │
+│  "Your momentum transfer is elite. Energy   │  ← Coach Rick summary
+│   flows cleanly from ground contact through │
+│   power generation into barrel release."    │
+└─────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Component Props (TypeScript)
+## 1. Header Section
 
-```typescript
-import type { MomentumTransferAnalysis } from '@/lib/scoring/analysis-output-types';
+### Title
+- **Text:** "Momentum Transfer"
+- **Icon:** ⚡ Zap (lucide-react)
+- **Style:** 
+  - Font: `text-lg font-bold uppercase tracking-wide`
+  - Color: `text-white`
 
-interface MomentumTransferCardProps {
-  analysis: MomentumTransferAnalysis;  // Full JSON structure
-  showCoaching?: boolean;              // Show AI-generated coaching text
-  showTimingDetails?: boolean;         // Show expandable timing section
-}
+### Band Badge (Right Side)
+- **Position:** Top-right of card
+- **Style:** 
+  - `px-3 py-1 rounded-full`
+  - `bg-gradient-to-r {bandColor}`
+  - `text-white text-sm font-bold shadow-lg`
+
+#### Band Colors (based on goatyBand -3 to +3)
+- **Elite** (≥3): `from-green-500 to-emerald-600`
+- **Advanced** (≥2): `from-barrels-gold to-barrels-gold-light`
+- **Above Average** (≥1): `from-blue-500 to-blue-600`
+- **Average** (≥0): `from-gray-400 to-gray-500`
+- **Below Average** (≥-1): `from-orange-500 to-orange-600`
+- **Poor/Needs Work** (<-1): `from-red-500 to-red-600`
+
+---
+
+## 2. Main Score Display
+
+### Score Number
+- **Value:** `momentumTransfer.score` (0-100)
+- **Style:** 
+  - Font: `text-7xl font-black`
+  - Color: `text-white`
+  - Animation: Scale in from 0.8 to 1.0 (0.6s delay)
+
+### Subtitle
+- **Text:** "How cleanly your swing passes energy Ground → Hips → Torso → Barrel"
+- **Style:**
+  - Font: `text-sm`
+  - Color: `text-gray-400`
+
+---
+
+## 3. Flow Path Sub-Scores
+
+Each sub-score includes:
+- Label + description
+- Leak severity indicator (🔥)
+- Score value
+- Progress bar
+
+### Ground Flow
+```
+Ground Flow    (Ground → Hips)    🔥🔥    72
+████████░░░░░░░░░░░░░░░░░░░░░░
 ```
 
-### Full Data Structure:
+- **Label:** "Ground Flow"
+- **Description:** "(Ground → Hips)"
+- **Leak Indicator:** Flame icons based on severity
+  - `none`: No flames
+  - `mild`: 🔥 (yellow)
+  - `moderate`: 🔥🔥 (orange)
+  - `severe`: 🔥🔥🔥 (red)
+- **Score:** `groundFlow.score` (right-aligned, bold)
+- **Bar Color:**
+  - Default: `from-barrels-gold to-barrels-gold-light`
+  - If main leak: Red/orange/yellow gradient based on severity
 
+### Power Flow
+```
+Power Flow     (Hips → Torso)              90
+████████████████████████████████░░░░░░
+```
+
+- **Label:** "Power Flow"
+- **Description:** "(Hips → Torso)"
+- **Bar Color:**
+  - Default: `from-barrels-blue to-blue-500`
+  - If main leak: Red/orange/yellow gradient
+
+### Barrel Flow
+```
+Barrel Flow    (Torso → Barrel)   🔥       85
+████████████████████████████░░░░░░░░
+```
+
+- **Label:** "Barrel Flow"
+- **Description:** "(Torso → Barrel)"
+- **Bar Color:**
+  - Default: `from-green-500 to-green-600`
+  - If main leak: Red/orange/yellow gradient
+
+### Main Leak Highlight
+- If `flags.mainLeak === 'groundFlow' | 'powerFlow' | 'barrelFlow'`:
+  - Container background: `bg-red-950/20`
+  - Border: `border border-red-500/30`
+
+---
+
+## 4. Coaching Summary
+
+Displayed only if `showCoaching={true}` (default: true)
+
+### Layout
+- **Container:** 
+  - `bg-barrels-black-light/50 rounded-lg p-4`
+  - `border border-barrels-gold/10`
+- **Content:**
+  - 3 text lines (overall, leak, nextStep)
+  - `text-sm text-gray-300`
+  - Next step in `text-barrels-gold font-semibold`
+
+### Example
+```
+Your momentum transfer is 68, which is average. You're creating 
+speed, but there's still power left on the table as energy moves 
+through your body.
+
+The biggest leak is in your ground flow. Your base doesn't hold 
+long enough for the hips to start the chain, so the upper body 
+has to help too much.
+
+Next step: Learn to load into the ground and hold it so the hips 
+can fire first and everything else can follow.
+```
+
+---
+
+## 5. JSON to UI Mapping
+
+### Input Data Structure
 ```typescript
 interface MomentumTransferAnalysis {
   videoId: string;
-  athlete: {
-    name: string;
-    level: 'MLB' | 'College' | 'HS' | 'Youth';
-    age: number;
-    bats: 'R' | 'L' | 'S';
-    throws: 'R' | 'L' | 'S';
-  };
+  athlete: AthleteInfo;
   scores: {
     momentumTransfer: {
-      score: number;              // 0-100
-      goatyBand: number;          // -3 to +3
-      goatyLabel: string;         // "Elite", "Advanced", etc.
+      score: number;              // 0-100 → Main score display
+      goatyBand: number;          // -3 to +3 → Badge color
+      goatyLabel: string;         // → Badge text
       confidence: number;         // 0.0-1.0
     };
-    anchor: {
-      score: number;              // 0-100
-      label: string;              // "Ground → Hips"
-      leakSeverity: 'none' | 'mild' | 'moderate' | 'severe';
+    groundFlow: {
+      score: number;              // 0-100 → Sub-score value
+      label: string;              // "Ground Flow"
+      leakSeverity: LeakSeverity; // → 🔥 indicator
     };
-    engine: {
+    powerFlow: {
       score: number;
-      label: string;              // "Hips → Torso"
-      leakSeverity: 'none' | 'mild' | 'moderate' | 'severe';
+      label: string;              // "Power Flow"
+      leakSeverity: LeakSeverity;
     };
-    whip: {
+    barrelFlow: {
       score: number;
-      label: string;              // "Torso → Barrel"
-      leakSeverity: 'none' | 'mild' | 'moderate' | 'severe';
+      label: string;              // "Barrel Flow"
+      leakSeverity: LeakSeverity;
     };
   };
-  timing: {
-    abRatio: number;
-    loadDurationMs: number;
-    swingDurationMs: number;
-    sequenceOrder: string[];
-    segmentGapsMs: {
-      pelvisToTorso: number;
-      torsoToHands: number;
-      handsToBat: number;
-    };
-  };
+  timing: TimingData;             // Optional, for timing tab
   flags: {
-    mainLeak: 'anchor' | 'engine' | 'whip' | 'none';
-    secondaryLeak: 'anchor' | 'engine' | 'whip' | null;
+    mainLeak: 'groundFlow' | 'powerFlow' | 'barrelFlow' | 'none';
+    secondaryLeak: 'groundFlow' | 'powerFlow' | 'barrelFlow' | null;
     sequenceBroken: boolean;
   };
   coachSummary: {
-    overall: string;              // 1-2 sentences about MTS
-    leak: string;                 // 1-2 sentences about leak location
-    nextStep: string;             // 1 sentence with actionable focus
+    overall: string;              // → First paragraph
+    leak: string;                 // → Second paragraph
+    nextStep: string;             // → Final sentence (gold)
   };
 }
 ```
 
----
+### UI Mapping Rules
 
-## 3. UI Elements & Mapping
-
-### 3.1 Header Section
-
-| UI Element | JSON Path | Example Value |
-|------------|-----------|---------------|
-| Icon | Static | ⚡ (Zap icon) |
-| Title | Static | "MOMENTUM TRANSFER" |
-| Badge | `scores.momentumTransfer.goatyLabel` | "Advanced" |
-| Badge Color | Based on `scores.momentumTransfer.goatyBand` | Gold gradient |
-
-### 3.2 Main Score Display
-
-| UI Element | JSON Path | Example Value |
-|------------|-----------|---------------|
-| Score Number | `scores.momentumTransfer.score` | 87 |
-| Subtitle | Static | "How cleanly your swing passes energy Ground → Hips → Torso → Barrel" |
-
-### 3.3 Sub-Scores (Anchor/Engine/Whip)
-
-| UI Element | JSON Path | Example Value |
-|------------|-----------|---------------|
-| Anchor Score | `scores.anchor.score` | 72 |
-| Anchor Label | `scores.anchor.label` | "Ground → Hips" |
-| Anchor Bar | Progress bar (0-100%) | 72% filled |
-| Anchor Leak | `scores.anchor.leakSeverity` | 🔥 (1 flame) |
-| Engine Score | `scores.engine.score` | 90 |
-| Engine Label | `scores.engine.label` | "Hips → Torso" |
-| Whip Score | `scores.whip.score` | 85 |
-| Whip Label | `scores.whip.label` | "Torso → Barrel" |
-
-### 3.4 Leak Indicators
-
-Use `leakSeverity` to show flame emojis:
-
-- **none**: No indicator
-- **mild**: 🔥 (1 flame, yellow)
-- **moderate**: 🔥🔥 (2 flames, orange)
-- **severe**: 🔥🔥🔥 (3 flames, red)
-
-Highlight the **main leak** with a red border around the sub-score card.
-
-### 3.5 Coaching Text
-
-| UI Element | JSON Path | Example Value |
-|------------|-----------|---------------|
-| Overall | `coachSummary.overall` | "Your momentum transfer is 87, which is advanced..." |
-| Leak | `coachSummary.leak` | "The lower body is late or unstable..." |
-| Next Step | `coachSummary.nextStep` | "Next step: Learn to load into the ground..." |
+1. **Main Score:** `momentumTransfer.score` → Display as integer
+2. **Badge:**
+   - Text: `momentumTransfer.goatyLabel`
+   - Color: Use `goatyBand` to determine gradient
+3. **Ground Flow:**
+   - Score: `groundFlow.score`
+   - Bar width: `${groundFlow.score}%`
+   - Leak indicator: `groundFlow.leakSeverity` → 0-3 flames
+   - Highlight: If `flags.mainLeak === 'groundFlow'`
+4. **Power Flow:** Same mapping as Ground Flow
+5. **Barrel Flow:** Same mapping as Ground Flow
+6. **Coaching Summary:**
+   - Line 1: `coachSummary.overall`
+   - Line 2: `coachSummary.leak`
+   - Line 3 (gold): `coachSummary.nextStep`
 
 ---
 
-## 4. Color Rules (GOATY Bands)
+## 6. Visual Examples
 
-Badge and accent colors based on `goatyBand` (-3 to +3):
+### Elite MLB Swing (Ohtani - 94)
+```
+┌─────────────────────────────────────────────┐
+│  ⚡ MOMENTUM TRANSFER           [Elite] 🟢  │
+│                                             │
+│     94                                      │
+│     How cleanly energy flows Ground→Barrel  │
+│                                             │
+│  Ground Flow  ████████████████  92          │
+│  Power Flow   ████████████████  96          │
+│  Barrel Flow  ████████████████  93          │
+│                                             │
+│  "Your momentum transfer is elite. Energy   │
+│   flows cleanly from ground contact through │
+│   power generation into barrel release."    │
+└─────────────────────────────────────────────┘
+```
 
-| Band | Label | Color | Tailwind Classes |
-|------|-------|-------|------------------|
-| +3 | Elite | Green | `from-green-500 to-emerald-600` |
-| +2 | Advanced | Gold | `from-barrels-gold to-barrels-gold-light` |
-| +1 | Above Average | Blue | `from-blue-500 to-blue-600` |
-| 0 | Average | Gray | `from-gray-400 to-gray-500` |
-| -1 | Below Average | Orange | `from-orange-500 to-orange-600` |
-| -2, -3 | Poor/Needs Work | Red | `from-red-500 to-red-600` |
+### Youth Swing with Ground Flow Leak (Jalen - 68)
+```
+┌─────────────────────────────────────────────┐
+│  ⚡ MOMENTUM TRANSFER         [Average] ⚪   │
+│                                             │
+│     68                                      │
+│     How cleanly energy flows Ground→Barrel  │
+│                                             │
+│  🔴 Ground Flow  ████████░░  61  🔥🔥  ← LEAK
+│  Power Flow   ████████████░  73  🔥         │
+│  Barrel Flow  ████████████░  71             │
+│                                             │
+│  "Your momentum transfer is 68 (average).   │
+│   The biggest leak is in ground flow—your   │
+│   base doesn't hold long enough for clean   │
+│   power flow. Next step: Load into the      │
+│   ground and hold it."                      │
+└─────────────────────────────────────────────┘
+```
 
 ---
 
-## 5. Usage Example
+## 7. Integration Instructions
 
-### In a Video Analysis Page:
+### Installation
+```bash
+cd /home/ubuntu/barrels_pwa/nextjs_space
+yarn add framer-motion lucide-react
+```
 
-```tsx
+### Import Component
+```typescript
 import { MomentumTransferCard } from '@/components/momentum-transfer-card';
-
-export default async function VideoAnalysisPage({ params }: { params: { id: string } }) {
-  // Fetch analysis data from API
-  const response = await fetch(`/api/videos/${params.id}/analysis-summary`);
-  const analysis = await response.json();
-  
-  return (
-    <div className="max-w-2xl mx-auto p-4">
-      <MomentumTransferCard 
-        analysis={analysis}
-        showCoaching={true}
-        showTimingDetails={true}
-      />
-      
-      {/* Other analysis components below... */}
-    </div>
-  );
-}
+import type { MomentumTransferAnalysis } from '@/lib/scoring/analysis-output-types';
 ```
 
----
-
-## 6. API Integration
-
-### Endpoint: `GET /api/videos/[id]/analysis-summary`
-
-Returns the full `MomentumTransferAnalysis` JSON structure.
-
-**Example Response:**
-
-```json
-{
-  "videoId": "mlb_ohtani_hr_01",
-  "athlete": {
-    "name": "Shohei Ohtani",
-    "level": "MLB",
-    "age": 30,
-    "bats": "L",
-    "throws": "R"
+### Usage
+```tsx
+const analysis: MomentumTransferAnalysis = {
+  videoId: "video_123",
+  athlete: {
+    name: "Jalen",
+    level: "Youth",
+    age: 14,
+    bats: "R",
+    throws: "R"
   },
-  "scores": {
-    "momentumTransfer": {
-      "score": 94,
-      "goatyBand": 3,
-      "goatyLabel": "Elite",
-      "confidence": 0.93
+  scores: {
+    momentumTransfer: {
+      score: 68,
+      goatyBand: 0,
+      goatyLabel: "Average",
+      confidence: 0.86
     },
-    "anchor": {
-      "score": 92,
-      "label": "Ground → Hips",
-      "leakSeverity": "none"
+    groundFlow: {
+      score: 61,
+      label: "Ground Flow",
+      leakSeverity: "moderate"
     },
-    "engine": {
-      "score": 96,
-      "label": "Hips → Torso",
-      "leakSeverity": "none"
+    powerFlow: {
+      score: 73,
+      label: "Power Flow",
+      leakSeverity: "mild"
     },
-    "whip": {
-      "score": 93,
-      "label": "Torso → Barrel",
-      "leakSeverity": "none"
+    barrelFlow: {
+      score: 71,
+      label: "Barrel Flow",
+      leakSeverity: "mild"
     }
   },
-  "timing": {
-    "abRatio": 1.37,
-    "loadDurationMs": 212,
-    "swingDurationMs": 155,
-    "sequenceOrder": ["pelvis", "torso", "hands", "bat"],
-    "segmentGapsMs": {
-      "pelvisToTorso": 38,
-      "torsoToHands": 43,
-      "handsToBat": 26
-    }
+  timing: { /* ... */ },
+  flags: {
+    mainLeak: "groundFlow",
+    secondaryLeak: "powerFlow",
+    sequenceBroken: false
   },
-  "flags": {
-    "mainLeak": "none",
-    "secondaryLeak": null,
-    "sequenceBroken": false
-  },
-  "coachSummary": {
-    "overall": "Your momentum transfer is 94, which is elite. The energy flows from the ground, through your body, into the barrel with almost no leaks.",
-    "leak": "There's no major leak here – the lower body, core, and barrel are all playing in the right order.",
-    "nextStep": "The focus at this level is tiny refinements and repeating this pattern under different speeds and pitch types."
+  coachSummary: {
+    overall: "Your momentum transfer is 68, which is average.",
+    leak: "The biggest leak is in your ground flow.",
+    nextStep: "Next step: Load into the ground and hold it."
   }
+};
+
+// Render
+<MomentumTransferCard 
+  analysis={analysis}
+  showCoaching={true}
+  showTimingDetails={false}
+/>
+```
+
+---
+
+## 8. Props API
+
+```typescript
+interface MomentumTransferCardProps {
+  analysis: MomentumTransferAnalysis;  // Required: Full analysis data
+  showCoaching?: boolean;              // Optional: Show coaching text (default: true)
+  showTimingDetails?: boolean;         // Optional: Show expandable timing tab (default: false)
 }
 ```
 
 ---
 
-## 7. Coach Rick AI Integration
+## 9. Backward Compatibility
 
-The `coachSummary` field is generated by Coach Rick AI using the `/api/coach-rick` endpoint.
+The system supports legacy field names for a transition period:
 
-### How It Works:
+### Legacy Mapping
+- `anchor` → `groundFlow`
+- `engine` → `powerFlow`
+- `whip` → `barrelFlow`
 
-1. Scoring engine produces raw scores (Momentum Transfer, Anchor, Engine, Whip)
-2. `formatAnalysisOutput()` in `lib/scoring/analysis-output.ts` calls `generateMomentumCoaching()`
-3. Coaching logic identifies the main leak and generates 3-part explanation
-4. Result is stored in `coachSummary` field
-5. UI displays the coaching text directly
+### Component Logic
+```typescript
+const ground = groundFlow || anchor;  // Use new, fallback to legacy
+const power = powerFlow || engine;
+const barrel = barrelFlow || whip;
+```
 
-**3-Part Structure:**
-
-1. **Overall**: Explain the Momentum Transfer score in 1-2 sentences
-2. **Leak**: Identify where energy is lost (Anchor/Engine/Whip)
-3. **Next Step**: One simple focus for the next rep (no drill names)
-
----
-
-## 8. Responsive Design
-
-- **Mobile (< 640px)**: Single column, full-width bars
-- **Tablet (640-1024px)**: Slightly larger text, more spacing
-- **Desktop (> 1024px)**: Max width 700px, centered
+Both old and new field names work, but new implementations should use **Ground Flow / Power Flow / Barrel Flow** terminology.
 
 ---
 
-## 9. Animations
+## 10. Color Palette Reference
 
-- **Card entry**: Fade in + slide up (0.5s duration)
-- **Score counter**: Count up animation (0.8s duration)
-- **Progress bars**: Fill from left to right with stagger (0.8s total)
-- **Coaching text**: Fade in after bars complete (0.8s delay)
+### BARRELS Theme Colors
+- **Electric Gold:** `#E8B14E` (`barrels-gold`)
+- **Gold Light:** `#F2C26B` (`barrels-gold-light`)
+- **Electric Blue:** `#3B9FE8` (`barrels-blue`)
+- **Pure Black:** `#000000` (`barrels-black`)
+- **Black Light:** `#2A2A2A` (`barrels-black-light`)
 
----
-
-## 10. Accessibility
-
-- All colors meet WCAG AA contrast standards (4.5:1 minimum)
-- Progress bars include `aria-valuenow`, `aria-valuemin`, `aria-valuemax`
-- Coaching text is semantic HTML (`<p>` tags)
-- Keyboard navigation supported (expandable timing section)
+### Status Colors
+- **Success/Elite:** Green (`from-green-500 to-emerald-600`)
+- **Warning/Leak:** Orange → Yellow → Red (based on severity)
+- **Neutral:** Gray (`from-gray-400 to-gray-500`)
 
 ---
 
-## 11. Testing Checklist
+## 11. Animations
 
-### Visual Tests:
-- [ ] Card displays correctly on mobile (< 640px)
-- [ ] Card displays correctly on desktop (> 1024px)
-- [ ] All GOATY band colors render correctly (Elite, Advanced, Average, etc.)
-- [ ] Leak indicators show correct number of flames
-- [ ] Main leak has red border highlight
-- [ ] Progress bars fill to correct percentages
-- [ ] Coaching text is readable and wraps properly
+All animations use `framer-motion`:
 
-### Functional Tests:
-- [ ] Timing details expand/collapse on button click
-- [ ] All scores display correct values from API
-- [ ] Coach summary text matches mock data
-- [ ] No console errors or warnings
-- [ ] TypeScript compiles without errors
-
-### Edge Cases:
-- [ ] Score = 0 (should show empty bar)
-- [ ] Score = 100 (should show full bar)
-- [ ] All leakSeverity = "none" (no flame icons)
-- [ ] All leakSeverity = "severe" (3 flames each)
-- [ ] sequenceBroken = true (should show warning)
-- [ ] Missing athlete data (graceful degradation)
+1. **Card Entry:** Fade in + slide up (0.5s)
+2. **Main Score:** Scale from 0.8 to 1.0 (0.6s, 0.2s delay)
+3. **Sub-score Bars:** Width from 0% to actual% (0.8s, staggered 0.3-0.5s)
+4. **Coaching Summary:** Fade in (0.8s delay)
 
 ---
 
-## 12. File References
+## 12. Accessibility
 
-| File | Purpose |
-|------|----------|
-| `/components/momentum-transfer-card.tsx` | Main UI component |
-| `/lib/scoring/analysis-output-types.ts` | TypeScript interfaces |
-| `/lib/scoring/analysis-output.ts` | Output formatting logic |
-| `/lib/momentum-coaching.ts` | Coaching text generation |
-| `/app/api/videos/[id]/analysis-summary/route.ts` | API endpoint |
-| `/app/api/coach-rick/route.ts` | Coach Rick AI endpoint |
-
----
-
-## 13. Future Enhancements
-
-- [ ] Add "Compare to Previous" button
-- [ ] Show historical trend (Momentum Transfer over time)
-- [ ] Add "Ask Coach Rick" inline chat button
-- [ ] Show drill recommendations based on main leak
-- [ ] Add video overlay showing leak location on skeleton
-- [ ] Export report as PDF
+- Minimum contrast ratios meet WCAG AA standards
+- Flame icons paired with numerical scores for colorblind users
+- Progress bars include aria-labels with current percentage
+- All interactive elements keyboard-accessible
 
 ---
 
 ## Summary
 
-The Momentum Transfer Card is a production-ready component that displays swing analysis results in a clear, mobile-friendly format. It integrates seamlessly with the scoring engine, Coach Rick AI, and the BARRELS design system.
+This UI spec defines the **Momentum Transfer Card** for the BARRELS app using the proprietary **Flow Path Model™**:
 
-**Key Features:**
-- ✅ Standardized JSON structure
-- ✅ GOATY band color coding
-- ✅ Leak severity indicators
-- ✅ AI-generated coaching feedback
-- ✅ Expandable timing details
-- ✅ Responsive design
-- ✅ WCAG AA accessible
-- ✅ TypeScript type-safe
+- **Ground Flow** (lower body initiation)
+- **Power Flow** (core transfer)
+- **Barrel Flow** (hands/bat release)
 
----
+The card provides:
+- Clear visual hierarchy (score → sub-scores → coaching)
+- Leak severity indicators (🔥)
+- AI-generated coaching explanations
+- Backward compatibility with legacy terms
 
-**Questions?** Contact the development team or refer to the implementation files listed above.
+**Result:** A unique, brandable system that no other swing analysis platform uses. 🎯⚾

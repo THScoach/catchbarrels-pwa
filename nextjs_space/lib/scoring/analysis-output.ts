@@ -12,6 +12,17 @@ export type HandednessValue = 'R' | 'L' | 'S';
 export type GoatyLabel = 'Elite' | 'Advanced' | 'Above Average' | 'Average' | 'Below Average' | 'Needs Work';
 export type LeakSeverity = 'none' | 'mild' | 'moderate' | 'severe';
 export type LeakZone = 'anchor' | 'engine' | 'whip' | 'none';
+export type FlowPathZone = 'groundFlow' | 'powerFlow' | 'barrelFlow' | 'none';
+
+/**
+ * Convert legacy leak zone names to BARRELS Flow Path Model™ terminology
+ */
+export function convertToFlowPath(zone: LeakZone): FlowPathZone {
+  if (zone === 'anchor') return 'groundFlow';
+  if (zone === 'engine') return 'powerFlow';
+  if (zone === 'whip') return 'barrelFlow';
+  return 'none';
+}
 
 export interface AthleteInfo {
   name: string;
@@ -36,9 +47,14 @@ export interface SubScore {
 
 export interface Scores {
   momentumTransfer: MomentumTransferScore;
-  anchor: SubScore;
-  engine: SubScore;
-  whip: SubScore;
+  // NEW: BARRELS Flow Path Model™
+  groundFlow: SubScore;
+  powerFlow: SubScore;
+  barrelFlow: SubScore;
+  // LEGACY: For backward compatibility
+  anchor?: SubScore;
+  engine?: SubScore;
+  whip?: SubScore;
 }
 
 export interface TimingData {
@@ -54,9 +70,12 @@ export interface TimingData {
 }
 
 export interface Flags {
-  mainLeak: LeakZone;
-  secondaryLeak: LeakZone | null;
+  mainLeak: FlowPathZone;
+  secondaryLeak: FlowPathZone | null;
   sequenceBroken: boolean;
+  // LEGACY: For backward compatibility
+  mainLeakLegacy?: LeakZone;
+  secondaryLeakLegacy?: LeakZone | null;
 }
 
 export interface CoachSummary {
@@ -152,9 +171,12 @@ export function formatAnalysisOutput(
   // Generate coach summary
   const coaching = generateMomentumCoaching({
     momentumTransferScore: mechanicsScore,
-    anchorScore: subScores.anchor,
-    engineScore: subScores.engine,
-    whipScore: subScores.whip,
+    groundFlowScore: subScores.anchor,  // New field name
+    powerFlowScore: subScores.engine,    // New field name
+    barrelFlowScore: subScores.whip,     // New field name
+    anchorScore: subScores.anchor,       // Legacy field name
+    engineScore: subScores.engine,       // Legacy field name
+    whipScore: subScores.whip,           // Legacy field name
     goatyBandLabel: goatyLabel,
   });
   
@@ -168,6 +190,23 @@ export function formatAnalysisOutput(
         goatyLabel,
         confidence: scoringResult.confidence || 0.85,  // Default if not provided
       },
+      // NEW: BARRELS Flow Path Model™
+      groundFlow: {
+        score: subScores.anchor,
+        label: 'Ground Flow',
+        leakSeverity: anchorLeakSeverity,
+      },
+      powerFlow: {
+        score: subScores.engine,
+        label: 'Power Flow',
+        leakSeverity: engineLeakSeverity,
+      },
+      barrelFlow: {
+        score: subScores.whip,
+        label: 'Barrel Flow',
+        leakSeverity: whipLeakSeverity,
+      },
+      // LEGACY: For backward compatibility
       anchor: {
         score: subScores.anchor,
         label: 'Ground → Hips',
@@ -186,9 +225,11 @@ export function formatAnalysisOutput(
     },
     timing: timingData,
     flags: {
-      mainLeak,
-      secondaryLeak,
+      mainLeak: convertToFlowPath(mainLeak),
+      secondaryLeak: secondaryLeak ? convertToFlowPath(secondaryLeak) : null,
       sequenceBroken,
+      mainLeakLegacy: mainLeak,
+      secondaryLeakLegacy: secondaryLeak,
     },
     coachSummary: {
       overall: coaching.overallLine,

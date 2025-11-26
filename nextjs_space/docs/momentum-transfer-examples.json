@@ -16,19 +16,19 @@
         "goatyLabel": "Elite",
         "confidence": 0.93
       },
-      "anchor": {
+      "groundFlow": {
         "score": 92,
-        "label": "Ground → Hips",
+        "label": "Ground Flow",
         "leakSeverity": "none"
       },
-      "engine": {
+      "powerFlow": {
         "score": 96,
-        "label": "Hips → Torso",
+        "label": "Power Flow",
         "leakSeverity": "none"
       },
-      "whip": {
+      "barrelFlow": {
         "score": 93,
-        "label": "Torso → Barrel",
+        "label": "Barrel Flow",
         "leakSeverity": "none"
       }
     },
@@ -50,7 +50,7 @@
     },
     "coachSummary": {
       "overall": "Your momentum transfer is 94, which is elite. The energy flows from the ground, through your body, into the barrel with almost no leaks.",
-      "leak": "There's no major leak here – the lower body, core, and barrel are all playing in the right order.",
+      "leak": "There's no major leak here – your ground flow, power flow, and barrel flow are all playing in the right order.",
       "nextStep": "The focus at this level is tiny refinements and repeating this pattern under different speeds and pitch types."
     }
   },
@@ -71,19 +71,19 @@
         "goatyLabel": "Average",
         "confidence": 0.86
       },
-      "anchor": {
+      "groundFlow": {
         "score": 61,
-        "label": "Ground → Hips",
+        "label": "Ground Flow",
         "leakSeverity": "moderate"
       },
-      "engine": {
+      "powerFlow": {
         "score": 73,
-        "label": "Hips → Torso",
+        "label": "Power Flow",
         "leakSeverity": "mild"
       },
-      "whip": {
+      "barrelFlow": {
         "score": 71,
-        "label": "Torso → Barrel",
+        "label": "Barrel Flow",
         "leakSeverity": "mild"
       }
     },
@@ -99,13 +99,13 @@
       }
     },
     "flags": {
-      "mainLeak": "anchor",
-      "secondaryLeak": "engine",
+      "mainLeak": "groundFlow",
+      "secondaryLeak": "powerFlow",
       "sequenceBroken": false
     },
     "coachSummary": {
       "overall": "Your momentum transfer is 68, which is in the average range. You're creating speed, but there's still power left on the table as energy moves through your body.",
-      "leak": "The biggest leak is in the lower half. Your base doesn't hold long enough for the hips to start the chain, so the upper body has to help too much.",
+      "leak": "The biggest leak is in your ground flow. Your base doesn't hold long enough for the hips to start the chain, so the upper body has to help too much.",
       "nextStep": "Next step is learning to load into the ground and hold it so the hips can fire first and everything else can follow."
     }
   },
@@ -126,19 +126,19 @@
         "goatyLabel": "Advanced",
         "confidence": 0.89
       },
-      "anchor": {
+      "groundFlow": {
         "score": 84,
-        "label": "Ground → Hips",
+        "label": "Ground Flow",
         "leakSeverity": "none"
       },
-      "engine": {
+      "powerFlow": {
         "score": 90,
-        "label": "Hips → Torso",
+        "label": "Power Flow",
         "leakSeverity": "none"
       },
-      "whip": {
+      "barrelFlow": {
         "score": 85,
-        "label": "Torso → Barrel",
+        "label": "Barrel Flow",
         "leakSeverity": "mild"
       }
     },
@@ -154,13 +154,13 @@
       }
     },
     "flags": {
-      "mainLeak": "whip",
+      "mainLeak": "barrelFlow",
       "secondaryLeak": null,
       "sequenceBroken": false
     },
     "coachSummary": {
       "overall": "Your momentum transfer is 87, which is advanced. You're creating great flow through the body, with just a small leak in the final piece.",
-      "leak": "The barrel isn't quite catching the wave of energy from the core. Your hands and bat are slightly off path or mistimed.",
+      "leak": "Your barrel flow isn't quite catching the wave of energy from the core. Your hands and bat are slightly off path or mistimed.",
       "nextStep": "Next step: Learn to let the barrel snap late so it catches the energy instead of forcing it."
     }
   }

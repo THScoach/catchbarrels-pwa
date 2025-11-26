@@ -2,8 +2,9 @@
  * Momentum Transfer Card Component
  * 
  * Displays the Momentum Transfer Score (master metric) with
- * Anchor/Engine/Whip sub-scores and leak indicators.
+ * Ground Flow / Power Flow / Barrel Flow sub-scores and leak indicators.
  * 
+ * BARRELS Flow Path Model™
  * Layout matches BARRELS branding and user spec.
  */
 
@@ -28,7 +29,12 @@ export function MomentumTransferCard({
   const [timingExpanded, setTimingExpanded] = useState(false);
   
   const { scores, timing, flags, coachSummary } = analysis;
-  const { momentumTransfer, anchor, engine, whip } = scores;
+  const { momentumTransfer, groundFlow, powerFlow, barrelFlow, anchor, engine, whip } = scores;
+  
+  // Use new Flow Path names, with fallback to legacy names
+  const ground = groundFlow || anchor;
+  const power = powerFlow || engine;
+  const barrel = barrelFlow || whip;
   
   // Get color based on GOATY band (-3 to +3)
   const getBandColor = (band: number): string => {
@@ -41,18 +47,26 @@ export function MomentumTransferCard({
   };
   
   // Get bar color based on sub-score and leak severity
-  const getBarColor = (subscore: 'anchor' | 'engine' | 'whip', leakSeverity: LeakSeverity): string => {
+  const getBarColor = (subscore: 'groundFlow' | 'powerFlow' | 'barrelFlow', leakSeverity: LeakSeverity): string => {
     // If it's the main leak, use warning colors
-    if (flags.mainLeak === subscore) {
+    if (flags.mainLeak === subscore || flags.mainLeakLegacy === convertToLegacy(subscore)) {
       if (leakSeverity === 'severe') return 'from-red-500 to-red-600';
       if (leakSeverity === 'moderate') return 'from-orange-500 to-orange-600';
       if (leakSeverity === 'mild') return 'from-yellow-500 to-yellow-600';
     }
     
     // Default colors by component
-    if (subscore === 'anchor') return 'from-barrels-gold to-barrels-gold-light';
-    if (subscore === 'engine') return 'from-barrels-blue to-blue-500';
+    if (subscore === 'groundFlow') return 'from-barrels-gold to-barrels-gold-light';
+    if (subscore === 'powerFlow') return 'from-barrels-blue to-blue-500';
     return 'from-green-500 to-green-600';
+  };
+  
+  // Helper to convert new field names to legacy for backward compatibility
+  const convertToLegacy = (field: string): string => {
+    if (field === 'groundFlow') return 'anchor';
+    if (field === 'powerFlow') return 'engine';
+    if (field === 'barrelFlow') return 'whip';
+    return field;
   };
   
   // Get leak indicator (flame emoji)
@@ -108,62 +122,62 @@ export function MomentumTransferCard({
       
       {/* Sub-Scores with Mini-Bars */}
       <div className="space-y-4 mb-6">
-        {/* Anchor */}
-        <div className={`p-3 rounded-lg ${flags.mainLeak === 'anchor' ? 'bg-red-950/20 border border-red-500/30' : 'bg-barrels-black-light/30'}`}>
+        {/* Ground Flow */}
+        <div className={`p-3 rounded-lg ${(flags.mainLeak === 'groundFlow' || flags.mainLeakLegacy === 'anchor') ? 'bg-red-950/20 border border-red-500/30' : 'bg-barrels-black-light/30'}`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-300">Anchor</span>
+              <span className="text-sm font-semibold text-gray-300">Ground Flow</span>
               <span className="text-xs text-gray-500">(Ground → Hips)</span>
-              {getLeakIndicator(anchor.leakSeverity)}
+              {getLeakIndicator(ground?.leakSeverity || 'none')}
             </div>
-            <span className="text-lg font-bold text-white">{anchor.score}</span>
+            <span className="text-lg font-bold text-white">{ground?.score || 0}</span>
           </div>
           <div className="w-full bg-barrels-black-light rounded-full h-2.5">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${anchor.score}%` }}
+              animate={{ width: `${ground?.score || 0}%` }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className={`bg-gradient-to-r ${getBarColor('anchor', anchor.leakSeverity)} h-2.5 rounded-full`}
+              className={`bg-gradient-to-r ${getBarColor('groundFlow', ground?.leakSeverity || 'none')} h-2.5 rounded-full`}
             />
           </div>
         </div>
         
-        {/* Engine */}
-        <div className={`p-3 rounded-lg ${flags.mainLeak === 'engine' ? 'bg-red-950/20 border border-red-500/30' : 'bg-barrels-black-light/30'}`}>
+        {/* Power Flow */}
+        <div className={`p-3 rounded-lg ${(flags.mainLeak === 'powerFlow' || flags.mainLeakLegacy === 'engine') ? 'bg-red-950/20 border border-red-500/30' : 'bg-barrels-black-light/30'}`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-300">Engine</span>
+              <span className="text-sm font-semibold text-gray-300">Power Flow</span>
               <span className="text-xs text-gray-500">(Hips → Torso)</span>
-              {getLeakIndicator(engine.leakSeverity)}
+              {getLeakIndicator(power?.leakSeverity || 'none')}
             </div>
-            <span className="text-lg font-bold text-white">{engine.score}</span>
+            <span className="text-lg font-bold text-white">{power?.score || 0}</span>
           </div>
           <div className="w-full bg-barrels-black-light rounded-full h-2.5">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${engine.score}%` }}
+              animate={{ width: `${power?.score || 0}%` }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className={`bg-gradient-to-r ${getBarColor('engine', engine.leakSeverity)} h-2.5 rounded-full`}
+              className={`bg-gradient-to-r ${getBarColor('powerFlow', power?.leakSeverity || 'none')} h-2.5 rounded-full`}
             />
           </div>
         </div>
         
-        {/* Whip */}
-        <div className={`p-3 rounded-lg ${flags.mainLeak === 'whip' ? 'bg-red-950/20 border border-red-500/30' : 'bg-barrels-black-light/30'}`}>
+        {/* Barrel Flow */}
+        <div className={`p-3 rounded-lg ${(flags.mainLeak === 'barrelFlow' || flags.mainLeakLegacy === 'whip') ? 'bg-red-950/20 border border-red-500/30' : 'bg-barrels-black-light/30'}`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-300">Whip</span>
+              <span className="text-sm font-semibold text-gray-300">Barrel Flow</span>
               <span className="text-xs text-gray-500">(Torso → Barrel)</span>
-              {getLeakIndicator(whip.leakSeverity)}
+              {getLeakIndicator(barrel?.leakSeverity || 'none')}
             </div>
-            <span className="text-lg font-bold text-white">{whip.score}</span>
+            <span className="text-lg font-bold text-white">{barrel?.score || 0}</span>
           </div>
           <div className="w-full bg-barrels-black-light rounded-full h-2.5">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${whip.score}%` }}
+              animate={{ width: `${barrel?.score || 0}%` }}
               transition={{ duration: 0.8, delay: 0.5 }}
-              className={`bg-gradient-to-r ${getBarColor('whip', whip.leakSeverity)} h-2.5 rounded-full`}
+              className={`bg-gradient-to-r ${getBarColor('barrelFlow', barrel?.leakSeverity || 'none')} h-2.5 rounded-full`}
             />
           </div>
         </div>
