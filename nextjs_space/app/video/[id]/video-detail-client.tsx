@@ -30,6 +30,10 @@ import { PlayerReflectionBox } from '@/components/analysis/player-reflection-box
 import { CoachRickDrawer } from '@/components/coach-rick-drawer';
 import { DrillCard } from '@/components/analysis/drill-card';
 import { AEWCardsSection } from '@/components/analysis/aew-cards-section';
+import { JointOverlayPlaceholder } from '@/components/analysis/joint-overlay-placeholder';
+import { RecommendationEnginePlaceholder } from '@/components/analysis/recommendation-engine-placeholder';
+import { SpineTracerTile } from '@/components/analysis/spine-tracer-tile';
+import { NewAnalysisButton } from '@/components/analysis/new-analysis-button';
 
 // Dynamic import with ssr: false to avoid chunk loading issues with recharts
 const ProgressCharts = dynamic(() => import('@/components/progress-charts').then(mod => ({ default: mod.ProgressCharts })), {
@@ -699,41 +703,12 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
 
                   return (
                     <>
-                      {/* New Mobile-First Layout */}
+                      {/* New Analysis Page Flow - Dr. Kwon Style */}
                       
-                      {/* Analysis Header with GOAT + AEW chips */}
-                      <AnalysisHeader
-                        player={{ name: video.user?.name || 'Player' }}
-                        session={{
-                          label: `Swing Analysis #${video.id.slice(0, 8)}`,
-                          date: formatDistanceToNow(new Date(video.uploadDate), { addSuffix: true })
-                        }}
-                        scores={{
-                          goat: video.overallScore || 0,
-                          anchor: video.anchor || 0,
-                          engine: video.engine || 0,
-                          whip: video.whip || 0
-                        }}
-                      />
-
-                      {/* Ask Coach Rick Button */}
-                      <button
-                        onClick={() => setIsCoachRickOpen(true)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors mb-4"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        Ask Coach Rick About This Swing
-                      </button>
-
-                      {/* Mini Dashboard Strip */}
-                      <MiniDashboardStrip
-                        biggestFix={`${biggestFix.name} \u2013 ${biggestFix.detail}`}
-                        biggestWin={biggestWin.change > 0 ? `${biggestWin.name} \u2013 Up ${biggestWin.change} pts` : undefined}
-                      />
-
-                      {/* Video Player - Simple mobile view */}
+                      {/* 1. Swing Video */}
                       {videoUrl && (
                         <div className="mb-4">
+                          <h2 className="text-xl font-bold text-white mb-3">Swing Video</h2>
                           <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
                             <video
                               src={videoUrl}
@@ -745,71 +720,94 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                         </div>
                       )}
 
-                      {/* Analysis Results Card (circular GOAT display) */}
-                      <AnalysisResultsCard
-                        scores={{
-                          goat: video.overallScore || 0,
-                          anchor: video.anchor || 0,
-                          engine: video.engine || 0,
-                          whip: video.whip || 0
-                        }}
-                      />
+                      {/* 2. Coach Rick Analysis */}
+                      <div className="mb-4">
+                        <h2 className="text-xl font-bold text-white mb-3">Coach Rick Analysis</h2>
+                        <Card className="bg-gray-800/50 border-gray-700 p-4">
+                          <div className="flex items-start gap-3 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-barrels-gold/20 border-2 border-barrels-gold flex items-center justify-center flex-shrink-0 text-2xl">
+                              🐐
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-white font-semibold mb-1">Coach Rick's Breakdown</h3>
+                              <p className="text-gray-300 text-sm">
+                                Your biggest area for improvement is <strong>{biggestFix.name}</strong> ({biggestFix.detail}). 
+                                {biggestWin.change > 0 && ` Great progress on ${biggestWin.name} - up ${biggestWin.change} points!`}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setIsCoachRickOpen(true)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-barrels-gold hover:bg-barrels-gold-light text-barrels-black font-medium rounded-lg transition-colors"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            Ask Coach Rick About This Swing
+                          </button>
+                        </Card>
+                      </div>
 
-                      {/* Player Reflection Box */}
-                      <PlayerReflectionBox
-                        value={playerReflection}
-                        onChange={setPlayerReflection}
-                      />
+                      {/* 3. Metrics Summary */}
+                      <div className="mb-4">
+                        <h2 className="text-xl font-bold text-white mb-3">Metrics Summary</h2>
+                        <AnalysisResultsCard
+                          scores={{
+                            goat: video.overallScore || 0,
+                            anchor: video.anchor || 0,
+                            engine: video.engine || 0,
+                            whip: video.whip || 0
+                          }}
+                        />
+                        <div className="mt-3">
+                          <AEWCardsSection
+                            anchorScore={video.anchor || 0}
+                            engineScore={video.engine || 0}
+                            whipScore={video.whip || 0}
+                            anchorMetrics={mapAnchorMetricsFromScores({
+                              anchorMotion: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2),
+                              anchorStability: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2),
+                              anchorSequencing: video.anchorLowerBodyMechanics || 0,
+                              anchorStance: video.anchorStance || 0,
+                              anchorWeightShift: video.anchorWeightShift || 0,
+                              anchorGroundConnection: video.anchorGroundConnection || 0,
+                              anchorLowerBodyMechanics: video.anchorLowerBodyMechanics || 0
+                            })}
+                            engineMetrics={mapEngineMetricsFromScores(video)}
+                            whipMetrics={mapWhipMetricsFromScores({
+                              whipMotion: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2),
+                              whipStability: video.whipConnection || 0,
+                              whipSequencing: video.whipBatPath || 0,
+                              whipBatSpeed: video.whipBatSpeed || 0,
+                              whipArmPath: video.whipArmPath || 0,
+                              whipConnection: video.whipConnection || 0
+                            })}
+                          />
+                        </div>
+                      </div>
 
+                      {/* 4. AI Joint Overlay (Placeholder) */}
+                      <div className="mb-4">
+                        <JointOverlayPlaceholder />
+                      </div>
 
+                      {/* 5. Recommendation Engine (Placeholder) */}
+                      <div className="mb-4">
+                        <RecommendationEnginePlaceholder />
+                      </div>
 
-                      {/* Drill Card */}
-                      <DrillCard drill={recommendedDrill} />
+                      {/* 6. Spine & Motion Tracer */}
+                      <div className="mb-4">
+                        <SpineTracerTile />
+                      </div>
 
-                      {/* AEW Cards Section (Anchor/Engine/Whip detailed breakdown) */}
-                      <AEWCardsSection
-                        anchorScore={video.anchor || 0}
-                        engineScore={video.engine || 0}
-                        whipScore={video.whip || 0}
-                        anchorMetrics={mapAnchorMetricsFromScores({
-                          anchorMotion: Math.round(((video.anchorStance || 0) + (video.anchorWeightShift || 0)) / 2),
-                          anchorStability: Math.round(((video.anchorGroundConnection || 0) + (video.anchorLowerBodyMechanics || 0)) / 2),
-                          anchorSequencing: video.anchorLowerBodyMechanics || 0,
-                          anchorStance: video.anchorStance || 0,
-                          anchorWeightShift: video.anchorWeightShift || 0,
-                          anchorGroundConnection: video.anchorGroundConnection || 0,
-                          anchorLowerBodyMechanics: video.anchorLowerBodyMechanics || 0
-                        })}
-                        engineMetrics={mapEngineMetricsFromScores(video)}
-                        whipMetrics={mapWhipMetricsFromScores({
-                          whipMotion: Math.round(((video.whipBatSpeed || 0) + (video.whipArmPath || 0)) / 2),
-                          whipStability: video.whipConnection || 0,
-                          whipSequencing: video.whipBatPath || 0,
-                          whipBatSpeed: video.whipBatSpeed || 0,
-                          whipArmPath: video.whipArmPath || 0,
-                          whipConnection: video.whipConnection || 0
-                        })}
-                      />
+                      {/* 7. New Analysis Button */}
+                      <NewAnalysisButton />
 
-                      {/* Personal Bests & Progress indicators (optional, can be shown in a compact way) */}
+                      {/* Personal Bests indicator (keep at bottom) */}
                       {overallProgress.isPersonalBest && (
-                        <div className="flex items-center justify-center gap-2 bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-lg">
+                        <div className="flex items-center justify-center gap-2 bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-lg mb-4">
                           <Award className="w-5 h-5" />
                           <span className="text-sm font-semibold">Personal Best Overall Score!</span>
                         </div>
-                      )}
-
-                      {/* Add Another Swing button (if part of a lesson/session) */}
-                      {video.sessionId && (
-                        <Link
-                          href={`/video/upload?sessionId=${video.sessionId}`}
-                          className="block w-full mt-6"
-                        >
-                          <button className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-lg">
-                            <Plus className="w-5 h-5" />
-                            Add Another Swing to This Lesson
-                          </button>
-                        </Link>
                       )}
                     </>
                   );
