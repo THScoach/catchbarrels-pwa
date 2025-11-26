@@ -25,7 +25,7 @@ This is the **complete 52 Pitch Flow Assessment system** for the BARRELS app, re
 
 ### 1. TypeScript Types
 **File:** `types/assessment.ts`  
-**Size:** Medium (~5 pages)
+**Size:** Medium (approx. 5 pages)
 
 **Contents:**
 - Complete TypeScript interfaces for 52 Pitch Flow Assessment
@@ -40,7 +40,7 @@ This is the **complete 52 Pitch Flow Assessment system** for the BARRELS app, re
 ### 2. DeepAgent Report Generator ⭐
 **File:** `docs/coach-rick-assessment-report-prompt.md`  
 **Skill Name:** `CoachRick.AssessmentReport`  
-**Size:** Large (~8 pages)
+**Size:** Large (approx. 8 pages)
 
 **Contents:**
 - Complete DeepAgent system prompt for report generation
@@ -62,7 +62,7 @@ This is the **complete 52 Pitch Flow Assessment system** for the BARRELS app, re
 
 ### 3. React UI Component
 **File:** `app/assessments/52-pitch/run/page.tsx`  
-**Size:** Medium (~6 pages)
+**Size:** Medium (approx. 6 pages)
 
 **Contents:**
 - Complete coach-facing UI for running assessments
@@ -90,7 +90,7 @@ This is the **complete 52 Pitch Flow Assessment system** for the BARRELS app, re
 - `app/api/assessments/52-pitch/[sessionId]/swing/route.ts`
 - `app/api/assessments/52-pitch/[sessionId]/complete/route.ts`
 
-**Size:** Small (~3 pages total)
+**Size:** Small (approx. 3 pages total)
 
 **Contents:**
 - POST `/api/assessments/52-pitch/start` — Create new assessment session
@@ -110,7 +110,7 @@ This is the **complete 52 Pitch Flow Assessment system** for the BARRELS app, re
 
 ### 5. PDF Report Template
 **File:** `docs/52-pitch-assessment-pdf-template.md`  
-**Size:** Large (~12 pages)
+**Size:** Large (approx. 12 pages)
 
 **Contents:**
 - Complete 6-page PDF structure
@@ -134,7 +134,7 @@ This is the **complete 52 Pitch Flow Assessment system** for the BARRELS app, re
 
 ### 6. This Integration Guide
 **File:** `docs/52-pitch-assessment-complete.md`  
-**Size:** Comprehensive (~15 pages)
+**Size:** Comprehensive (approx. 15 pages)
 
 **Contents:**
 - Complete package overview
