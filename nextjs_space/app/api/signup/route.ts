@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name } = body;
+    const { email, password, name, isAdmin, adminSecret } = body;
 
     // Validate input
     if (!email || !password) {
@@ -30,6 +30,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate admin creation
+    if (isAdmin && adminSecret !== 'barrels-admin-2024') {
+      return NextResponse.json(
+        { error: 'Invalid admin secret' },
+        { status: 403 }
+      );
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -40,17 +48,22 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         name: name || email.split('@')[0],
-        profileComplete: false,
+        profileComplete: isAdmin ? true : false,
+        completedOnboarding: isAdmin ? true : false,
+        isCoach: isAdmin ? true : false,
+        role: isAdmin ? 'coach' : 'player',
       },
     });
 
     return NextResponse.json(
       { 
-        message: 'User created successfully',
+        message: `${isAdmin ? 'Admin' : 'User'} created successfully`,
         user: {
           id: user.id,
           email: user.email,
           name: user.name,
+          isCoach: user.isCoach,
+          role: user.role,
         }
       },
       { status: 201 }

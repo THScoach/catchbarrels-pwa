@@ -21,6 +21,7 @@ export async function middleware(request: NextRequest) {
     '/auth/whop-redirect',
     '/api/auth',
     '/api/dev', // Allow dev endpoints for seeding/testing
+    '/api/signup', // Allow signup endpoint
   ];
 
   // Check if path is public
