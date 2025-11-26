@@ -4,44 +4,28 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useSession } from "next-auth/react";
-import { Menu, X } from "lucide-react";
 
-const NAV_ITEMS = [
+const NAV_TABS = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/lesson/new", label: "Sessions" },
-  { href: "/video", label: "Videos" },
-  { href: "/coach", label: "Coach Rick" },
+  { href: "/lesson/new", label: "New Lesson" },
+  { href: "/lesson/history", label: "History" },
 ];
 
 export function BarrelsHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const { data: session } = useSession() || {};
-
-  // Get user initials for avatar
-  const getInitials = () => {
-    if (!session?.user?.name) return "RS";
-    const names = session.user.name.split(" ");
-    if (names.length >= 2) {
-      return `${names[0][0]}${names[1][0]}`.toUpperCase();
-    }
-    return names[0].substring(0, 2).toUpperCase();
-  };
-
-  // Get latest momentum score (TODO: fetch from actual data)
-  const momentumScore = 84;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        {/* Left: Logo + wordmark */}
+    <header className="sticky top-0 z-40 bg-[#050814]">
+      {/* Top row: logo + menu */}
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 pt-3 pb-2 sm:px-6">
+        {/* Logo lockup */}
         <Link
           href="/dashboard"
-          className="flex items-center gap-3"
+          className="flex items-center gap-2"
           aria-label="Barrels – Catch Barrels"
         >
-          <div className="relative h-9 w-9 sm:h-11 sm:w-11 flex-shrink-0">
+          <div className="relative h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
             <Image
               src="/branding/barrels-mark-only.png"
               alt="Barrels logo"
@@ -51,88 +35,86 @@ export function BarrelsHeader() {
             />
           </div>
 
-          <div className="leading-tight hidden xs:block">
-            <div className="text-sm font-semibold tracking-[0.2em] text-slate-300">
+          <div className="leading-tight">
+            <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-100">
               BARRELS
             </div>
-            <div className="text-[10px] font-medium uppercase tracking-[0.25em] text-amber-400">
+            <div className="text-[9px] font-medium uppercase tracking-[0.26em] text-amber-400">
               CATCH BARRELS
             </div>
           </div>
         </Link>
 
-        {/* Center / Right: navigation */}
-        <nav className="hidden items-center gap-6 text-sm font-medium text-slate-300 md:flex">
-          {NAV_ITEMS.map((item) => {
-            const active = pathname?.startsWith(item.href);
+        {/* Right: hamburger (desktop + mobile) */}
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-700/70 bg-black/40 text-slate-200 hover:bg-slate-900"
+          aria-label="Open menu"
+        >
+          <div className="space-y-1.5">
+            <span className="block h-0.5 w-4 rounded bg-current" />
+            <span className="block h-0.5 w-4 rounded bg-current" />
+            <span className="block h-0.5 w-4 rounded bg-current" />
+          </div>
+        </button>
+      </div>
+
+      {/* Tab row */}
+      <div className="mx-auto flex max-w-6xl px-4 pb-3 sm:px-6">
+        <nav className="flex w-full gap-3">
+          {NAV_TABS.map((tab) => {
+            const active =
+              pathname === tab.href ||
+              (tab.href !== "/dashboard" && pathname?.startsWith(tab.href));
+
             return (
               <Link
-                key={item.href}
-                href={item.href}
-                className={`transition-colors hover:text-white ${
-                  active ? "text-amber-400" : ""
-                }`}
+                key={tab.href}
+                href={tab.href}
+                className={[
+                  "flex-1 rounded-full border text-center text-sm font-semibold transition-all",
+                  "px-3 py-2 sm:py-2.5",
+                  active
+                    ? "border-amber-400 bg-amber-400 text-slate-900 shadow-[0_0_18px_rgba(251,191,36,0.45)]"
+                    : "border-slate-700/70 bg-[#0a0f1f] text-slate-200 hover:border-slate-500 hover:bg-slate-900",
+                ].join(" ")}
               >
-                {item.label}
+                {tab.label}
               </Link>
             );
           })}
         </nav>
-
-        {/* Right: Momentum pill + profile */}
-        <div className="flex items-center gap-3">
-          {/* Momentum Transfer mini pill */}
-          <div className="hidden items-center gap-1 rounded-full border border-amber-500/70 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-300 sm:flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            <span>Momentum</span>
-            <span className="text-slate-200">{momentumScore}</span>
-          </div>
-
-          {/* Avatar / profile button */}
-          <Link
-            href="/profile"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-[11px] font-semibold uppercase text-slate-200 border border-slate-700 hover:border-amber-500/50 transition-colors"
-          >
-            {getInitials()}
-          </Link>
-
-          {/* Mobile menu button */}
-          <button
-            className="inline-flex items-center justify-center rounded-md p-2 text-slate-300 hover:bg-slate-800 md:hidden"
-            onClick={() => setOpen(!open)}
-            aria-label="Toggle navigation"
-          >
-            <span className="sr-only">Toggle Menu</span>
-            {open ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
       </div>
 
-      {/* Mobile nav drawer */}
+      {/* Slide-down menu (when you tap hamburger) */}
       {open && (
-        <div className="border-t border-slate-800 bg-slate-950 md:hidden">
-          <nav className="mx-auto flex max-w-6xl flex-col px-4 py-3 text-sm font-medium text-slate-200">
-            {NAV_ITEMS.map((item) => {
-              const active = pathname?.startsWith(item.href);
+        <div className="border-t border-slate-800 bg-[#050814]">
+          <nav className="mx-auto flex max-w-6xl flex-col px-4 py-3 text-sm font-medium text-slate-100 sm:px-6">
+            {NAV_TABS.map((tab) => {
+              const active =
+                pathname === tab.href ||
+                (tab.href !== "/dashboard" && pathname?.startsWith(tab.href));
               return (
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  key={tab.href}
+                  href={tab.href}
                   onClick={() => setOpen(false)}
-                  className={`rounded-md px-2 py-2 hover:bg-slate-900 ${
-                    active ? "text-amber-300" : ""
+                  className={`rounded-lg px-3 py-2 ${
+                    active
+                      ? "bg-amber-500/10 text-amber-300"
+                      : "hover:bg-slate-900"
                   }`}
                 >
-                  {item.label}
+                  {tab.label}
                 </Link>
               );
             })}
-            {/* Show momentum in mobile menu */}
-            <div className="mt-2 flex items-center gap-2 rounded-md bg-slate-900 px-2 py-2 text-xs">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-              <span className="text-slate-400">Momentum Transfer:</span>
-              <span className="font-semibold text-amber-300">{momentumScore}</span>
-            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="mt-2 self-start rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-wide text-slate-300 hover:bg-slate-900"
+            >
+              Close
+            </button>
           </nav>
         </div>
       )}
