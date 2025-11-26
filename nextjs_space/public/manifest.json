@@ -2,7 +2,9 @@
   "name": "CatchBarrels - Momentum Transfer System",
   "short_name": "CatchBarrels",
   "description": "AI-Powered Baseball Swing Analysis & Momentum Transfer Training",
-  "start_url": "/dashboard",
+  "id": "https://catchbarrels.app/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#E8B14E",
@@ -27,5 +29,6 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["sports", "health", "education"]
+  "categories": ["sports", "health", "education"],
+  "screenshots": []
 }

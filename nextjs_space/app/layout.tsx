@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: 'CatchBarrels - Momentum Transfer System',
   description: 'AI-Powered Baseball Swing Analysis & Momentum Transfer Training',
   manifest: '/manifest.json',
-  metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://catchbarrels.app'),
   icons: {
     icon: '/catchbarrels-logo-512.png',
     shortcut: '/favicon.ico',
@@ -23,12 +23,30 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'CatchBarrels - Momentum Transfer System',
     description: 'AI-Powered Baseball Swing Analysis & Momentum Transfer Training',
+    url: 'https://catchbarrels.app',
+    siteName: 'CatchBarrels',
+    images: ['/catchbarrels-logo-512.png'],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CatchBarrels - Momentum Transfer System',
+    description: 'AI-Powered Baseball Swing Analysis & Momentum Transfer Training',
     images: ['/catchbarrels-logo-512.png'],
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'CatchBarrels',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  verification: {
+    // Add verification tokens when available
+    // google: 'your-google-verification-token',
   },
 };
 

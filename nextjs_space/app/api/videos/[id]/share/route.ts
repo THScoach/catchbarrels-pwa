@@ -84,7 +84,7 @@ export async function POST(
     });
 
     // Generate full share URL
-    const shareUrl = `${process.env.NEXTAUTH_URL || 'https://barrels-pwa-dheu67.abacusai.app'}/share/${shareableLink}`;
+    const shareUrl = `${process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://catchbarrels.app'}/share/${shareableLink}`;
 
     return NextResponse.json({
       success: true,
@@ -133,7 +133,7 @@ export async function GET(
     }
 
     const shareUrl = video.shareableLink 
-      ? `${process.env.NEXTAUTH_URL || 'https://barrels-pwa-dheu67.abacusai.app'}/share/${video.shareableLink}`
+      ? `${process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://catchbarrels.app'}/share/${video.shareableLink}`
       : null;
 
     return NextResponse.json({

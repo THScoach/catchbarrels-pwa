@@ -17,7 +17,7 @@ Integrated the new **CatchBarrels "Momentum Transfer"** logo across the entire a
 ### 1. New Logo Assets Created
 
 **Source Logo:**
-- Original: `/home/ubuntu/Uploads/download (1).png` (1376x768 PNG)
+- Original: User-provided Momentum Transfer logo (1376x768 PNG)
 
 **Generated Assets:**
 ```
