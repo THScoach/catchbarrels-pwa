@@ -7,6 +7,7 @@ import { EnhancedVideoPlayer } from '@/components/enhanced-video-player';
 import { SkeletonExtractor } from '@/components/skeleton-extractor';
 // Removed AutoSkeletonExtractor - replaced with opt-in only
 import { JointOverlayCompare } from '@/components/joint-overlay-compare';
+import { MotionTab } from '@/components/motion-tab';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { toast } from 'sonner';
 import { ChevronLeft, Video, Loader2, Sparkles, RefreshCw, Award, TrendingUp, Share2, Eye, Link2, Globe, Lock } from 'lucide-react';
@@ -653,7 +654,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                 : 'border-transparent text-gray-400'
             }`}
           >
-            🦴 Skeleton
+            🎯 Motion
           </button>
           <button
             onClick={() => setActiveTab('coach')}
@@ -858,76 +859,12 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
             )}
           </div>
         ) : activeTab === 'skeleton' ? (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-green-500/10 to-yellow-500/10 border border-green-500/30 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                🦴 Skeleton Joint Analysis
-              </h2>
-              <p className="text-gray-300 text-sm mb-4">
-                Extract joint data from your swing and compare it to pro models. Green = Model, Yellow = Your Swing.
-              </p>
-            </div>
-
-            {!skeletonExtracted ? (
-              <div className="space-y-4">
-                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-                  <h3 className="text-white font-semibold mb-3">Step 1: Extract Skeleton Data</h3>
-                  <p className="text-gray-400 text-sm mb-4">
-                    We'll analyze your video frame-by-frame to track 33 body joints using MediaPipe Pose estimation.
-                  </p>
-                  
-                  {videoUrl && (
-                    <SkeletonExtractor
-                      videoId={video.id}
-                      videoUrl={videoUrl}
-                      onComplete={handleSkeletonExtracted}
-                      onError={(error) => toast.error('Failed to extract skeleton')}
-                    />
-                  )}
-                </div>
-
-                <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
-                  <h4 className="text-white text-sm font-semibold mb-2">What happens next?</h4>
-                  <ul className="text-gray-400 text-sm space-y-1">
-                    <li>✓ Auto-detect ball impact frame</li>
-                    <li>✓ Trim video (2 seconds before/after impact)</li>
-                    <li>✓ Normalize to 60 FPS for smooth playback</li>
-                    <li>✓ Compare with pro model swing</li>
-                  </ul>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-green-400 mb-2">
-                    <Award className="w-5 h-5" />
-                    <span className="font-semibold">Skeleton Extracted!</span>
-                  </div>
-                  <p className="text-gray-300 text-sm">
-                    Your swing has been analyzed. Use the controls below to compare your joints (blue) with a reference swing (gray).
-                  </p>
-                </div>
-
-                {videoUrl && (
-                  <JointOverlayCompare
-                    referenceSwing={referenceSwing}
-                    currentSwing={currentSwing}
-                    videoUrl={videoUrl}
-                  />
-                )}
-
-                <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
-                  <h4 className="text-white text-sm font-semibold mb-2">Analysis Tips:</h4>
-                  <ul className="text-gray-400 text-sm space-y-1">
-                    <li>• Use frame-by-frame controls to examine specific positions</li>
-                    <li>• Toggle model/player visibility to isolate movements</li>
-                    <li>• Watch for differences in joint angles at impact</li>
-                    <li>• Compare hip and shoulder rotation timing</li>
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
+          <MotionTab
+            videoId={video.id}
+            videoUrl={videoUrl || ''}
+            initialJointData={video.jointData as any}
+            jointAnalyzed={video.jointAnalyzed || false}
+          />
         ) : activeTab === 'coach' ? (
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             <div className="flex items-center space-x-3 mb-4">
