@@ -703,24 +703,9 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
 
                   return (
                     <>
-                      {/* New Analysis Page Flow - Dr. Kwon Style */}
+                      {/* Analysis Layout - 7 Tiles (Video player shown above tabs) */}
                       
-                      {/* 1. Swing Video */}
-                      {videoUrl && (
-                        <div className="mb-4">
-                          <h2 className="text-xl font-bold text-white mb-3">Swing Video</h2>
-                          <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-                            <video
-                              src={videoUrl}
-                              controls
-                              playsInline
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 2. Coach Rick Analysis */}
+                      {/* 1. Coach Rick Analysis */}
                       <div className="mb-4">
                         <h2 className="text-xl font-bold text-white mb-3">Coach Rick Analysis</h2>
                         <Card className="bg-gray-800/50 border-gray-700 p-4">
@@ -746,7 +731,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                         </Card>
                       </div>
 
-                      {/* 3. Metrics Summary */}
+                      {/* 2. Metrics Summary */}
                       <div className="mb-4">
                         <h2 className="text-xl font-bold text-white mb-3">Metrics Summary</h2>
                         <AnalysisResultsCard
@@ -784,22 +769,22 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                         </div>
                       </div>
 
-                      {/* 4. AI Joint Overlay (Placeholder) */}
+                      {/* 3. AI Joint Overlay (Placeholder) */}
                       <div className="mb-4">
                         <JointOverlayPlaceholder />
                       </div>
 
-                      {/* 5. Recommendation Engine (Placeholder) */}
+                      {/* 4. Recommendation Engine (Placeholder) */}
                       <div className="mb-4">
                         <RecommendationEnginePlaceholder />
                       </div>
 
-                      {/* 6. Spine & Motion Tracer */}
+                      {/* 5. Spine & Motion Tracer */}
                       <div className="mb-4">
                         <SpineTracerTile />
                       </div>
 
-                      {/* 7. New Analysis Button */}
+                      {/* 6. New Analysis Button */}
                       <NewAnalysisButton />
 
                       {/* Personal Bests indicator (keep at bottom) */}
