@@ -20,6 +20,7 @@ export async function middleware(request: NextRequest) {
     '/auth/admin-login',
     '/auth/whop-redirect',
     '/api/auth',
+    '/api/dev', // Allow dev endpoints for seeding/testing
   ];
 
   // Check if path is public
