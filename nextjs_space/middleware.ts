@@ -56,7 +56,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // User is authenticated - check product ownership
+  // Check for coach-only routes (/admin)
+  if (pathname.startsWith('/admin')) {
+    const isCoach = (token as any).isCoach || false;
+    
+    if (!isCoach) {
+      // Not a coach - redirect to dashboard with error message
+      const dashboardUrl = new URL('/dashboard', request.url);
+      dashboardUrl.searchParams.set('error', 'unauthorized');
+      return NextResponse.redirect(dashboardUrl);
+    }
+    
+    // Is coach - allow access to admin routes
+    return NextResponse.next();
+  }
+
+  // User is authenticated - check product ownership for player routes
   const membershipTier = (token as any).membershipTier || 'free';
   const membershipStatus = (token as any).membershipStatus || 'inactive';
   

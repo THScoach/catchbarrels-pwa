@@ -17,6 +17,10 @@ model User {
   name            String?
   whopUserId      String?   @unique  // For Phase 6 Whop integration
   
+  // Role & Access Control
+  role            String    @default("player") // "player", "coach", "admin"
+  isCoach         Boolean   @default(false)    // Quick check for coach access
+  
   // Whop Membership Tracking (Phase 6)
   whopMembershipId    String?   // Current Whop membership ID
   membershipTier      String    @default("free") // "free", "athlete", "pro", "elite"

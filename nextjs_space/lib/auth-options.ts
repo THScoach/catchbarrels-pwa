@@ -54,6 +54,8 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           email: user.email,
           username: user.username,
+          isCoach: user.isCoach || false,
+          role: user.role || 'player',
         };
       },
     }),
@@ -97,6 +99,8 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.username = (user as any).username;
         token.whopUserId = (user as any).whopUserId;
+        token.isCoach = (user as any).isCoach || false;
+        token.role = (user as any).role || 'player';
       }
       
       // If this is a Whop OAuth login, sync membership data
@@ -179,6 +183,8 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).whopUserId = token.whopUserId;
         (session.user as any).membershipTier = token.membershipTier;
         (session.user as any).membershipStatus = token.membershipStatus;
+        (session.user as any).isCoach = token.isCoach || false;
+        (session.user as any).role = token.role || 'player';
       }
       return session;
     },

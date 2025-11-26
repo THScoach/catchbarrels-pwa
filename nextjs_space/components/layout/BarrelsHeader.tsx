@@ -26,6 +26,9 @@ export function BarrelsHeader() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession() || {};
 
+  // Check if user is a coach
+  const isCoach = (session?.user as any)?.isCoach || false;
+
   // Get user initials for avatar
   const getInitials = () => {
     if (!session?.user?.name) return "U";
@@ -195,6 +198,23 @@ export function BarrelsHeader() {
                 </Link>
               );
             })}
+
+            {/* Coach Admin Link */}
+            {isCoach && (
+              <div className="mt-2 pt-2 border-t border-slate-800">
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className={`block rounded-lg px-3 py-2 ${
+                    pathname?.startsWith("/admin")
+                      ? "bg-barrels-gold/10 text-barrels-gold"
+                      : "hover:bg-slate-900 text-barrels-gold"
+                  }`}
+                >
+                  🎯 Coach Admin
+                </Link>
+              </div>
+            )}
 
             {/* Momentum Score (Mobile) */}
             <div className="sm:hidden mt-2 pt-2 border-t border-slate-800">
