@@ -12,7 +12,52 @@ export const authOptions: NextAuthOptions = {
   // adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
+    // Admin Credentials Provider - Requires admin role
     CredentialsProvider({
+      id: 'admin-credentials',
+      name: 'Admin Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { username: credentials.email },
+        });
+
+        if (!user || !user.password) {
+          return null;
+        }
+
+        // Verify role is admin
+        if (user.role !== 'admin' && user.role !== 'coach') {
+          console.log(`Admin login rejected: User ${user.email} has role ${user.role}`);
+          return null;
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+
+        if (!isValid) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          username: user.username,
+          isCoach: user.isCoach || false,
+          role: user.role || 'player',
+        };
+      },
+    }),
+    // Regular Credentials Provider (for athletes/testing)
+    CredentialsProvider({
+      id: 'credentials',
       name: 'Credentials',
       credentials: {
         username: { label: 'Username', type: 'text' },
@@ -189,7 +234,11 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Always redirect to dashboard after login
+      // Role-based redirect after login
+      // Note: We can't access session/token directly in redirect callback,
+      // so we'll handle this in the login page client-side
+      
+      // Default redirect to dashboard
       if (url === baseUrl || url === `${baseUrl}/` || url.includes('/auth/login')) {
         return `${baseUrl}/dashboard`;
       }

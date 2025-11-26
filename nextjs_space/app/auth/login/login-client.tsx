@@ -1,22 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, LogIn, AlertCircle } from 'lucide-react';
+import { Loader2, LogIn, AlertCircle, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function LoginClient() {
   const router = useRouter();
+  const { data: session } = useSession() || {};
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [loginMode, setLoginMode] = useState<'athlete' | 'admin'>('athlete');
   const [formData, setFormData] = useState({
     username: '',
+    email: '',
     password: '',
   });
 
@@ -28,25 +32,40 @@ export default function LoginClient() {
     try {
       // Get callback URL from query params
       const searchParams = new URLSearchParams(window.location.search);
-      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+      const defaultCallback = loginMode === 'admin' ? '/admin' : '/dashboard';
+      const callbackUrl = searchParams.get('callbackUrl') || defaultCallback;
 
-      const result = await signIn('credentials', {
-        username: formData.username,
-        password: formData.password,
+      // Use appropriate provider based on mode
+      const provider = loginMode === 'admin' ? 'admin-credentials' : 'credentials';
+      const credentials = loginMode === 'admin' 
+        ? { email: formData.email, password: formData.password }
+        : { username: formData.username, password: formData.password };
+
+      const result = await signIn(provider, {
+        ...credentials,
         redirect: false,
         callbackUrl,
       });
 
       if (result?.error) {
-        setError('Invalid username or password');
+        const errorMsg = loginMode === 'admin' 
+          ? 'Invalid admin credentials or insufficient permissions'
+          : 'Invalid username or password';
+        setError(errorMsg);
         toast.error('Login failed', {
-          description: 'Please check your credentials and try again.',
+          description: errorMsg,
         });
       } else if (result?.ok) {
-        toast.success('Welcome back!', {
+        const welcomeMsg = loginMode === 'admin' ? 'Welcome, Admin!' : 'Welcome back!';
+        toast.success(welcomeMsg, {
           description: 'Redirecting...',
         });
-        router.push(callbackUrl);
+        
+        // Small delay to let session update
+        setTimeout(() => {
+          router.push(callbackUrl);
+          router.refresh();
+        }, 100);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -59,19 +78,30 @@ export default function LoginClient() {
     }
   };
 
-  const handleQuickLogin = async (username: string, password: string) => {
-    setFormData({ username, password });
+  const handleQuickLogin = async (email: string, password: string, isAdmin: boolean = false) => {
+    if (isAdmin) {
+      setFormData({ username: '', email, password });
+      setLoginMode('admin');
+    } else {
+      setFormData({ username: email, email: '', password });
+      setLoginMode('athlete');
+    }
     setError('');
     setLoading(true);
 
     try {
       // Get callback URL from query params
       const searchParams = new URLSearchParams(window.location.search);
-      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+      const defaultCallback = isAdmin ? '/admin' : '/dashboard';
+      const callbackUrl = searchParams.get('callbackUrl') || defaultCallback;
 
-      const result = await signIn('credentials', {
-        username,
-        password,
+      const provider = isAdmin ? 'admin-credentials' : 'credentials';
+      const credentials = isAdmin 
+        ? { email, password }
+        : { username: email, password };
+
+      const result = await signIn(provider, {
+        ...credentials,
         redirect: false,
         callbackUrl,
       });
@@ -81,7 +111,10 @@ export default function LoginClient() {
         toast.error('Login failed');
       } else if (result?.ok) {
         toast.success('Welcome!');
-        router.push(callbackUrl);
+        setTimeout(() => {
+          router.push(callbackUrl);
+          router.refresh();
+        }, 100);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -119,72 +152,176 @@ export default function LoginClient() {
               Sign In
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Enter your credentials to access your account
+              Choose your login type and enter your credentials
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Username/Email */}
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-gray-300">
-                  Username or Email
-                </Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="john@doe.com"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  disabled={loading}
-                  className="bg-gray-900/50 border-gray-600 text-white"
-                  required
-                />
-              </div>
+            {/* Login Mode Tabs */}
+            <Tabs 
+              value={loginMode} 
+              onValueChange={(value) => setLoginMode(value as 'athlete' | 'admin')}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-900/50">
+                <TabsTrigger 
+                  value="athlete"
+                  className="data-[state=active]:bg-[#F5A623] data-[state=active]:text-white"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Athlete
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="admin"
+                  className="data-[state=active]:bg-[#F5A623] data-[state=active]:text-white"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Admin
+                </TabsTrigger>
+              </TabsList>
 
-              {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-300">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  disabled={loading}
-                  className="bg-gray-900/50 border-gray-600 text-white"
-                  required
-                />
-              </div>
+              {/* Athlete Login Form */}
+              <TabsContent value="athlete">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Username/Email */}
+                  <div className="space-y-2">
+                    <Label htmlFor="username" className="text-gray-300">
+                      Username or Email
+                    </Label>
+                    <Input
+                      id="username"
+                      type="text"
+                      placeholder="john@doe.com"
+                      value={formData.username}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      disabled={loading}
+                      className="bg-gray-900/50 border-gray-600 text-white"
+                      required
+                    />
+                  </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-red-400" />
-                  <span className="text-sm text-red-400">{error}</span>
-                </div>
-              )}
+                  {/* Password */}
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-gray-300">
+                      Password
+                    </Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      disabled={loading}
+                      className="bg-gray-900/50 border-gray-600 text-white"
+                      required
+                    />
+                  </div>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#F5A623] hover:bg-[#E89815] text-white"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Sign In
-                  </>
-                )}
-              </Button>
-            </form>
+                  {/* Error Message */}
+                  {error && (
+                    <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <AlertCircle className="w-4 h-4 text-red-400" />
+                      <span className="text-sm text-red-400">{error}</span>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#F5A623] hover:bg-[#E89815] text-white"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      <>
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Sign In
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              {/* Admin Login Form */}
+              <TabsContent value="admin">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Admin Email */}
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-email" className="text-gray-300">
+                      Admin Email
+                    </Label>
+                    <Input
+                      id="admin-email"
+                      type="email"
+                      placeholder="admin@catchbarrels.app"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      disabled={loading}
+                      className="bg-gray-900/50 border-gray-600 text-white"
+                      required
+                    />
+                  </div>
+
+                  {/* Admin Password */}
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-password" className="text-gray-300">
+                      Password
+                    </Label>
+                    <Input
+                      id="admin-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      disabled={loading}
+                      className="bg-gray-900/50 border-gray-600 text-white"
+                      required
+                    />
+                  </div>
+
+                  {/* Error Message */}
+                  {error && (
+                    <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <AlertCircle className="w-4 h-4 text-red-400" />
+                      <span className="text-sm text-red-400">{error}</span>
+                    </div>
+                  )}
+
+                  {/* Admin Info */}
+                  <div className="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <Shield className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-blue-400">
+                      <p className="font-medium mb-1">Admin Access Required</p>
+                      <p className="text-blue-300/80">
+                        You must have admin or coach role to access this area.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#F5A623] hover:bg-[#E89815] text-white"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="w-4 h-4 mr-2" />
+                        Admin Sign In
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
 
             {/* Divider */}
             <div className="relative my-6">
@@ -225,7 +362,7 @@ export default function LoginClient() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleQuickLogin('john@doe.com', 'johndoe123')}
+                  onClick={() => handleQuickLogin('john@doe.com', 'johndoe123', false)}
                   disabled={loading}
                   className="text-xs border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white"
                 >
@@ -234,10 +371,11 @@ export default function LoginClient() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleQuickLogin('admin@barrels.com', 'admin123')}
+                  onClick={() => handleQuickLogin('admin@barrels.com', 'admin123', true)}
                   disabled={loading}
-                  className="text-xs border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white"
+                  className="text-xs border-[#F5A623]/30 text-[#F5A623] hover:bg-[#F5A623]/10 hover:border-[#F5A623]"
                 >
+                  <Shield className="w-3 h-3 mr-1" />
                   Admin
                 </Button>
               </div>

@@ -16,9 +16,11 @@ export default async function AdminDashboardPage() {
     redirect('/auth/login?callbackUrl=/admin');
   }
 
-  const isCoach = (session.user as any)?.isCoach || false;
+  // Check for admin or coach role
+  const userRole = (session.user as any)?.role || 'player';
+  const hasAdminAccess = userRole === 'admin' || userRole === 'coach';
 
-  if (!isCoach) {
+  if (!hasAdminAccess) {
     redirect('/dashboard?error=unauthorized');
   }
 
