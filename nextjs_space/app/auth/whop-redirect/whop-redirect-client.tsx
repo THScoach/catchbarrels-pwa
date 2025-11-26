@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { isWhopEnvironment, getAndClearRedirectTarget } from '@/lib/whop-utils';
 
 export default function WhopRedirectClient() {
   const router = useRouter();
@@ -14,15 +15,17 @@ export default function WhopRedirectClient() {
 
   useEffect(() => {
     const handleWhopRedirect = async () => {
-      // If already authenticated, go to dashboard
+      // If already authenticated, check for saved redirect target
       if (status === 'authenticated') {
-        router.push('/dashboard');
+        const savedTarget = getAndClearRedirectTarget();
+        router.push(savedTarget || '/dashboard');
         return;
       }
 
       // Get the code from URL params (from Whop OAuth callback)
       const code = searchParams?.get('code');
       const error = searchParams?.get('error');
+      const callbackUrl = searchParams?.get('callbackUrl');
 
       if (error) {
         setError(`Authentication error: ${error}`);
@@ -30,10 +33,15 @@ export default function WhopRedirectClient() {
         return;
       }
 
+      // Check if we're in Whop environment (App Shell)
+      const inWhopEnvironment = isWhopEnvironment();
+
       if (!code) {
         // No code, initiate Whop OAuth
         try {
-          await signIn('whop', { callbackUrl: '/dashboard' });
+          // Use callback URL from params or default to dashboard
+          const targetUrl = callbackUrl || '/dashboard';
+          await signIn('whop', { callbackUrl: targetUrl });
         } catch (err) {
           console.error('Error initiating Whop sign in:', err);
           setError('Failed to connect to Whop. Please try again.');

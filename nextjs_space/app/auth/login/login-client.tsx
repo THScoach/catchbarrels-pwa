@@ -25,10 +25,15 @@ export default function LoginClient() {
     setLoading(true);
 
     try {
+      // Get callback URL from query params
+      const searchParams = new URLSearchParams(window.location.search);
+      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+
       const result = await signIn('credentials', {
         username: formData.username,
         password: formData.password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
@@ -38,9 +43,9 @@ export default function LoginClient() {
         });
       } else if (result?.ok) {
         toast.success('Welcome back!', {
-          description: 'Redirecting to dashboard...',
+          description: 'Redirecting...',
         });
-        router.push('/dashboard');
+        router.push(callbackUrl);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -59,10 +64,15 @@ export default function LoginClient() {
     setLoading(true);
 
     try {
+      // Get callback URL from query params
+      const searchParams = new URLSearchParams(window.location.search);
+      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+
       const result = await signIn('credentials', {
         username,
         password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
@@ -70,7 +80,7 @@ export default function LoginClient() {
         toast.error('Login failed');
       } else if (result?.ok) {
         toast.success('Welcome!');
-        router.push('/dashboard');
+        router.push(callbackUrl);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -180,7 +190,11 @@ export default function LoginClient() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => signIn('whop', { callbackUrl: '/dashboard' })}
+              onClick={() => {
+                const searchParams = new URLSearchParams(window.location.search);
+                const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+                signIn('whop', { callbackUrl });
+              }}
               disabled={loading}
               className="w-full border-[#F5A623]/30 text-white hover:bg-[#F5A623]/10 hover:border-[#F5A623]"
             >
