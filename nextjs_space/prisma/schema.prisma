@@ -80,6 +80,7 @@ model User {
   trainingSessions TrainingSession[] @relation("UserTrainingSessions")
   playerLessons    PlayerLesson[] @relation("UserPlayerLessons")
   brainTestSessions BrainTestSession[] @relation("UserBrainTestSessions")
+  supportTickets   SupportTicket[] @relation("UserSupportTickets")
 }
 
 model Video {
@@ -1302,5 +1303,35 @@ model BrainTestTrial {
   
   @@map("brain_test_trials")
   @@index([sessionId])
+  @@index([createdAt])
+}
+
+// Support Ticket System - In-app bug reporting with screenshots
+model SupportTicket {
+  id              String   @id @default(cuid())
+  userId          String?
+  user            User?    @relation("UserSupportTickets", fields: [userId], references: [id], onDelete: SetNull)
+  userEmail       String?
+  role            String?  // "admin", "coach", "player"
+  
+  // Ticket details
+  whereHappened   String   // "Dashboard", "New Lesson", "History", etc.
+  description     String   @db.Text
+  screenshotUrl   String?  // S3 key for screenshot
+  
+  // Context for debugging
+  userAgent       String?
+  pageUrl         String?
+  extraContext    Json?    // Additional debug info (device, browser, etc.)
+  
+  // Status tracking
+  status          String   @default("open") // "open", "in_progress", "resolved"
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("support_tickets")
+  @@index([userId])
+  @@index([status])
   @@index([createdAt])
 }
