@@ -125,6 +125,12 @@ export interface MomentumTransferComponents {
   decelQualityScore: number;          // 0-100 (upstream decel while downstream peaks)
   smoothnessScore: number;            // 0-100 (low jerk = smooth momentum flow)
   abcTempoScore: number;              // 0-100 (A→B→C timing quality)
+  
+  // Raw timing values (in milliseconds) for UI/Coach Rick
+  abRatio?: number;                   // Acceleration-to-Brake ratio
+  pelvisTorsoGapMs?: number;          // Raw timing gap in ms
+  torsoHandsGapMs?: number;           // Raw timing gap in ms
+  handsBarrelGapMs?: number;          // Raw timing gap in ms
 }
 
 export interface MomentumTransferScore {

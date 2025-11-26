@@ -698,6 +698,12 @@ function calculateMomentumTransferScore(
     decelQualityScore: 0,
     smoothnessScore: 0,
     abcTempoScore: 0,
+    
+    // Raw timing values in milliseconds for UI/Coach Rick
+    abRatio: features.tempo.abRatio,
+    pelvisTorsoGapMs: Math.round(features.sequence.pelvisTorsoGap * 1000 / fps),
+    torsoHandsGapMs: Math.round(features.sequence.torsoHandsGap * 1000 / fps),
+    handsBarrelGapMs: Math.round(features.sequence.handsBatGap * 1000 / fps),
   };
   
   // 1. Sequence Order Score (30% weight)
