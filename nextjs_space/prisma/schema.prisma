@@ -63,6 +63,9 @@ model User {
   modelOverlayOffsetX Int?   @default(0)
   modelOverlayOffsetY Int?   @default(0)
   
+  // Reboot Motion Integration (Work Order - Reboot Import)
+  rebootAthleteId String? // Links this user to a Reboot athlete profile
+  
   profileComplete Boolean   @default(false)
   
   // FTUE/Onboarding Tracking (Work Order #10)
@@ -1345,5 +1348,27 @@ model SupportTicket {
   @@map("support_tickets")
   @@index([userId])
   @@index([status])
+  @@index([createdAt])
+}
+
+// Reboot Motion Data Ingestion (Admin-Only, Phase 1)
+// Stores swing data from Reboot Motion for benchmarking, comparison, and analysis
+model RebootSession {
+  id              String   @id @default(cuid())
+  rebootSessionId String   @unique  // Unique ID from Reboot API
+  rebootAthleteId String?  // Reboot's athlete identifier
+  athleteName     String?  // Name from Reboot
+  athleteEmail    String?  // Email from Reboot (if available)
+  level           String?  // "MLB", "Pro", "College", "HS", "Youth"
+  teamTag         String?  // Team or organization
+  swingDate       DateTime? // When the swing was captured
+  metrics         Json      // Full payload from Reboot API (kinematic/timing data)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("reboot_sessions")
+  @@index([rebootAthleteId])
+  @@index([level])
+  @@index([swingDate])
   @@index([createdAt])
 }
