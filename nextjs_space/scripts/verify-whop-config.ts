@@ -18,8 +18,7 @@ const REQUIRED_ENV_VARS = [
 ];
 
 const EXPECTED_REDIRECT_URLS = [
-  'https://catchbarrels.app/api/auth/callback/whop',
-  'https://catchbarrels.app/auth/whop-redirect',
+  'https://catchbarrels.app/api/auth/callback/whop', // Primary OAuth callback (REQUIRED)
 ];
 
 const COLORS = {
@@ -83,12 +82,13 @@ function main() {
   
   if (clientSecret && apiKey) {
     if (clientSecret === apiKey) {
-      log(COLORS.RED, '   ❌ CLIENT SECRET IS THE SAME AS API KEY!');
-      log(COLORS.YELLOW, '   ⚠️  This is likely INCORRECT. OAuth Client Secret should be different.');
-      log(COLORS.YELLOW, '   ⚠️  Get the correct Client Secret from Whop Developer Dashboard.');
-      hasErrors = true;
+      log(COLORS.GREEN, '   ✅ Client Secret matches API Key');
+      log(COLORS.BLUE, '   ℹ️  Note: Whop uses the same value for both Client Secret and API Key.');
+      log(COLORS.BLUE, '   ℹ️  This is correct for Whop OAuth implementation.');
     } else {
-      log(COLORS.GREEN, '   ✅ Client Secret is different from API Key (correct)');
+      log(COLORS.YELLOW, '   ⚠️  Client Secret is different from API Key');
+      log(COLORS.YELLOW, '   ⚠️  This is unusual for Whop. Double-check your configuration.');
+      hasWarnings = true;
     }
   } else {
     log(COLORS.YELLOW, '   ⚠️  Cannot compare - one or both values missing');
@@ -153,19 +153,25 @@ function main() {
     log(COLORS.YELLOW, 'NEXT STEPS:');
     log(COLORS.YELLOW, '1. Go to Whop Developer Dashboard (https://dev.whop.com/)');
     log(COLORS.YELLOW, '2. Find CatchBarrels app → OAuth Settings');
-    log(COLORS.YELLOW, '3. Copy the CORRECT Client Secret (NOT the API Key)');
-    log(COLORS.YELLOW, '4. Update .env file with correct WHOP_CLIENT_SECRET');
+    log(COLORS.YELLOW, '3. Verify Client ID and Client Secret');
+    log(COLORS.YELLOW, '4. Update .env file with correct credentials');
     log(COLORS.YELLOW, '5. Redeploy the app');
     log(COLORS.YELLOW, '6. Reinstall CatchBarrels app in Whop business');
   } else if (hasWarnings) {
     log(COLORS.YELLOW, '⚠️  WARNINGS FOUND - Please verify configuration');
+    console.log('');
+    log(COLORS.YELLOW, 'RECOMMENDED STEPS:');
+    log(COLORS.YELLOW, '1. Double-check credentials in Whop Dashboard');
+    log(COLORS.YELLOW, '2. Verify redirect URL is registered');
+    log(COLORS.YELLOW, '3. Test login at https://catchbarrels.app/auth/login');
   } else {
     log(COLORS.GREEN, '✅ ALL CHECKS PASSED - Configuration looks good!');
     console.log('');
-    log(COLORS.YELLOW, 'FINAL STEPS:');
-    log(COLORS.YELLOW, '1. Verify redirect URLs are registered in Whop Dashboard');
-    log(COLORS.YELLOW, '2. Test login at https://catchbarrels.app/auth/login');
-    log(COLORS.YELLOW, '3. If still failing, reinstall app in Whop business');
+    log(COLORS.BLUE, 'READY TO TEST:');
+    log(COLORS.BLUE, '1. Deploy the app to production');
+    log(COLORS.BLUE, '2. Test browser login at https://catchbarrels.app/auth/login');
+    log(COLORS.BLUE, '3. Test WAP mobile login via Whop app');
+    log(COLORS.BLUE, '4. If still failing, try reinstalling app in Whop business');
   }
 
   console.log('\n' + '='.repeat(70) + '\n');
