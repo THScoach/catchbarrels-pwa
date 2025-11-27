@@ -103,12 +103,14 @@ export interface RebootSessionPayload {
 }
 
 /**
- * Fetch all sessions from Reboot Motion API
+ * Fetch all hitting sessions from Reboot Motion API
+ * 
+ * Based on Reboot Motion API documentation:
+ * - Endpoint: /hitting-processed-metrics
+ * - Filter by movement_type_id=1 (baseball hitting)
+ * - Returns processed hitting metrics for all athletes
  * 
  * @returns Array of Reboot session payloads
- * 
- * NOTE: This is a test implementation. The actual Reboot API structure may differ.
- * Adjust based on their actual API documentation.
  */
 export async function fetchRebootSessions(): Promise<RebootSessionPayload[]> {
   // Guard: Ensure environment variables are set
@@ -118,81 +120,94 @@ export async function fetchRebootSessions(): Promise<RebootSessionPayload[]> {
     );
   }
 
-  console.log('[Reboot API] Fetching sessions...');
+  console.log('[Reboot API] Fetching hitting sessions...');
   console.log(`[Reboot API] Base URL: ${REBOOT_API_BASE}`);
   console.log(`[Reboot API] API Key configured: ${REBOOT_API_KEY ? 'Yes (length: ' + REBOOT_API_KEY.length + ')' : 'No'}`);
 
   try {
-    // Try different possible endpoints and auth methods
-    const endpoints = [
-      '/sessions',
-      '/swings',
-      '/data',
-      '/api/sessions',
-    ];
+    // Use the correct endpoint from Reboot documentation
+    // Filter by movement_type_id=1 for baseball hitting
+    const url = `${REBOOT_API_BASE}/hitting-processed-metrics?movement_type_id=1`;
+    console.log(`[Reboot API] Fetching from: ${url}`);
 
-    for (const endpoint of endpoints) {
-      const url = `${REBOOT_API_BASE}${endpoint}`;
-      console.log(`[Reboot API] Trying endpoint: ${url}`);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${REBOOT_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
 
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${REBOOT_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        });
-
-        console.log(`[Reboot API] Response status: ${response.status} ${response.statusText}`);
-        
-        // If we get 2xx, try to parse the response
-        if (response.ok) {
-          const data = await response.json();
-          console.log('[Reboot API] Success! Response structure:', Object.keys(data));
-          
-          // Try to find the sessions array in the response
-          const sessions = data.sessions || data.data || data.results || data.swings || [];
-          
-          if (Array.isArray(sessions)) {
-            console.log(`[Reboot API] Found ${sessions.length} sessions`);
-            return sessions.map((s: any) => ({
-              sessionId: s.id || s.session_id || s.sessionId || String(Math.random()),
-              athleteId: s.athlete_id || s.athleteId || s.player_id,
-              athleteName: s.athlete_name || s.athleteName || s.player_name || s.name,
-              athleteEmail: s.athlete_email || s.email,
-              level: s.level || s.skill_level,
-              sessionType: mapSessionTypeFromReboot(s),
-              team: s.team || s.team_name,
-              captureDate: s.capture_date || s.created_at || s.date,
-              metrics: s,
-            }));
-          }
-        }
-        
-        // Log error details for non-200 responses
-        const errorText = await response.text();
-        console.log(`[Reboot API] Error response: ${errorText.substring(0, 200)}`);
-        
-      } catch (endpointError: any) {
-        console.log(`[Reboot API] Endpoint ${endpoint} failed:`, endpointError.message);
-      }
+    console.log(`[Reboot API] Response status: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Reboot API] Error response:`, errorText);
+      throw new Error(
+        `Reboot API returned ${response.status}: ${response.statusText}\n` +
+        `Error details: ${errorText.substring(0, 200)}\n` +
+        `Please verify API key has access to hitting-processed-metrics endpoint.`
+      );
     }
 
-    // If none of the endpoints worked, throw an error with diagnostic info
-    throw new Error(
-      'Unable to connect to Reboot API. Tried multiple endpoints and all returned errors. ' +
-      'Please verify:\n' +
-      '1. REBOOT_API_KEY is correct\n' +
-      '2. REBOOT_API_BASE_URL is correct\n' +
-      '3. API key has proper permissions\n' +
-      '4. Contact Reboot Motion support for correct API endpoint'
-    );
+    const data = await response.json();
+    console.log('[Reboot API] Success! Response received');
+    console.log(`[Reboot API] Response structure:`, Object.keys(data));
+    
+    // The response should contain an array of hitting sessions
+    // Adapt based on actual response structure from Reboot
+    let sessions = data;
+    
+    // Handle different possible response structures
+    if (!Array.isArray(data)) {
+      sessions = data.sessions || data.data || data.results || data.metrics || [];
+    }
+    
+    if (!Array.isArray(sessions)) {
+      console.error('[Reboot API] Unexpected response structure:', data);
+      throw new Error('Reboot API response is not an array. Check API documentation.');
+    }
+
+    console.log(`[Reboot API] Found ${sessions.length} hitting sessions`);
+    
+    // Map Reboot's response to our internal format
+    return sessions.map((session: any) => {
+      const mapped = {
+        // Use Reboot's session/swing ID
+        sessionId: session.id || session.session_id || session.swing_id || String(Math.random()),
+        
+        // Athlete identification
+        athleteId: session.athlete_id || session.user_id,
+        athleteName: session.athlete_name || session.player_name || session.name,
+        athleteEmail: session.athlete_email || session.email,
+        
+        // Session metadata
+        level: session.level || session.skill_level,
+        sessionType: 'HITTING' as SessionType, // We filtered by movement_type_id=1
+        team: session.team || session.team_name || session.organization,
+        
+        // Timing
+        captureDate: session.capture_date || session.created_at || session.date || session.timestamp,
+        
+        // Store full metrics payload
+        metrics: session,
+      };
+      
+      console.log(`[Reboot API] Mapped session: ${mapped.sessionId} - ${mapped.athleteName || 'Unknown'}`);
+      return mapped;
+    });
 
   } catch (error: any) {
     console.error('[Reboot API] Fatal error:', error);
-    throw error;
+    throw new Error(
+      `Failed to fetch from Reboot API: ${error.message}\n\n` +
+      `Troubleshooting:\n` +
+      `1. Verify REBOOT_API_KEY in .env is correct\n` +
+      `2. Ensure API key has access to /hitting-processed-metrics endpoint\n` +
+      `3. Check Reboot Motion dashboard for API permissions\n` +
+      `4. Contact Reboot support if issue persists`
+    );
   }
 }
 
