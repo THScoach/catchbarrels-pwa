@@ -37,6 +37,14 @@ export const barrelsTheme = {
       dark: '#1E5ECC',     // Dark variant
     },
     
+    // Coach/Admin Purple (distinct from player gold theme)
+    purple: {
+      DEFAULT: '#9D6FDB',  // Primary coach accent - softer purple
+      light: '#B88EE8',    // Light variant for gradients
+      dark: '#7C4FC9',     // Dark variant for hover states
+      muted: '#6B4A9E',    // Muted purple for borders/subtle backgrounds
+    },
+    
     // Text System
     text: {
       DEFAULT: '#FFFFFF',  // Primary text (white)
