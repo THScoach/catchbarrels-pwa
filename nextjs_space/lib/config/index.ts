@@ -6,5 +6,6 @@
 
 // Assessment VIP Configuration
 export * from '../assessment-vip-config';
+export * from '../dashboard/types';
 
 // Add other config modules here as needed

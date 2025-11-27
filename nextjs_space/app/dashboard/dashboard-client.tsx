@@ -2,35 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Upload, TrendingUp, Play, ChevronRight, FileText, Sparkles, Crown, Clock } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Upload, Crown, Clock, TrendingUp, AlertCircle, CheckCircle, AlertTriangle, ChevronRight, Zap, Target, Activity } from 'lucide-react'
 import Link from 'next/link'
 import { format, differenceInDays } from 'date-fns'
+import { DashboardSummary } from '@/lib/dashboard/types'
 import { CoachRickDrawer } from '@/components/coach-rick-drawer'
-import { Tile, TileHeader } from '@/components/ui/tile'
 import { BarrelsButton } from '@/components/ui/barrels-button'
-import { RickTip } from '@/components/ui/rick-tip'
-import { Pill } from '@/components/ui/pill'
-import { ScoreItem, ScoreGrid } from '@/components/ui/score-item'
-import { FourBTile } from '@/components/four-b-tile'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { HelpBeacon } from '@/components/help/HelpBeacon'
 import { FTUEModal } from '@/components/onboarding/ftue-modal'
 
 interface DashboardClientProps {
   user: any
-  scores: {
-    barrel: number
-    anchor: number
-    engine: number
-    whip: number
-    barrelDelta?: number  // Change vs last session
-    anchorDelta?: number
-    engineDelta?: number
-    whipDelta?: number
-  }
-  coachingText: string | null
-  recommendedDrills: any[]
-  latestAssessmentDate: Date | null
+  summary: DashboardSummary
   membershipInfo: any
   vipOfferInfo: {
     assessmentCompletedAt: Date | null
@@ -41,10 +27,7 @@ interface DashboardClientProps {
 
 export default function DashboardClient({
   user,
-  scores,
-  coachingText,
-  recommendedDrills,
-  latestAssessmentDate,
+  summary,
   membershipInfo,
   vipOfferInfo,
 }: DashboardClientProps) {
@@ -52,6 +35,7 @@ export default function DashboardClient({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [showFTUE, setShowFTUE] = useState(false)
   const [onboardingChecked, setOnboardingChecked] = useState(false)
+  const [selectedMetric, setSelectedMetric] = useState<any>(null)
 
   // Check if user needs onboarding
   useEffect(() => {
@@ -76,565 +60,719 @@ export default function DashboardClient({
 
   const handleOnboardingComplete = () => {
     setShowFTUE(false);
-    router.refresh(); // Refresh to update user data
+    router.refresh();
   };
 
-  // Check if user has completed their first session
-  const hasFirstSession = user?.firstSessionCompleted || scores?.barrel > 0;
-
-  // Primary drill is the first in the list
-  const primaryDrill = recommendedDrills?.[0]
-  const alternateDrills = recommendedDrills?.slice(1, 4) || []
-
   return (
-    <div className="min-h-screen bg-barrels-bg">
+    <div className="min-h-screen bg-barrels-bg pb-24">
       <main className="p-4 space-y-6 max-w-4xl mx-auto pt-4 mt-4">
         
-        {/* Welcome Message with Branding */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="text-center space-y-3"
-        >
-          <h1 className="text-2xl md:text-3xl font-bold text-white">
-            Welcome back, {user?.name?.split(' ')[0] || 'Player'}.
-          </h1>
-          <div className="space-y-1">
-            <h2 className="text-lg md:text-xl font-semibold text-barrels-gold">
-              CatchBarrels Momentum Dashboard
-            </h2>
-            <p className="text-barrels-muted text-sm md:text-base max-w-2xl mx-auto">
-              Built by Coach Rick to measure how well you move energy, not just how hard you swing.
-            </p>
-          </div>
-        </motion.div>
+        {/* Header Strip */}
+        <HeaderStrip user={user} membershipInfo={membershipInfo} />
 
-        {/* Coach Rick Tip */}
-        <RickTip
-          variant="compact"
-          text="Every swing is a data point. Try to record 15 clean swings per session to get the most accurate momentum analysis."
+        {/* VIP Banner (if active) */}
+        {vipOfferInfo.vipActive && vipOfferInfo.vipExpiresAt && (
+          <VIPBanner vipOfferInfo={vipOfferInfo} />
+        )}
+
+        {/* Start New Session CTA */}
+        <StartNewSessionCTA />
+
+        {/* Core Scores Row */}
+        <CoreScoresRow scores={summary.coreScores} />
+
+        {/* Traffic Light Summary */}
+        <TrafficLightSummary
+          strengths={summary.strengths}
+          watchItems={summary.watchItems}
+          priority={summary.priorityIssue}
+          onMetricClick={setSelectedMetric}
         />
 
-        {/* VIP Offer Banner (Assessment → VIP Pricing) */}
-        {vipOfferInfo.vipActive && vipOfferInfo.vipExpiresAt && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="rounded-2xl bg-gradient-to-br from-barrels-gold/20 via-barrels-gold/10 to-barrels-gold-light/5 border-2 border-barrels-gold/40 p-6 shadow-xl"
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-barrels-gold to-barrels-gold-light flex items-center justify-center shadow-lg">
-                  <Crown className="w-6 h-6 text-barrels-black" />
-                </div>
+        {/* Flow Timeline Bar */}
+        <FlowTimelineBar timingLeaks={summary.timingLeaks} />
+
+        {/* Metric Cards Grid */}
+        <MetricCardsGrid
+          strengths={summary.strengths}
+          watchItems={summary.watchItems}
+          priority={summary.priorityIssue}
+          drills={summary.suggestedDrills}
+          onMetricClick={setSelectedMetric}
+        />
+
+        {/* Next 30 Days Plan */}
+        <Next30DaysPlan plan={summary.next30Days} membershipInfo={membershipInfo} />
+
+        {/* Help Beacon */}
+        <HelpBeacon pageId="dashboard" />
+      </main>
+
+      {/* Coach Rick Drawer */}
+      <CoachRickDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+
+      {/* FTUE Modal */}
+      {showFTUE && (
+        <FTUEModal
+          open={showFTUE}
+          onComplete={handleOnboardingComplete}
+        />
+      )}
+
+      {/* Metric Detail Drawer */}
+      <MetricDetailDrawer
+        metric={selectedMetric}
+        isOpen={!!selectedMetric}
+        onClose={() => setSelectedMetric(null)}
+        drills={summary.suggestedDrills}
+      />
+    </div>
+  )
+}
+
+/**
+ * Header Strip (logo, player name, plan badge)
+ */
+function HeaderStrip({ user, membershipInfo }: { user: any; membershipInfo: any }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center justify-between"
+    >
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-white">
+          Hey, {user?.name?.split(' ')[0] || 'Player'}!
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Let's check your hitting health
+        </p>
+      </div>
+      <Badge variant="outline" className="text-barrels-gold border-barrels-gold">
+        {membershipInfo.tier === 'elite' ? 'Elite' : membershipInfo.tier === 'pro' ? 'Pro' : 'Athlete'}
+      </Badge>
+    </motion.div>
+  )
+}
+
+/**
+ * VIP Banner (Assessment → VIP Pricing)
+ */
+function VIPBanner({ vipOfferInfo }: { vipOfferInfo: any }) {
+  const daysRemaining = vipOfferInfo.vipExpiresAt
+    ? differenceInDays(new Date(vipOfferInfo.vipExpiresAt), new Date())
+    : 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-xl bg-gradient-to-br from-barrels-gold/20 via-barrels-gold-light/10 to-transparent border border-barrels-gold/30 p-6"
+    >
+      <div className="relative z-10">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <Crown className="w-5 h-5 text-barrels-gold" />
+              <h3 className="text-lg font-bold text-white">Coach Rick VIP Access Unlocked</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              You completed an assessment! Upgrade to BARRELS Pro at the VIP rate.
+            </p>
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-barrels-gold" />
+                <span className="text-white font-medium">{daysRemaining} days left</span>
               </div>
-              
-              <div className="flex-1 space-y-3">
-                <div className="space-y-1">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    Coach Rick VIP Access Unlocked
-                    <span className="text-sm font-normal px-2 py-1 rounded-full bg-barrels-gold/20 text-barrels-gold border border-barrels-gold/30">
-                      {(() => {
-                        const daysRemaining = differenceInDays(
-                          new Date(vipOfferInfo.vipExpiresAt),
-                          new Date()
-                        );
-                        return `${Math.max(0, daysRemaining)} days left`;
-                      })()}
-                    </span>
-                  </h3>
-                  <p className="text-gray-300 text-sm leading-relaxed">
-                    Because you completed a CatchBarrels Assessment, you can train with Coach Rick for a special VIP rate of <span className="font-bold text-barrels-gold">$99/month</span> for the next{' '}
-                    {(() => {
-                      const daysRemaining = differenceInDays(
-                        new Date(vipOfferInfo.vipExpiresAt),
-                        new Date()
-                      );
-                      return Math.max(0, daysRemaining);
-                    })()}{' '}
-                    days.
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <a
-                    href="https://whop.com/barrels-pro/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block"
-                  >
-                    <BarrelsButton variant="primary" size="md">
-                      <Crown className="w-4 h-4 mr-2" />
-                      Upgrade to VIP Training
-                    </BarrelsButton>
-                  </a>
-                  
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Clock className="w-4 h-4" />
-                    <span>
-                      Offer expires {format(new Date(vipOfferInfo.vipExpiresAt), 'MMM d, yyyy')}
-                    </span>
-                  </div>
-                </div>
+              <div className="text-muted-foreground">
+                VIP Rate: <span className="text-barrels-gold font-bold">$99/month</span>
               </div>
             </div>
-          </motion.div>
-        )}
-
-        {/* Primary Action - Start New Session */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-        >
-          <Link href="/lesson/new" className="block">
-            <BarrelsButton variant="primary" size="lg" className="w-full">
-              <Upload className="w-6 h-6 mr-2" />
-              Start New Session
+            <p className="text-xs text-muted-foreground mt-2">
+              Offer expires: {format(new Date(vipOfferInfo.vipExpiresAt), 'MMM dd, yyyy')}
+            </p>
+          </div>
+          <Link href="https://whop.com/barrels-pro/" target="_blank" rel="noopener noreferrer">
+            <BarrelsButton variant="primary" size="sm">
+              Upgrade to VIP Training
             </BarrelsButton>
           </Link>
-        </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
 
-        {/* Hero BARREL Score - Two Column Layout OR First Session CTA */}
-        {!hasFirstSession ? (
+/**
+ * Start New Session CTA
+ */
+function StartNewSessionCTA() {
+  return (
+    <Link href="/video/upload">
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-barrels-gold via-barrels-gold-light to-barrels-gold p-6 cursor-pointer group"
+      >
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-barrels-black mb-1">Start New Session</h3>
+            <p className="text-sm text-barrels-black/80">Upload a video to analyze your swing</p>
+          </div>
+          <div className="bg-barrels-black/10 rounded-full p-3 group-hover:bg-barrels-black/20 transition-colors">
+            <Upload className="w-6 h-6 text-barrels-black" />
+          </div>
+        </div>
+      </motion.div>
+    </Link>
+  )
+}
+
+/**
+ * Core Scores Row (POWER / FLOW / CONTACT)
+ */
+function CoreScoresRow({ scores }: { scores: any[] }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {scores.map((score, index) => (
+        <motion.div
+          key={score.label}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+        >
+          <Card className="bg-barrels-black-light border-gray-800 hover:border-barrels-gold/30 transition-colors">
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center text-center">
+                {/* Color ring */}
+                <div
+                  className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 ring-4 ${
+                    score.color === 'green'
+                      ? 'ring-emerald-500/30 bg-emerald-500/10'
+                      : score.color === 'yellow'
+                      ? 'ring-yellow-500/30 bg-yellow-500/10'
+                      : 'ring-red-500/30 bg-red-500/10'
+                  }`}
+                >
+                  <span
+                    className={`text-3xl font-bold ${
+                      score.color === 'green'
+                        ? 'text-emerald-500'
+                        : score.color === 'yellow'
+                        ? 'text-yellow-500'
+                        : 'text-red-500'
+                    }`}
+                  >
+                    {score.score}
+                  </span>
+                </div>
+                {/* Label */}
+                <h3 className="text-sm font-bold text-white uppercase tracking-wide mb-1">
+                  {score.label}
+                </h3>
+                {/* Tagline */}
+                <p className="text-xs text-muted-foreground leading-tight">
+                  {score.shortTagline}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Traffic Light Summary (Green/Yellow/Red sections)
+ */
+function TrafficLightSummary({
+  strengths,
+  watchItems,
+  priority,
+  onMetricClick,
+}: {
+  strengths: any[]
+  watchItems: any[]
+  priority: any
+  onMetricClick: (metric: any) => void
+}) {
+  return (
+    <div className="space-y-4">
+      {/* Green - Strengths */}
+      {strengths.length > 0 && (
+        <Card className="bg-emerald-500/10 border-emerald-500/30">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-500" />
+              <CardTitle className="text-emerald-500">What You're Doing Well</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {strengths.map((item, index) => (
+                <motion.li
+                  key={index}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => onMetricClick({ ...item, status: 'strength' })}
+                  className="flex items-start gap-2 cursor-pointer hover:bg-emerald-500/5 p-2 rounded transition-colors"
+                >
+                  <span className="text-emerald-500 mt-0.5">•</span>
+                  <div>
+                    <span className="text-white font-medium">{item.title}</span>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                </motion.li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Yellow - Watch Items */}
+      {watchItems.length > 0 && (
+        <Card className="bg-yellow-500/10 border-yellow-500/30">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-500" />
+              <CardTitle className="text-yellow-500">What to Watch</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {watchItems.map((item, index) => (
+                <motion.li
+                  key={index}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => onMetricClick({ ...item, status: 'watch' })}
+                  className="flex items-start gap-2 cursor-pointer hover:bg-yellow-500/5 p-2 rounded transition-colors"
+                >
+                  <span className="text-yellow-500 mt-0.5">•</span>
+                  <div>
+                    <span className="text-white font-medium">{item.title}</span>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                </motion.li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Red - Priority Issue */}
+      <Card className="bg-red-500/10 border-red-500/30">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <CardTitle className="text-red-500">Biggest Opportunity</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="rounded-2xl bg-gradient-to-br from-barrels-gold/10 to-barrels-gold-light/5 border border-barrels-gold/30 p-8 text-center"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => onMetricClick({ ...priority, status: 'priority' })}
+            className="cursor-pointer hover:bg-red-500/5 p-2 rounded transition-colors"
           >
-            <Sparkles className="w-12 h-12 text-barrels-gold mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-2">
-              Unlock Your Momentum Transfer Score
-            </h2>
-            <p className="text-gray-300 mb-6 max-w-lg mx-auto">
-              Complete one swing session to unlock your Momentum Transfer Score, Flow Path analysis, and personalized coaching from Coach Rick.
-            </p>
-            <Link href="/video/upload" className="inline-block">
-              <BarrelsButton variant="primary" size="lg">
-                Start My First Session →
+            <h4 className="text-white font-bold mb-1">{priority.title}</h4>
+            <p className="text-sm text-muted-foreground">{priority.description}</p>
+          </motion.div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+/**
+ * Flow Timeline Bar (A → B → C)
+ */
+function FlowTimelineBar({ timingLeaks }: { timingLeaks: any[] }) {
+  // Find the worst leak (red > yellow > green)
+  const worstLeak = timingLeaks.reduce((worst, leak) => {
+    if (leak.color === 'red') return leak;
+    if (leak.color === 'yellow' && worst.color !== 'red') return leak;
+    return worst;
+  }, timingLeaks[0]);
+
+  return (
+    <Card className="bg-barrels-black-light border-gray-800">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="w-5 h-5 text-barrels-gold" />
+          Flow Timeline
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Timeline Bar */}
+        <div className="relative">
+          {/* Connection line */}
+          <div className="absolute top-6 left-8 right-8 h-0.5 bg-gray-700" />
+          
+          {/* Nodes */}
+          <div className="relative flex justify-between px-4">
+            {timingLeaks.map((leak, index) => (
+              <div key={leak.phase} className="flex flex-col items-center">
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg mb-2 ring-4 ${
+                    leak.color === 'green'
+                      ? 'ring-emerald-500/30 bg-emerald-500/20 text-emerald-500'
+                      : leak.color === 'yellow'
+                      ? 'ring-yellow-500/30 bg-yellow-500/20 text-yellow-500'
+                      : 'ring-red-500/30 bg-red-500/20 text-red-500'
+                  }`}
+                >
+                  {leak.phase}
+                </div>
+                <span className="text-xs text-muted-foreground font-medium">{leak.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Issue Summary */}
+        <div className="mt-6 p-4 bg-barrels-black rounded-lg border border-gray-800">
+          <p className="text-sm text-muted-foreground">
+            <span className="text-white font-medium">Flow Issue: </span>
+            {worstLeak.issueSummary}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
+ * Metric Cards Grid
+ */
+function MetricCardsGrid({
+  strengths,
+  watchItems,
+  priority,
+  drills,
+  onMetricClick,
+}: {
+  strengths: any[]
+  watchItems: any[]
+  priority: any
+  drills: any[]
+  onMetricClick: (metric: any) => void
+}) {
+  // Combine all metrics with status
+  const allMetrics = [
+    ...strengths.map((m) => ({ ...m, status: 'strength' })),
+    ...watchItems.map((m) => ({ ...m, status: 'watch' })),
+    { ...priority, status: 'priority' },
+  ];
+
+  // Group by category
+  const powerMetrics = allMetrics.filter((m) => m.category === 'power');
+  const flowMetrics = allMetrics.filter((m) => m.category === 'flow');
+  const contactMetrics = allMetrics.filter((m) => m.category === 'contact');
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold text-white">Detailed Breakdown</h2>
+      
+      {/* POWER Category */}
+      {powerMetrics.length > 0 && (
+        <MetricCategorySection
+          title="POWER"
+          icon={<Zap className="w-5 h-5" />}
+          metrics={powerMetrics}
+          onMetricClick={onMetricClick}
+        />
+      )}
+
+      {/* FLOW Category */}
+      {flowMetrics.length > 0 && (
+        <MetricCategorySection
+          title="FLOW"
+          icon={<Activity className="w-5 h-5" />}
+          metrics={flowMetrics}
+          onMetricClick={onMetricClick}
+        />
+      )}
+
+      {/* CONTACT Category */}
+      {contactMetrics.length > 0 && (
+        <MetricCategorySection
+          title="CONTACT"
+          icon={<Target className="w-5 h-5" />}
+          metrics={contactMetrics}
+          onMetricClick={onMetricClick}
+        />
+      )}
+    </div>
+  )
+}
+
+function MetricCategorySection({
+  title,
+  icon,
+  metrics,
+  onMetricClick,
+}: {
+  title: string
+  icon: React.ReactNode
+  metrics: any[]
+  onMetricClick: (metric: any) => void
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="text-barrels-gold">{icon}</div>
+        <h3 className="text-lg font-bold text-white">{title}</h3>
+      </div>
+      <div className="grid grid-cols-1 gap-3">
+        {metrics.map((metric, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+            onClick={() => onMetricClick(metric)}
+            className="cursor-pointer"
+          >
+            <Card className="bg-barrels-black-light border-gray-800 hover:border-barrels-gold/30 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${
+                          metric.status === 'strength'
+                            ? 'border-emerald-500 text-emerald-500'
+                            : metric.status === 'watch'
+                            ? 'border-yellow-500 text-yellow-500'
+                            : 'border-red-500 text-red-500'
+                        }`}
+                      >
+                        {metric.category.toUpperCase()}
+                      </Badge>
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          metric.status === 'strength'
+                            ? 'bg-emerald-500'
+                            : metric.status === 'watch'
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
+                        }`}
+                      />
+                    </div>
+                    <h4 className="text-white font-medium mb-1">{metric.title}</h4>
+                    <p className="text-sm text-muted-foreground">{metric.description}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Next 30 Days Plan
+ */
+function Next30DaysPlan({ plan, membershipInfo }: { plan: any; membershipInfo: any }) {
+  const currentTier = membershipInfo.tier;
+  const needsUpgrade = plan.recommendedTier !== currentTier && 
+    ((plan.recommendedTier === 'pro' && currentTier === 'athlete') ||
+     (plan.recommendedTier === 'elite' && (currentTier === 'athlete' || currentTier === 'pro')));
+
+  return (
+    <Card className="bg-gradient-to-br from-barrels-gold/10 via-barrels-black-light to-barrels-black-light border-barrels-gold/30">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-barrels-gold">
+          <TrendingUp className="w-5 h-5" />
+          Next 30 Days - Game Plan
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Sessions per week */}
+        <div>
+          <p className="text-sm text-muted-foreground mb-1">Recommended Frequency</p>
+          <p className="text-lg font-bold text-white">
+            {plan.sessionsPerWeek} sessions per week
+          </p>
+        </div>
+
+        {/* Recommended tier */}
+        <div>
+          <p className="text-sm text-muted-foreground mb-1">Recommended Tier</p>
+          <Badge
+            variant="outline"
+            className={`text-sm ${
+              plan.recommendedTier === 'elite'
+                ? 'border-purple-500 text-purple-500'
+                : plan.recommendedTier === 'pro'
+                ? 'border-barrels-gold text-barrels-gold'
+                : 'border-blue-500 text-blue-500'
+            }`}
+          >
+            {plan.recommendedTier.toUpperCase()}
+          </Badge>
+        </div>
+
+        {/* Focus bullets */}
+        <div>
+          <p className="text-sm text-muted-foreground mb-2">Your Focus Areas</p>
+          <ul className="space-y-2">
+            {plan.focusBullets.map((bullet: string, index: number) => (
+              <motion.li
+                key={index}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-start gap-2"
+              >
+                <span className="text-barrels-gold mt-0.5">•</span>
+                <span className="text-sm text-white">{bullet}</span>
+              </motion.li>
+            ))}
+          </ul>
+        </div>
+
+        {/* CTA */}
+        <div className="pt-4 border-t border-gray-800">
+          {needsUpgrade ? (
+            <Link href="https://whop.com/barrels-pro/" target="_blank" rel="noopener noreferrer">
+              <BarrelsButton variant="primary" className="w-full">
+                Upgrade to {plan.recommendedTier.charAt(0).toUpperCase() + plan.recommendedTier.slice(1)}
               </BarrelsButton>
             </Link>
-          </motion.div>
-        ) : (
+          ) : (
+            <Link href="/video/upload">
+              <BarrelsButton variant="primary" className="w-full">
+                Book Your Next Session
+              </BarrelsButton>
+            </Link>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
+ * Metric Detail Drawer (modal for clicking metric cards)
+ */
+function MetricDetailDrawer({
+  metric,
+  isOpen,
+  onClose,
+  drills,
+}: {
+  metric: any
+  isOpen: boolean
+  onClose: () => void
+  drills: any[]
+}) {
+  if (!metric) return null;
+
+  // Filter drills by category
+  const relatedDrills = drills.filter((drill) => drill.primaryCategory === metric.category).slice(0, 3);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+          />
+
+          {/* Drawer */}
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="rounded-2xl bg-barrels-surface border border-barrels-border p-4 md:p-5 text-barrels-text"
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-0 left-0 right-0 z-50 bg-barrels-black-light border-t border-gray-800 rounded-t-2xl max-h-[80vh] overflow-y-auto"
           >
-            <div className="flex gap-4 md:gap-6 items-stretch">
-              {/* LEFT: Circular BARREL Score Gauge */}
-              <div className="flex-1 flex flex-col items-center justify-center">
-              <div className="relative flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
-                {/* SVG Circular Ring */}
-                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  {/* Background track */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    fill="none"
-                    stroke="#2E3440"
-                    strokeWidth="12"
-                  />
-                  {/* Progress ring - Electric Gold */}
-                  <motion.circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    fill="none"
-                    stroke="url(#barrelsGradient)"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 40}`}
-                    initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
-                    animate={{ 
-                      strokeDashoffset: 2 * Math.PI * 40 * (1 - (scores?.barrel || 0) / 100) 
-                    }}
-                    transition={{ duration: 1.8, delay: 0.2, ease: "easeOut" }}
-                  />
-                  <defs>
-                    <linearGradient id="barrelsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#FFC93C" />
-                      <stop offset="100%" stopColor="#FFD54A" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                
-                {/* Center text - Score only, no percentage */}
-                <div className="flex flex-col items-center justify-center">
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
-                    className="text-5xl md:text-6xl font-bold leading-none"
-                    style={{ color: '#FFFFFF' }}
-                  >
-                    {scores?.barrel || 0}
-                  </motion.div>
-                  <div className="mt-1 text-xs text-barrels-muted uppercase tracking-wide">
-                    Score
+            <div className="p-6 space-y-4">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${
+                        metric.status === 'strength'
+                          ? 'border-emerald-500 text-emerald-500'
+                          : metric.status === 'watch'
+                          ? 'border-yellow-500 text-yellow-500'
+                          : 'border-red-500 text-red-500'
+                      }`}
+                    >
+                      {metric.category.toUpperCase()} - {metric.status === 'strength' ? 'GREEN' : metric.status === 'watch' ? 'YELLOW' : 'RED'}
+                    </Badge>
                   </div>
+                  <h3 className="text-2xl font-bold text-white">{metric.title}</h3>
                 </div>
-              </div>
-
-              {/* Delta indicator below circle */}
-              {scores?.barrel > 0 && scores?.barrelDelta !== undefined && (
-                <motion.p
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.6 }}
-                  className={
-                    "mt-3 text-xs font-medium " +
-                    (scores.barrelDelta >= 0 ? "text-emerald-400" : "text-red-400")
-                  }
+                <button
+                  onClick={onClose}
+                  className="text-muted-foreground hover:text-white transition-colors"
                 >
-                  {scores.barrelDelta >= 0 ? "▲" : "▼"} {Math.abs(scores.barrelDelta)} pts since last session
-                </motion.p>
-              )}
-            </div>
-
-            {/* RIGHT: Stacked Anchor/Engine/Whip Mini-Cards */}
-            <div className="w-40 md:w-48 flex flex-col space-y-2">
-              {/* Anchor Card */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.4 }}
-                className="flex items-center justify-between rounded-xl bg-white/3 border border-barrels-border px-3 py-2"
-              >
-                <div>
-                  <p className="text-[11px] text-barrels-muted uppercase tracking-wide">
-                    Anchor
-                  </p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-white">
-                      {scores?.anchor || 0}
-                    </span>
-                    <span className="text-[10px] text-barrels-muted uppercase tracking-wide">
-                      Score
-                    </span>
-                  </div>
-                </div>
-
-                {scores?.anchorDelta !== undefined && (
-                  <div className="flex flex-col items-end">
-                    <span
-                      className={
-                        "text-[11px] font-semibold " +
-                        (scores.anchorDelta >= 0 ? "text-emerald-400" : "text-red-400")
-                      }
-                    >
-                      {scores.anchorDelta >= 0 ? "▲" : "▼"} {Math.abs(scores.anchorDelta)} pts
-                    </span>
-                    <span className="text-[10px] text-barrels-muted">
-                      vs last
-                    </span>
-                  </div>
-                )}
-              </motion.div>
-
-              {/* Engine Card */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.5 }}
-                className="flex items-center justify-between rounded-xl bg-white/3 border border-barrels-border px-3 py-2"
-              >
-                <div>
-                  <p className="text-[11px] text-barrels-muted uppercase tracking-wide">
-                    Engine
-                  </p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-white">
-                      {scores?.engine || 0}
-                    </span>
-                    <span className="text-[10px] text-barrels-muted uppercase tracking-wide">
-                      Score
-                    </span>
-                  </div>
-                </div>
-
-                {scores?.engineDelta !== undefined && (
-                  <div className="flex flex-col items-end">
-                    <span
-                      className={
-                        "text-[11px] font-semibold " +
-                        (scores.engineDelta >= 0 ? "text-emerald-400" : "text-red-400")
-                      }
-                    >
-                      {scores.engineDelta >= 0 ? "▲" : "▼"} {Math.abs(scores.engineDelta)} pts
-                    </span>
-                    <span className="text-[10px] text-barrels-muted">
-                      vs last
-                    </span>
-                  </div>
-                )}
-              </motion.div>
-
-              {/* Whip Card */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.6 }}
-                className="flex items-center justify-between rounded-xl bg-white/3 border border-barrels-border px-3 py-2"
-              >
-                <div>
-                  <p className="text-[11px] text-barrels-muted uppercase tracking-wide">
-                    Whip
-                  </p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-white">
-                      {scores?.whip || 0}
-                    </span>
-                    <span className="text-[10px] text-barrels-muted uppercase tracking-wide">
-                      Score
-                    </span>
-                  </div>
-                </div>
-
-                {scores?.whipDelta !== undefined && (
-                  <div className="flex flex-col items-end">
-                    <span
-                      className={
-                        "text-[11px] font-semibold " +
-                        (scores.whipDelta >= 0 ? "text-emerald-400" : "text-red-400")
-                      }
-                    >
-                      {scores.whipDelta >= 0 ? "▲" : "▼"} {Math.abs(scores.whipDelta)} pts
-                    </span>
-                    <span className="text-[10px] text-barrels-muted">
-                      vs last
-                    </span>
-                  </div>
-                )}
-              </motion.div>
-            </div>
-          </div>
-        </motion.div>
-        )}
-
-        {/* Quick Stats Tiles */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-3"
-        >
-          {/* Sessions This Week */}
-          <div className="bg-barrels-surface border border-barrels-border rounded-xl p-4">
-            <div className="text-barrels-muted text-xs uppercase tracking-wide mb-2">
-              This Week
-            </div>
-            <div className="text-2xl font-bold text-white">
-              {/* Mock data - replace with real data */}
-              5
-            </div>
-            <div className="text-barrels-muted text-xs mt-1">
-              Sessions
-            </div>
-          </div>
-
-          {/* Average Momentum Transfer (30 days) */}
-          <div className="bg-barrels-surface border border-barrels-border rounded-xl p-4">
-            <div className="text-barrels-muted text-xs uppercase tracking-wide mb-2">
-              30-Day Avg
-            </div>
-            <div className="text-2xl font-bold text-barrels-gold">
-              {scores?.barrel || 0}
-            </div>
-            <div className="text-barrels-muted text-xs mt-1">
-              Momentum
-            </div>
-          </div>
-
-          {/* Best Session */}
-          <div className="bg-barrels-surface border border-barrels-border rounded-xl p-4">
-            <div className="text-barrels-muted text-xs uppercase tracking-wide mb-2">
-              Best Session
-            </div>
-            <div className="text-2xl font-bold text-emerald-400">
-              {Math.min((scores?.barrel || 0) + 8, 100)}
-            </div>
-            <div className="text-barrels-muted text-xs mt-1">
-              Score
-            </div>
-          </div>
-
-          {/* Last Update */}
-          <div className="bg-barrels-surface border border-barrels-border rounded-xl p-4">
-            <div className="text-barrels-muted text-xs uppercase tracking-wide mb-2">
-              Last Update
-            </div>
-            <div className="text-sm font-bold text-white">
-              {latestAssessmentDate 
-                ? format(new Date(latestAssessmentDate), 'MMM d')
-                : 'N/A'
-              }
-            </div>
-            <div className="text-barrels-muted text-xs mt-1">
-              {latestAssessmentDate 
-                ? format(new Date(latestAssessmentDate), 'yyyy')
-                : 'No data'
-              }
-            </div>
-          </div>
-        </motion.div>
-
-        {/* 4B System Tile */}
-        <FourBTile />
-
-        {/* BARRELS-Style Coaching Text Block */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <Tile>
-            <TileHeader 
-              title="Your Current Focus"
-              subtitle="Based on your latest assessment"
-              action={
-                <div className="w-10 h-10 rounded-full bg-barrels-gold/20 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-barrels-gold" />
-                </div>
-              }
-            />
-            
-            {coachingText ? (
-              <div className="text-barrels-text text-sm leading-relaxed whitespace-pre-wrap">
-                {coachingText}
+                  ✕
+                </button>
               </div>
-            ) : (
-              <div className="text-barrels-muted text-sm italic">
-                Complete your first assessment to receive personalized coaching guidance.
+
+              {/* Description */}
+              <p className="text-muted-foreground leading-relaxed">{metric.description}</p>
+
+              {/* What it means */}
+              <div className="p-4 bg-barrels-black rounded-lg border border-gray-800">
+                <h4 className="text-sm font-bold text-white mb-2">What This Means</h4>
+                <p className="text-sm text-muted-foreground">
+                  {metric.status === 'strength'
+                    ? `This is a major strength in your swing. Keep doing what you're doing and maintain this level of performance.`
+                    : metric.status === 'watch'
+                    ? `This area is decent but has room for improvement. Focus on consistency and refinement.`
+                    : `This is your biggest opportunity for improvement. Prioritize drills and coaching in this area.`}
+                </p>
               </div>
-            )}
-          </Tile>
-        </motion.div>
 
-        {/* Recommended Work (Drills) Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.4 }}
-          className="space-y-4"
-        >
-          <h3 className="text-xl font-bold text-barrels-text">Recommended Work</h3>
-          
-          {primaryDrill ? (
-            <>
-              {/* Primary Drill */}
-              <Tile className="bg-gradient-to-br from-barrels-gold/5 to-barrels-surface border-barrels-gold/20">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-barrels-gold/20 flex items-center justify-center flex-shrink-0">
-                    <Play className="w-5 h-5 text-barrels-gold" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-barrels-text mb-1">{primaryDrill.name}</h4>
-                    <p className="text-sm text-barrels-muted">
-                      {primaryDrill.primaryPurpose || primaryDrill.description || 'Recommended drill for your current focus'}
-                    </p>
-                  </div>
-                </div>
-                <Link href={`/drills/${primaryDrill.id}`}>
-                  <BarrelsButton variant="primary">
-                    View Drill Details
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </BarrelsButton>
-                </Link>
-              </Tile>
-
-              {/* Alternate Drills */}
-              {alternateDrills.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm text-barrels-muted font-medium">Alternate Drills:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {alternateDrills.map((drill: any) => (
+              {/* Related Drills */}
+              {relatedDrills.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-3">Recommended Drills</h4>
+                  <div className="space-y-2">
+                    {relatedDrills.map((drill, index) => (
                       <Link key={drill.id} href={`/drills/${drill.id}`}>
-                        <BarrelsButton variant="secondary" className="w-auto">
-                          {drill.name}
-                        </BarrelsButton>
+                        <motion.div
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="p-3 bg-barrels-black rounded-lg border border-gray-800 hover:border-barrels-gold/30 transition-colors flex items-center justify-between"
+                        >
+                          <span className="text-sm text-white font-medium">{drill.title}</span>
+                          <ChevronRight className="w-4 h-4 text-barrels-gold" />
+                        </motion.div>
                       </Link>
                     ))}
                   </div>
                 </div>
               )}
-            </>
-          ) : (
-            <Tile className="text-center">
-              <p className="text-barrels-muted text-sm mb-4">
-                No drills recommended yet. Complete your first assessment to get personalized drill recommendations.
-              </p>
-            </Tile>
-          )}
-        </motion.div>
 
-        {/* Primary Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          <Link href="/lesson/new">
-            <BarrelsButton variant="primary" size="lg" className="w-full">
-              <Upload className="w-5 h-5 mr-2" />
-              Start New Lesson
-            </BarrelsButton>
-          </Link>
-          
-          <Link href="/assessments/new">
-            <BarrelsButton variant="secondary" size="lg" className="w-full">
-              <FileText className="w-5 h-5 mr-2" />
-              View Full Report
-            </BarrelsButton>
-          </Link>
-        </motion.div>
-
-        {/* Need Help? */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.6 }}
-          className="text-center py-4"
-        >
-          <button
-            onClick={() => setIsDrawerOpen(true)}
-            className="text-barrels-gold hover:text-barrels-gold-light text-sm font-medium transition-colors"
-          >
-            Need help? Ask Coach Rick →
-          </button>
-        </motion.div>
-
-      </main>
-
-      {/* Bottom Navigation */}
-      
-      {/* Coach Rick Drawer */}
-      <CoachRickDrawer 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)}
-        context={{ pageType: 'dashboard' }}
-      />
-
-      {/* Help Beacon */}
-      <HelpBeacon 
-        pageId="dashboard"
-        variant="icon"
-      />
-
-      {/* FTUE Onboarding Modal */}
-      {showFTUE && (
-        <FTUEModal
-          open={showFTUE}
-          onComplete={handleOnboardingComplete}
-          userEmail={user?.email}
-        />
+              {/* Close button */}
+              <BarrelsButton variant="secondary" onClick={onClose} className="w-full">
+                Close
+              </BarrelsButton>
+            </div>
+          </motion.div>
+        </>
       )}
-    </div>
+    </AnimatePresence>
   )
 }
