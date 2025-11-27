@@ -131,11 +131,19 @@ export async function getAllWhopMemberships(): Promise<WhopMembership[]> {
       return [];
     }
 
+    const companyId = process.env.WHOP_COMPANY_ID;
+    if (!companyId) {
+      console.error('[Whop Client] ❌ WHOP_COMPANY_ID not configured');
+      return [];
+    }
+
     console.log('[Whop Client] ✓ Client initialized, fetching all memberships...');
+    console.log('[Whop Client] Using company ID:', companyId);
     
-    // Fetch ALL memberships without any filters
+    // Fetch ALL memberships with required company_id parameter
     // This will return all customers who have purchased any of your products
     const response = await client.memberships.list({
+      company_id: companyId,
       per_page: 100, // Fetch 100 at a time (max allowed by Whop)
     } as any);
 
@@ -154,6 +162,7 @@ export async function getAllWhopMemberships(): Promise<WhopMembership[]> {
       while (cursor) {
         try {
           const nextPage = await client.memberships.list({
+            company_id: companyId,
             per_page: 100,
             starting_after: cursor,
           } as any);
