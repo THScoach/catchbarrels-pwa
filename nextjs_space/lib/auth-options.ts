@@ -248,14 +248,21 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Handle callback URLs properly
+      // Handle callback URLs properly with context-aware redirects
       try {
         console.log('[NextAuth Redirect] url:', url, 'baseUrl:', baseUrl);
         
-        // If URL is the base URL or login page without a callbackUrl, go to dashboard
+        // Determine if this is an admin login based on the URL context
+        const isAdminLogin = url.includes('/auth/admin-login') || 
+                            (url.includes('/auth/login') && url.includes('admin'));
+        
+        console.log('[NextAuth Redirect] Admin login context:', isAdminLogin);
+        
+        // If URL is the base URL or login page without a callbackUrl, use context-based redirect
         if (url === baseUrl || url === `${baseUrl}/`) {
-          console.log('[NextAuth Redirect] Base URL detected, redirecting to dashboard');
-          return `${baseUrl}/dashboard`;
+          const defaultRedirect = isAdminLogin ? `${baseUrl}/admin` : `${baseUrl}/dashboard`;
+          console.log('[NextAuth Redirect] Base URL detected, redirecting to', defaultRedirect);
+          return defaultRedirect;
         }
         
         // If it's the login page with a callbackUrl parameter, extract and use it
@@ -275,9 +282,10 @@ export const authOptions: NextAuthOptions = {
             }
           }
           
-          // No callback URL, default to dashboard
-          console.log('[NextAuth Redirect] No callback URL, defaulting to dashboard');
-          return `${baseUrl}/dashboard`;
+          // No callback URL, use context-based default
+          const defaultRedirect = isAdminLogin ? `${baseUrl}/admin` : `${baseUrl}/dashboard`;
+          console.log('[NextAuth Redirect] No callback URL, using default:', defaultRedirect);
+          return defaultRedirect;
         }
         
         // Allow relative callback URLs
@@ -298,6 +306,7 @@ export const authOptions: NextAuthOptions = {
         return `${baseUrl}/dashboard`;
       } catch (error) {
         console.error('[NextAuth Redirect] Error:', error);
+        // Fallback to dashboard on error
         return `${baseUrl}/dashboard`;
       }
     },

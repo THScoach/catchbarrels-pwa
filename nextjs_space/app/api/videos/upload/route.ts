@@ -12,8 +12,13 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
+      console.error('[Video Upload] No session found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const userId = (session.user as any).id;
+    const userRole = (session.user as any).role || 'player';
+    console.log(`[Video Upload] User ${userId} (role: ${userRole}) initiated upload`);
 
     const formData = await request.formData();
     const videoFile = formData.get('video') as File;
@@ -21,16 +26,21 @@ export async function POST(request: NextRequest) {
     const sessionId = formData.get('sessionId') as string | null;
 
     if (!videoFile) {
+      console.error('[Video Upload] No video file in request');
       return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
     }
 
     if (!videoType) {
+      console.error('[Video Upload] No video type provided');
       return NextResponse.json({ error: 'Video type is required' }, { status: 400 });
     }
+
+    console.log(`[Video Upload] File: ${videoFile.name}, Size: ${(videoFile.size / 1024 / 1024).toFixed(2)}MB, Type: ${videoType}`);
 
     // Validate file type
     const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv', 'video/webm'];
     if (!validTypes.includes(videoFile.type) && !videoFile.name.match(/\.(mp4|mov|avi|wmv|webm)$/i)) {
+      console.error(`[Video Upload] Invalid file type: ${videoFile.type}`);
       return NextResponse.json(
         { error: 'Invalid file type. Please upload MP4, MOV, AVI, WMV, or WEBM files.' },
         { status: 400 }
@@ -40,13 +50,14 @@ export async function POST(request: NextRequest) {
     // Validate file size (max 500MB)
     const maxSize = 500 * 1024 * 1024;
     if (videoFile.size > maxSize) {
+      console.error(`[Video Upload] File too large: ${videoFile.size} bytes`);
       return NextResponse.json(
         { error: 'File too large. Maximum size is 500MB.' },
         { status: 413 }
       );
     }
 
-    console.log(`[Video Upload] Starting upload for user ${(session.user as any).id}: ${videoFile.name}`);
+    console.log(`[Video Upload] Starting upload for user ${userId}: ${videoFile.name}`);
 
     // Convert file to buffer
     const bytes = await videoFile.arrayBuffer();
@@ -57,6 +68,8 @@ export async function POST(request: NextRequest) {
     const sanitizedName = videoFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileName = `videos/${timestamp}-${sanitizedName}`;
 
+    console.log(`[Video Upload] Generated S3 key: ${fileName}`);
+
     // Upload to S3 with error handling
     let cloudStoragePath: string;
     try {
@@ -64,6 +77,11 @@ export async function POST(request: NextRequest) {
       console.log(`[Video Upload] S3 upload successful: ${cloudStoragePath}`);
     } catch (s3Error) {
       console.error('[Video Upload] S3 upload failed:', s3Error);
+      console.error('[Video Upload] S3 Error details:', {
+        message: (s3Error as any)?.message,
+        code: (s3Error as any)?.code,
+        statusCode: (s3Error as any)?.$metadata?.httpStatusCode,
+      });
       return NextResponse.json(
         { error: 'Failed to upload video to storage. Please try again.' },
         { status: 500 }
@@ -71,9 +89,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Create video record in database
+    console.log(`[Video Upload] Creating database record for user ${userId}`);
     const video = await prisma.video.create({
       data: {
-        userId: (session.user as any).id,
+        userId: userId,
         sessionId: sessionId || null, // Optional - links video to training session
         title: videoFile.name.replace(/\.[^/.]+$/, ''), // Remove file extension
         videoType: videoType,
