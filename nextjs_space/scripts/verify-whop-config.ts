@@ -17,9 +17,7 @@ const REQUIRED_ENV_VARS = [
   'WHOP_API_KEY',
 ];
 
-const EXPECTED_REDIRECT_URLS = [
-  'https://catchbarrels.app/api/auth/callback/whop', // Primary OAuth callback (REQUIRED)
-];
+const EXPECTED_REDIRECT_URL = 'https://catchbarrels.app/api/auth/callback/whop'; // ONLY THIS ONE IS NEEDED
 
 const COLORS = {
   RED: '\x1b[31m',
@@ -131,16 +129,16 @@ function main() {
 
   console.log('');
 
-  // Check 5: Expected Redirect URLs
-  console.log('5️⃣  Expected Redirect URLs (must be in Whop Dashboard):\n');
+  // Check 5: Required Redirect URL
+  console.log('5️⃣  Required Redirect URL (must be in Whop Dashboard):\n');
   
-  for (const url of EXPECTED_REDIRECT_URLS) {
-    log(COLORS.BLUE, `   🔗 ${url}`);
-  }
+  log(COLORS.BLUE, `   🔗 ${EXPECTED_REDIRECT_URL}`);
+  log(COLORS.BLUE, '\n   ℹ️  ONLY THIS ONE URL IS NEEDED - DO NOT ADD OTHERS');
 
   console.log('');
-  log(COLORS.YELLOW, '   ⚠️  You must manually verify these are registered in Whop Developer Dashboard');
+  log(COLORS.YELLOW, '   ⚠️  You must manually verify this is registered in Whop Developer Dashboard');
   log(COLORS.YELLOW, '   ⚠️  Go to: https://dev.whop.com/ → Your Apps → CatchBarrels → OAuth Settings');
+  log(COLORS.YELLOW, '   ⚠️  Remove any other URLs (like /auth/login, /auth/callback, etc.)');
 
   console.log('\n' + '='.repeat(70));
 
