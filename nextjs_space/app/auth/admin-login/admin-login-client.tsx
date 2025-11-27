@@ -16,7 +16,7 @@ export default function AdminLoginClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    username: 'admin@barrels.com',
+    username: 'coach@catchbarrels.app',
     password: '',
   });
 
@@ -26,23 +26,28 @@ export default function AdminLoginClient() {
     setLoading(true);
 
     try {
-      const result = await signIn('credentials', {
-        username: formData.username,
+      // Get callback URL from query params
+      const searchParams = new URLSearchParams(window.location.search);
+      const callbackUrl = searchParams.get('callbackUrl') || '/admin';
+
+      const result = await signIn('admin-credentials', {
+        email: formData.username,  // admin-credentials provider uses 'email' field
         password: formData.password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
-        setError('Invalid admin credentials');
+        setError('Invalid admin credentials or insufficient permissions');
         toast.error('Access denied', {
-          description: 'Please check your admin credentials.',
+          description: 'Only administrators and coaches can access this area.',
         });
       } else if (result?.ok) {
         toast.success('Admin access granted', {
-          description: 'Redirecting to admin panel...',
+          description: 'Redirecting to Coach Home...',
         });
-        router.push('/admin/assessments');
-        router.refresh();
+        // Redirect to admin dashboard (NO router.refresh())
+        router.push(callbackUrl);
       }
     } catch (error) {
       console.error('Admin login error:', error);
@@ -99,7 +104,7 @@ export default function AdminLoginClient() {
                 <Input
                   id="username"
                   type="text"
-                  placeholder="admin@barrels.com"
+                  placeholder="coach@catchbarrels.app"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   disabled={loading}
@@ -160,13 +165,13 @@ export default function AdminLoginClient() {
                 <div className="flex items-start gap-2">
                   <Shield className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-blue-300">Admin Credentials</p>
+                    <p className="text-sm font-semibold text-blue-300">Production Admin Credentials</p>
                     <p className="text-xs text-gray-400">
-                      Email: <span className="text-blue-300">admin@barrels.com</span><br />
-                      Password: <span className="text-blue-300">admin123</span>
+                      Email: <span className="text-blue-300">coach@catchbarrels.app</span><br />
+                      Password: <span className="text-blue-300">CoachBarrels2024!</span>
                     </p>
                     <p className="text-xs text-gray-500 mt-2">
-                      For testing purposes in Phase 1 prototype
+                      Secure admin access for CatchBarrels coaching team
                     </p>
                   </div>
                 </div>
