@@ -1,6 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import type { OAuthConfig } from 'next-auth/providers/oauth';
+import type { OAuthConfig, OAuthUserConfig } from 'next-auth/providers/oauth';
 // import { PrismaAdapter } from '@next-auth/prisma-adapter'; // Not used with CredentialsProvider + JWT
 import { prisma } from './db';
 import bcrypt from 'bcryptjs';
@@ -105,29 +105,28 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-    // Whop OAuth Provider
+    // Whop OAuth Provider - Using manual endpoints (wellKnown was causing issues)
     {
       id: 'whop',
       name: 'Whop',
       type: 'oauth',
       clientId: process.env.WHOP_CLIENT_ID,
       clientSecret: process.env.WHOP_CLIENT_SECRET,
-      wellKnown: 'https://data.whop.com/api/v3/oauth/.well-known/openid-configuration',
       authorization: {
-        url: 'https://data.whop.com/api/v3/oauth/authorize',
+        url: 'https://whop.com/oauth',
         params: {
-          scope: 'openid profile email',
-          response_type: 'code',
+          scope: 'openid email profile',
         },
       },
       token: {
-        url: 'https://data.whop.com/api/v3/oauth/token',
+        url: 'https://api.whop.com/api/v2/oauth/token',
       },
       userinfo: {
         url: 'https://api.whop.com/api/v2/me',
       },
+      checks: ['state'],
       profile(profile: any) {
-        console.log('[Whop OAuth] Profile received:', profile);
+        console.log('[Whop OAuth] Profile received:', JSON.stringify(profile, null, 2));
         return {
           id: profile.id,
           name: profile.name || profile.username,
@@ -252,56 +251,61 @@ export const authOptions: NextAuthOptions = {
       try {
         console.log('[NextAuth Redirect] url:', url, 'baseUrl:', baseUrl);
         
-        // Determine if this is an admin login based on the URL context
-        const isAdminLogin = url.includes('/auth/admin-login') || 
-                            (url.includes('/auth/login') && url.includes('admin'));
-        
-        console.log('[NextAuth Redirect] Admin login context:', isAdminLogin);
-        
-        // If URL is the base URL or login page without a callbackUrl, use context-based redirect
-        if (url === baseUrl || url === `${baseUrl}/`) {
-          const defaultRedirect = isAdminLogin ? `${baseUrl}/admin` : `${baseUrl}/dashboard`;
-          console.log('[NextAuth Redirect] Base URL detected, redirecting to', defaultRedirect);
-          return defaultRedirect;
-        }
-        
-        // If it's the login page with a callbackUrl parameter, extract and use it
-        if (url.includes('/auth/login') || url.includes('/auth/admin-login')) {
-          const urlObj = new URL(url);
-          const callbackUrl = urlObj.searchParams.get('callbackUrl');
-          
-          if (callbackUrl) {
-            console.log('[NextAuth Redirect] Callback URL from login page:', callbackUrl);
-            // If callback URL is relative, prepend baseUrl
-            if (callbackUrl.startsWith('/')) {
-              return `${baseUrl}${callbackUrl}`;
-            }
-            // If callback URL is on same origin, use it
-            if (callbackUrl.startsWith(baseUrl)) {
-              return callbackUrl;
-            }
-          }
-          
-          // No callback URL, use context-based default
-          const defaultRedirect = isAdminLogin ? `${baseUrl}/admin` : `${baseUrl}/dashboard`;
-          console.log('[NextAuth Redirect] No callback URL, using default:', defaultRedirect);
-          return defaultRedirect;
-        }
-        
-        // Allow relative callback URLs
+        // First, check if URL is relative
         if (url.startsWith('/')) {
           console.log('[NextAuth Redirect] Relative URL detected:', url);
           return `${baseUrl}${url}`;
         }
         
-        // Allow callback URLs on the same origin
-        const urlObj = new URL(url);
-        if (urlObj.origin === baseUrl) {
-          console.log('[NextAuth Redirect] Same origin URL detected:', url);
-          return url;
+        // Parse the URL to extract callback parameters
+        let targetUrl = url;
+        try {
+          const urlObj = new URL(url);
+          
+          // Check if this URL has a callbackUrl parameter
+          const callbackUrl = urlObj.searchParams.get('callbackUrl');
+          if (callbackUrl) {
+            console.log('[NextAuth Redirect] Found callbackUrl parameter:', callbackUrl);
+            // Use the callback URL if it's on the same origin
+            if (callbackUrl.startsWith('/')) {
+              targetUrl = `${baseUrl}${callbackUrl}`;
+            } else if (callbackUrl.startsWith(baseUrl)) {
+              targetUrl = callbackUrl;
+            }
+          }
+          
+          // If URL is on the same origin, allow it
+          if (urlObj.origin === baseUrl) {
+            console.log('[NextAuth Redirect] Same origin URL detected');
+            
+            // If the URL is the base URL or login page without a callback, redirect to dashboard
+            if (urlObj.pathname === '/' || 
+                urlObj.pathname === '/auth/login' || 
+                urlObj.pathname === '/auth/admin-login') {
+              
+              // Check if this is an admin login
+              const isAdminLogin = urlObj.pathname === '/auth/admin-login' || 
+                                  urlObj.searchParams.has('admin');
+              
+              const defaultRedirect = isAdminLogin ? `${baseUrl}/admin` : `${baseUrl}/dashboard`;
+              console.log('[NextAuth Redirect] Login page detected, redirecting to', defaultRedirect);
+              return callbackUrl || defaultRedirect;
+            }
+            
+            // Allow the URL if it's on the same origin
+            return targetUrl;
+          }
+        } catch (parseError) {
+          console.log('[NextAuth Redirect] URL parse error, treating as relative');
         }
         
-        // Default fallback
+        // If URL equals base URL, redirect to dashboard
+        if (url === baseUrl || url === `${baseUrl}/`) {
+          console.log('[NextAuth Redirect] Base URL detected, redirecting to dashboard');
+          return `${baseUrl}/dashboard`;
+        }
+        
+        // Default fallback to dashboard
         console.log('[NextAuth Redirect] Fallback to dashboard');
         return `${baseUrl}/dashboard`;
       } catch (error) {
