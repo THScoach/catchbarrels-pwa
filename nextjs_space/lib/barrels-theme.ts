@@ -106,6 +106,12 @@ export const barrelsColors = {
   'barrels-blue-light': barrelsTheme.colors.blue.light,
   'barrels-blue-dark': barrelsTheme.colors.blue.dark,
   
+  // Purple System (Coach/Admin Theme)
+  'barrels-purple': barrelsTheme.colors.purple.DEFAULT,
+  'barrels-purple-light': barrelsTheme.colors.purple.light,
+  'barrels-purple-dark': barrelsTheme.colors.purple.dark,
+  'barrels-purple-muted': barrelsTheme.colors.purple.muted,
+  
   // Text System
   'barrels-text': barrelsTheme.colors.text.DEFAULT,
   'barrels-muted': barrelsTheme.colors.text.muted,

@@ -3,11 +3,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Home, Upload, History, TrendingUp, User } from 'lucide-react';
 import { triggerHaptic } from '@/lib/mobile-utils';
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { data: session } = useSession() || {};
+  
+  // Hide bottom nav for admins/coaches (they have their own shell)
+  const isAdmin = (session?.user as any)?.role === 'admin' || (session?.user as any)?.role === 'coach';
+  
+  if (isAdmin && pathname?.startsWith('/admin')) {
+    return null;  // Don't show player nav in admin area
+  }
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Dashboard' },

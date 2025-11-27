@@ -63,15 +63,15 @@ export async function middleware(request: NextRequest) {
   const isAdmin = userRole === 'admin' || userRole === 'coach';
   
   // Admin/Coach access control
-  if (pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin') || pathname.startsWith('/coach')) {
     if (!isAdmin) {
-      // Not authorized for admin area - redirect to dashboard with error message
+      // Not authorized for admin/coach area - redirect to dashboard with error message
       const dashboardUrl = new URL('/dashboard', request.url);
       dashboardUrl.searchParams.set('error', 'unauthorized');
       return NextResponse.redirect(dashboardUrl);
     }
     
-    // Has admin/coach role - allow access to admin routes
+    // Has admin/coach role - allow access to admin/coach routes
     return NextResponse.next();
   }
 

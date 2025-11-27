@@ -28,7 +28,7 @@ export function isAdmin(sessionOrToken: Session | JWT | null): boolean {
  */
 export function getRoleBasedRedirect(sessionOrToken: Session | JWT | null, fallback: string = '/dashboard'): string {
   if (isAdmin(sessionOrToken)) {
-    return '/admin';
+    return '/coach';  // Coaches/admins are redirected to /coach (which then goes to /admin)
   }
-  return fallback;
+  return fallback;  // Players go to /dashboard
 }

@@ -34,7 +34,7 @@ export default function AdminShell({ session, children }: AdminShellProps) {
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
-      <header className="bg-[#1A1A1A] border-b border-[#E8B14E]/20 sticky top-0 z-50">
+      <header className="bg-[#1A1A1A] border-b border-[#9D6FDB]/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -47,7 +47,7 @@ export default function AdminShell({ session, children }: AdminShellProps) {
                 className="rounded"
               />
               <div>
-                <h1 className="text-lg font-bold text-[#E8B14E]">Coach Control Room</h1>
+                <h1 className="text-lg font-bold text-[#9D6FDB]">Coach Control Room</h1>
                 <p className="text-xs text-gray-400">CatchBarrels Admin</p>
               </div>
             </Link>
@@ -64,11 +64,11 @@ export default function AdminShell({ session, children }: AdminShellProps) {
               <div className="flex items-center space-x-3">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-medium text-white">{session?.user?.name}</p>
-                  <p className="text-xs text-gray-400 capitalize">{(session?.user as any)?.role || 'coach'}</p>
+                  <p className="text-xs text-[#9D6FDB] capitalize">{(session?.user as any)?.role || 'coach'}</p>
                 </div>
                 <button
                   onClick={() => signOut({ callbackUrl: '/auth/admin-login' })}
-                  className="p-2 hover:bg-[#E8B14E]/10 rounded-lg transition"
+                  className="p-2 hover:bg-[#9D6FDB]/10 rounded-lg transition"
                   title="Sign Out"
                 >
                   <LogOut className="w-5 h-5 text-gray-400" />
@@ -91,7 +91,7 @@ export default function AdminShell({ session, children }: AdminShellProps) {
                     relative flex items-center space-x-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition
                     ${
                       active
-                        ? 'text-[#E8B14E]'
+                        ? 'text-[#9D6FDB]'
                         : 'text-gray-400 hover:text-gray-300'
                     }
                   `}
@@ -101,7 +101,7 @@ export default function AdminShell({ session, children }: AdminShellProps) {
                   {active && (
                     <motion.div
                       layoutId="activeAdminTab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#E8B14E] to-[#F5C76E]"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#9D6FDB] to-[#B88EE8]"
                       transition={{
                         type: 'spring',
                         stiffness: 500,
