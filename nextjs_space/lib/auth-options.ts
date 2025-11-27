@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import type { OAuthConfig } from 'next-auth/providers/oauth';
 // import { PrismaAdapter } from '@next-auth/prisma-adapter'; // Not used with CredentialsProvider + JWT
 import { prisma } from './db';
 import bcrypt from 'bcryptjs';
@@ -111,6 +112,7 @@ export const authOptions: NextAuthOptions = {
       type: 'oauth',
       clientId: process.env.WHOP_CLIENT_ID,
       clientSecret: process.env.WHOP_CLIENT_SECRET,
+      wellKnown: 'https://data.whop.com/api/v3/oauth/.well-known/openid-configuration',
       authorization: {
         url: 'https://data.whop.com/api/v3/oauth/authorize',
         params: {
@@ -118,9 +120,14 @@ export const authOptions: NextAuthOptions = {
           response_type: 'code',
         },
       },
-      token: 'https://data.whop.com/api/v3/oauth/token',
-      userinfo: 'https://api.whop.com/api/v2/me',
+      token: {
+        url: 'https://data.whop.com/api/v3/oauth/token',
+      },
+      userinfo: {
+        url: 'https://api.whop.com/api/v2/me',
+      },
       profile(profile: any) {
+        console.log('[Whop OAuth] Profile received:', profile);
         return {
           id: profile.id,
           name: profile.name || profile.username,
@@ -129,7 +136,7 @@ export const authOptions: NextAuthOptions = {
           whopUserId: profile.id,
         };
       },
-    } as any,
+    } as OAuthConfig<any>,
   ],
   session: {
     strategy: 'jwt',
@@ -137,7 +144,9 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/auth/login',
     error: '/auth/login',
+    newUser: '/dashboard', // Redirect new users here after first OAuth sign-in
   },
+  debug: process.env.NODE_ENV === 'development',
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
@@ -150,6 +159,7 @@ export const authOptions: NextAuthOptions = {
       
       // If this is a Whop OAuth login, sync membership data
       if (account?.provider === 'whop' && token.whopUserId) {
+        console.log('[Whop OAuth] Processing Whop login for user:', token.whopUserId);
         try {
           // Find or create user in database
           let dbUser = await prisma.user.findUnique({
@@ -157,6 +167,7 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!dbUser) {
+            console.log('[Whop OAuth] Creating new user from Whop data');
             // Create new user from Whop OAuth data
             dbUser = await prisma.user.create({
               data: {
@@ -169,6 +180,9 @@ export const authOptions: NextAuthOptions = {
                 profileComplete: false,
               },
             });
+            console.log('[Whop OAuth] New user created:', dbUser.id);
+          } else {
+            console.log('[Whop OAuth] Existing user found:', dbUser.id);
           }
 
           // Sync membership data from Whop
@@ -236,8 +250,11 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       // Handle callback URLs properly
       try {
+        console.log('[NextAuth Redirect] url:', url, 'baseUrl:', baseUrl);
+        
         // If URL is the base URL or login page without a callbackUrl, go to dashboard
         if (url === baseUrl || url === `${baseUrl}/`) {
+          console.log('[NextAuth Redirect] Base URL detected, redirecting to dashboard');
           return `${baseUrl}/dashboard`;
         }
         
@@ -247,6 +264,7 @@ export const authOptions: NextAuthOptions = {
           const callbackUrl = urlObj.searchParams.get('callbackUrl');
           
           if (callbackUrl) {
+            console.log('[NextAuth Redirect] Callback URL from login page:', callbackUrl);
             // If callback URL is relative, prepend baseUrl
             if (callbackUrl.startsWith('/')) {
               return `${baseUrl}${callbackUrl}`;
@@ -258,24 +276,28 @@ export const authOptions: NextAuthOptions = {
           }
           
           // No callback URL, default to dashboard
+          console.log('[NextAuth Redirect] No callback URL, defaulting to dashboard');
           return `${baseUrl}/dashboard`;
         }
         
         // Allow relative callback URLs
         if (url.startsWith('/')) {
+          console.log('[NextAuth Redirect] Relative URL detected:', url);
           return `${baseUrl}${url}`;
         }
         
         // Allow callback URLs on the same origin
         const urlObj = new URL(url);
         if (urlObj.origin === baseUrl) {
+          console.log('[NextAuth Redirect] Same origin URL detected:', url);
           return url;
         }
         
         // Default fallback
+        console.log('[NextAuth Redirect] Fallback to dashboard');
         return `${baseUrl}/dashboard`;
       } catch (error) {
-        console.error('Redirect error:', error);
+        console.error('[NextAuth Redirect] Error:', error);
         return `${baseUrl}/dashboard`;
       }
     },
