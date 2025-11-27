@@ -26,7 +26,7 @@ export function DrillsClient({ drills }: any) {
     threshold: 80,
   });
 
-  const categories = ['All', 'Anchor', 'Engine', 'Whip', 'Tempo', 'General'];
+  const categories = ['All', 'Ground Flow', 'Engine Flow', 'Barrel Flow', 'Tempo', 'General'];
 
   useEffect(() => {
     const timer = setTimeout(() => {

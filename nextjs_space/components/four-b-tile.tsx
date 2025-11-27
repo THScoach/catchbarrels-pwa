@@ -20,7 +20,7 @@ export function FourBTile() {
       label: 'Body',
       icon: User,
       route: '/dashboard/body',
-      description: 'Anchor • Engine • Whip',
+      description: 'Ground • Engine • Barrel',
     },
     {
       id: 'bat',

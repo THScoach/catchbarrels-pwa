@@ -42,45 +42,45 @@ export function AEWCardsSection({
     >
       {/* Section Header */}
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-white mb-1">Body Metrics Breakdown</h2>
+        <h2 className="text-lg font-bold text-white mb-1">Flow Metrics Breakdown</h2>
         <p className="text-sm text-gray-400">
-          Motion (Timing) • Stability • Sequencing
+          Ground • Engine • Barrel
         </p>
       </div>
 
       {/* Three cards stacked vertically */}
       <div className="space-y-4">
-        {/* ANCHOR Card */}
+        {/* GROUND FLOW Card */}
         <ScoreCard
-          title="ANCHOR (FEET & GROUND)"
+          title="GROUND FLOW"
           score={anchorScore}
           maxScore={100}
           icon="⚓"
-          description="How well you use the ground to stay balanced and create power"
+          description="Lower body & ground interaction • stability • rhythm at start"
           color="orange"
           detailedMetrics={anchorMetrics}
           subCategories={anchorSubCategories}
         />
 
-        {/* ENGINE Card */}
+        {/* ENGINE FLOW Card */}
         <ScoreCard
-          title="ENGINE (HIPS & SHOULDERS)"
+          title="ENGINE FLOW"
           score={engineScore}
           maxScore={100}
           icon="🔄"
-          description="How well your hips and shoulders work together to create power"
+          description="Torso / core / spine rotation and sequencing"
           color="green"
           detailedMetrics={engineMetrics}
           subCategories={engineSubCategories}
         />
 
-        {/* WHIP Card */}
+        {/* BARREL FLOW Card */}
         <ScoreCard
-          title="WHIP (ARMS & BAT)"
+          title="BARREL FLOW"
           score={whipScore}
           maxScore={100}
           icon="⚡"
-          description="How well you transfer energy through your arms to the bat"
+          description="Barrel path, depth, direction, on-plane movement and timing"
           color="purple"
           detailedMetrics={whipMetrics}
           subCategories={whipSubCategories}

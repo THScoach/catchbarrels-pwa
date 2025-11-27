@@ -346,20 +346,20 @@ export default function SessionDetailClient({ session }: SessionDetailClientProp
           {/* Legacy Scores */}
           <Card className="bg-barrels-black-light border-gray-800">
             <CardHeader className="border-b border-gray-800">
-              <CardTitle className="text-white text-sm">Legacy A/E/W Scores</CardTitle>
+              <CardTitle className="text-white text-sm">Flow Scores</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <p className="text-xs text-gray-400 mb-1">Anchor</p>
+                  <p className="text-xs text-gray-400 mb-1">Ground Flow</p>
                   <p className="text-2xl font-bold text-white">{session.anchor}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-400 mb-1">Engine</p>
+                  <p className="text-xs text-gray-400 mb-1">Engine Flow</p>
                   <p className="text-2xl font-bold text-white">{session.engine}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-400 mb-1">Whip</p>
+                  <p className="text-xs text-gray-400 mb-1">Barrel Flow</p>
                   <p className="text-2xl font-bold text-white">{session.whip}</p>
                 </div>
               </div>

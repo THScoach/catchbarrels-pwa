@@ -3,7 +3,7 @@
  * 
  * BARRELS Flow Path Model™:
  * - Ground Flow (Ground → Hips)
- * - Power Flow (Hips → Torso)
+ * - Engine Flow (Hips → Torso)
  * - Barrel Flow (Torso → Barrel)
  * 
  * Generates simple, actionable coaching text based on momentum transfer scores.
@@ -117,7 +117,7 @@ export function generateMomentumCoaching(scores: MomentumScores): CoachingExplan
         break;
         
       case 'powerFlow':
-        leakLine = "Your power flow has a leak—the core isn't fully accepting what the hips started. You're either dumping early or spinning flat.";
+        leakLine = "Your engine flow has a leak—the core isn't fully accepting what the hips started. You're either dumping early or spinning flat.";
         nextStep = "Next step: Learn to **let the hips start and the torso follow**, instead of everything spinning together.";
         break;
         
@@ -128,7 +128,7 @@ export function generateMomentumCoaching(scores: MomentumScores): CoachingExplan
     }
   } else {
     // No major leak - everything is balanced
-    leakLine = "Your energy flow through Ground Flow → Power Flow → Barrel Flow is balanced.";
+    leakLine = "Your energy flow through Ground Flow → Engine Flow → Barrel Flow is balanced.";
     nextStep = "Next step: Focus on **consistency** and let the pattern settle in with reps.";
   }
   
@@ -197,13 +197,13 @@ export function generateStructuredCoachReport(scores: MomentumScores): Structure
   // === DETAIL PARAGRAPH ===
   let detailParagraph = '';
   if (!hasMainLeak) {
-    detailParagraph = `Your Ground Flow (${ground}), Power Flow (${power}), and Barrel Flow (${barrel}) are all balanced. No major leaks detected—energy is moving smoothly through each segment. This consistency is your foundation; now we focus on polishing the pattern and building confidence in the timing.`;
+    detailParagraph = `Your Ground Flow (${ground}), Engine Flow (${power}), and Barrel Flow (${barrel}) are all balanced. No major leaks detected—energy is moving smoothly through each segment. This consistency is your foundation; now we focus on polishing the pattern and building confidence in the timing.`;
   } else if (hasSecondaryLeak) {
-    const mainZoneName = mainLeak.zone === 'groundFlow' ? 'Ground Flow' : mainLeak.zone === 'powerFlow' ? 'Power Flow' : 'Barrel Flow';
-    const secondaryZoneName = secondaryLeak.zone === 'groundFlow' ? 'Ground Flow' : secondaryLeak.zone === 'powerFlow' ? 'Power Flow' : 'Barrel Flow';
+    const mainZoneName = mainLeak.zone === 'groundFlow' ? 'Ground Flow' : mainLeak.zone === 'powerFlow' ? 'Engine Flow' : 'Barrel Flow';
+    const secondaryZoneName = secondaryLeak.zone === 'groundFlow' ? 'Ground Flow' : secondaryLeak.zone === 'powerFlow' ? 'Engine Flow' : 'Barrel Flow';
     detailParagraph = `We're seeing two leaks: ${mainZoneName} (${mainLeak.score}) and ${secondaryZoneName} (${secondaryLeak.score}). This suggests a breakdown in sequencing—segments are either firing too early or not accepting energy from the previous link. We'll address the primary leak first, which will often help the secondary one fall into place.`;
   } else {
-    const mainZoneName = mainLeak.zone === 'groundFlow' ? 'Ground Flow' : mainLeak.zone === 'powerFlow' ? 'Power Flow' : 'Barrel Flow';
+    const mainZoneName = mainLeak.zone === 'groundFlow' ? 'Ground Flow' : mainLeak.zone === 'powerFlow' ? 'Engine Flow' : 'Barrel Flow';
     detailParagraph = `The main leak is in your ${mainZoneName} (${mainLeak.score}). ${
       mainLeak.zone === 'groundFlow' 
         ? "Your lower body isn't loading and holding long enough to set up clean hip initiation. You're likely starting your swing too early or not loading into the ground properly."
@@ -227,11 +227,11 @@ export function generateStructuredCoachReport(scores: MomentumScores): Structure
   if (ground >= 80) {
     strengths.push("Your Ground Flow is strong—you're loading into the ground and holding it well.");
   } else if (power >= 80) {
-    strengths.push("Your Power Flow is strong—your hips and torso are creating good separation and rotation.");
+    strengths.push("Your Engine Flow is strong—your hips and torso are creating good separation and rotation.");
   } else if (barrel >= 80) {
     strengths.push("Your Barrel Flow is strong—your hands and bat are catching the energy cleanly.");
   } else if (strongZones.length > 0) {
-    const strongZone = strongZones[0].zone === 'groundFlow' ? 'Ground Flow' : strongZones[0].zone === 'powerFlow' ? 'Power Flow' : 'Barrel Flow';
+    const strongZone = strongZones[0].zone === 'groundFlow' ? 'Ground Flow' : strongZones[0].zone === 'powerFlow' ? 'Engine Flow' : 'Barrel Flow';
     strengths.push(`Your ${strongZone} is consistent—this is a reliable part of your pattern.`);
   } else {
     strengths.push("You have the physical tools—we just need to connect the timing and sequencing.");

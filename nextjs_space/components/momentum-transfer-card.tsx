@@ -142,11 +142,11 @@ export function MomentumTransferCard({
           </div>
         </div>
         
-        {/* Power Flow */}
+        {/* Engine Flow */}
         <div className={`p-3 rounded-lg ${(flags.mainLeak === 'powerFlow' || flags.mainLeakLegacy === 'engine') ? 'bg-red-950/20 border border-red-500/30' : 'bg-barrels-black-light/30'}`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-300">Power Flow</span>
+              <span className="text-sm font-semibold text-gray-300">Engine Flow</span>
               <span className="text-xs text-gray-500">(Hips → Torso)</span>
               {getLeakIndicator(power?.leakSeverity || 'none')}
             </div>
