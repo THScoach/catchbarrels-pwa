@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Users, Activity, TrendingUp, TrendingDown, AlertTriangle, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
-import { format } from 'date-fns';
+import { 
+  Users, TrendingUp, TrendingDown, AlertTriangle, 
+  ArrowRight, Clock, RefreshCw, Star, Eye
+} from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
 import { AdminDashboardData } from '@/lib/admin/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,26 +19,44 @@ interface AdminDashboardClientProps {
 
 export default function AdminDashboardClient({ data }: AdminDashboardClientProps) {
   const router = useRouter();
-  const [expandedRoster, setExpandedRoster] = useState(false);
 
-  const statsCards = [
+  // Section 1: Today's Focus - Recent assessments needing review (flagged or recent)
+  const todaysFocus = data.recentSessions.slice(0, 5);
+  
+  // Section 2: Players - Top 5 active players
+  const quickAccessPlayers = data.rosterSummary.slice(0, 5);
+  
+  // Section 3: Open Tasks
+  const openTasks = [
     {
-      title: 'Total Athletes',
-      value: data.totalAthletes,
-      icon: Users,
+      id: 'flagged',
+      title: 'Flagged Sessions',
+      count: data.recentSessions.filter(s => s.flagged).length,
+      description: 'Sessions with low scores or unusual drops',
+      icon: AlertTriangle,
+      color: 'text-red-400',
+      bgColor: 'bg-red-900/20',
+      href: '/admin/sessions?filter=flagged',
+    },
+    {
+      id: 'whop-sync',
+      title: 'Sync Members',
+      count: data.totalAthletes,
+      description: 'Update membership tiers from Whop',
+      icon: RefreshCw,
       color: 'text-blue-400',
+      bgColor: 'bg-blue-900/20',
+      href: '/admin/players',
     },
     {
-      title: 'Active (7 Days)',
-      value: data.activeLast7Days,
-      icon: Activity,
-      color: 'text-green-400',
-    },
-    {
-      title: 'Avg Momentum Score',
-      value: data.avgMomentumScore,
-      icon: TrendingUp,
-      color: 'text-barrels-gold',
+      id: 'support',
+      title: 'Open Support Tickets',
+      count: 0, // Will be fetched in future update
+      description: 'User-reported issues awaiting response',
+      icon: AlertTriangle,
+      color: 'text-yellow-400',
+      bgColor: 'bg-yellow-900/20',
+      href: '/admin/support',
     },
   ];
 
@@ -50,82 +71,143 @@ export default function AdminDashboardClient({ data }: AdminDashboardClientProps
             transition={{ duration: 0.4 }}
           >
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Coach Control Room
+              Coach Home
             </h1>
             <p className="text-gray-400 text-lg">
-              Deep view of your roster, sessions, and momentum transfer patterns.
+              Today's priorities, quick player access, and pending tasks.
             </p>
           </motion.div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto p-6 space-y-8">
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {statsCards.map((stat, index) => (
-            <motion.div
-              key={stat.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-            >
-              <Card className="bg-barrels-black-light border-gray-800">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-400 font-medium">{stat.title}</p>
-                      <p className="text-3xl font-bold text-white mt-2">{stat.value}</p>
-                    </div>
-                    <div className={`p-3 rounded-lg bg-barrels-black ${stat.color}`}>
-                      <stat.icon className="w-6 h-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Roster Snapshot */}
+        {/* Section 1: Today's Focus */}
         <Card className="bg-barrels-black-light border-gray-800">
           <CardHeader className="border-b border-gray-800">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-white">Roster Snapshot</CardTitle>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-[#9D6FDB]" />
+                  Today's Focus
+                </CardTitle>
                 <CardDescription className="text-gray-400">
-                  Your athletes, sorted by most recent activity
+                  Recent assessments needing review (last 3-5 sessions)
                 </CardDescription>
               </div>
-              <button
-                onClick={() => setExpandedRoster(!expandedRoster)}
-                className="text-barrels-gold hover:text-barrels-gold-light transition-colors flex items-center gap-2"
+              <Link
+                href="/admin/sessions"
+                className="text-[#9D6FDB] hover:text-[#B88EE8] transition-colors flex items-center gap-2 text-sm"
               >
-                {expandedRoster ? (
-                  <>
-                    <ChevronUp className="w-4 h-4" />
-                    Show Less
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-4 h-4" />
-                    Show All ({data.rosterSummary.length})
-                  </>
-                )}
-              </button>
+                View All
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="space-y-3">
-              {data.rosterSummary
-                .slice(0, expandedRoster ? data.rosterSummary.length : 5)
-                .map((athlete) => (
+            {todaysFocus.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No recent sessions to review.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {todaysFocus.map((session, index) => (
+                  <motion.div
+                    key={session.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.01 }}
+                    className={`bg-barrels-black border rounded-lg p-4 transition-all cursor-pointer ${
+                      session.flagged
+                        ? 'border-red-600/50 hover:border-red-500'
+                        : 'border-gray-800 hover:border-[#9D6FDB]/30'
+                    }`}
+                    onClick={() => router.push(`/admin/session/${session.videoId}`)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-white font-semibold">{session.playerName}</h3>
+                          {session.flagged && (
+                            <Badge className="bg-red-600/20 text-red-400 border-red-600/30">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              {session.flagReason}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span>{formatDistanceToNow(new Date(session.date), { addSuffix: true })}</span>
+                          <span>•</span>
+                          <span>
+                            Weakest: {session.weakestFlow} ({session.weakestScore})
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                          <p className="text-xs text-gray-400 mb-1">Score</p>
+                          <p
+                            className={`text-2xl font-bold ${
+                              session.momentumScore >= 80
+                                ? 'text-green-400'
+                                : session.momentumScore >= 60
+                                ? 'text-[#E8B14E]'
+                                : 'text-red-400'
+                            }`}
+                          >
+                            {session.momentumScore}
+                          </p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-gray-600" />
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Section 2: Players - Quick Access */}
+        <Card className="bg-barrels-black-light border-gray-800">
+          <CardHeader className="border-b border-gray-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-[#9D6FDB]" />
+                  Players
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Quick access to your most active athletes
+                </CardDescription>
+              </div>
+              <Link
+                href="/admin/players"
+                className="text-[#9D6FDB] hover:text-[#B88EE8] transition-colors flex items-center gap-2 text-sm"
+              >
+                View All ({data.totalAthletes})
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            {quickAccessPlayers.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No players found.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {quickAccessPlayers.map((athlete, index) => (
                   <motion.div
                     key={athlete.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     whileHover={{ scale: 1.01 }}
-                    className="bg-barrels-black border border-gray-800 rounded-lg p-4 hover:border-barrels-gold/30 transition-all cursor-pointer"
-                    onClick={() => router.push(`/admin/athlete/${athlete.id}`)}
+                    className="bg-barrels-black border border-gray-800 rounded-lg p-4 hover:border-[#9D6FDB]/30 transition-all cursor-pointer"
+                    onClick={() => router.push(`/admin/players/${athlete.id}`)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -141,7 +223,7 @@ export default function AdminDashboardClient({ data }: AdminDashboardClientProps
                           <span>
                             Last session:{' '}
                             {athlete.lastSessionDate
-                              ? format(new Date(athlete.lastSessionDate), 'MMM d, yyyy')
+                              ? formatDistanceToNow(new Date(athlete.lastSessionDate), { addSuffix: true })
                               : 'Never'}
                           </span>
                           <span>•</span>
@@ -169,72 +251,49 @@ export default function AdminDashboardClient({ data }: AdminDashboardClientProps
                     </div>
                   </motion.div>
                 ))}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent Sessions & Flags */}
+        {/* Section 3: Open Tasks */}
         <Card className="bg-barrels-black-light border-gray-800">
           <CardHeader className="border-b border-gray-800">
-            <CardTitle className="text-white">Recent Sessions & Flags</CardTitle>
+            <CardTitle className="text-white flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-[#9D6FDB]" />
+              Open Tasks
+            </CardTitle>
             <CardDescription className="text-gray-400">
-              Last 30 sessions across all athletes
+              Pending items requiring your attention
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="space-y-3">
-              {data.recentSessions.map((session) => (
-                <motion.div
-                  key={session.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  whileHover={{ scale: 1.01 }}
-                  className={`bg-barrels-black border rounded-lg p-4 transition-all cursor-pointer ${
-                    session.flagged
-                      ? 'border-red-600/50 hover:border-red-500'
-                      : 'border-gray-800 hover:border-barrels-gold/30'
-                  }`}
-                  onClick={() => router.push(`/admin/session/${session.videoId}`)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-white font-semibold">{session.playerName}</h3>
-                        {session.flagged && (
-                          <Badge className="bg-red-600/20 text-red-400 border-red-600/30">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            {session.flagReason}
-                          </Badge>
-                        )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {openTasks.map((task, index) => {
+                const Icon = task.icon;
+                return (
+                  <motion.div
+                    key={task.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => router.push(task.href)}
+                    className={`${task.bgColor} border border-gray-800 rounded-lg p-5 cursor-pointer hover:border-[#9D6FDB]/30 transition-all`}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className={`p-2 rounded-lg bg-barrels-black ${task.color}`}>
+                        <Icon className="w-5 h-5" />
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>{format(new Date(session.date), 'MMM d, yyyy h:mm a')}</span>
-                        <span>•</span>
-                        <span>
-                          Weakest: {session.weakestFlow} ({session.weakestScore})
-                        </span>
-                      </div>
+                      <span className={`text-2xl font-bold ${task.color}`}>
+                        {task.count}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400 mb-1">Momentum</p>
-                        <p
-                          className={`text-2xl font-bold ${
-                            session.momentumScore >= 80
-                              ? 'text-green-400'
-                              : session.momentumScore >= 60
-                              ? 'text-barrels-gold'
-                              : 'text-red-400'
-                          }`}
-                        >
-                          {session.momentumScore}
-                        </p>
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-gray-600" />
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                    <h3 className="text-white font-semibold mb-1">{task.title}</h3>
+                    <p className="text-sm text-gray-400">{task.description}</p>
+                  </motion.div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
