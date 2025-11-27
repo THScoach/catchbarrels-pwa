@@ -107,12 +107,8 @@ export interface RebootSessionPayload {
  * 
  * @returns Array of Reboot session payloads
  * 
- * TODO: Implement actual API call
- * - Determine if API is paginated (likely is for large datasets)
- * - Add pagination logic to fetch all pages
- * - Add query params for filtering by date range, level, etc.
- * - Handle authentication (API key, OAuth, etc.)
- * - Parse response and map to RebootSessionPayload[]
+ * NOTE: This is a test implementation. The actual Reboot API structure may differ.
+ * Adjust based on their actual API documentation.
  */
 export async function fetchRebootSessions(): Promise<RebootSessionPayload[]> {
   // Guard: Ensure environment variables are set
@@ -122,26 +118,82 @@ export async function fetchRebootSessions(): Promise<RebootSessionPayload[]> {
     );
   }
 
-  // TODO: Replace with actual API call
-  // Example structure (replace with real endpoint):
-  //
-  // const response = await fetch(`${REBOOT_API_BASE}/sessions`, {
-  //   headers: {
-  //     'Authorization': `Bearer ${REBOOT_API_KEY}`,
-  //     'Content-Type': 'application/json',
-  //   },
-  // });
-  //
-  // if (!response.ok) {
-  //   throw new Error(`Reboot API error: ${response.statusText}`);
-  // }
-  //
-  // const data = await response.json();
-  // return data.sessions; // Or whatever the actual structure is
+  console.log('[Reboot API] Fetching sessions...');
+  console.log(`[Reboot API] Base URL: ${REBOOT_API_BASE}`);
+  console.log(`[Reboot API] API Key configured: ${REBOOT_API_KEY ? 'Yes (length: ' + REBOOT_API_KEY.length + ')' : 'No'}`);
 
-  throw new Error(
-    'fetchRebootSessions not implemented – requires actual Reboot API endpoint and key'
-  );
+  try {
+    // Try different possible endpoints and auth methods
+    const endpoints = [
+      '/sessions',
+      '/swings',
+      '/data',
+      '/api/sessions',
+    ];
+
+    for (const endpoint of endpoints) {
+      const url = `${REBOOT_API_BASE}${endpoint}`;
+      console.log(`[Reboot API] Trying endpoint: ${url}`);
+
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${REBOOT_API_KEY}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        });
+
+        console.log(`[Reboot API] Response status: ${response.status} ${response.statusText}`);
+        
+        // If we get 2xx, try to parse the response
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Reboot API] Success! Response structure:', Object.keys(data));
+          
+          // Try to find the sessions array in the response
+          const sessions = data.sessions || data.data || data.results || data.swings || [];
+          
+          if (Array.isArray(sessions)) {
+            console.log(`[Reboot API] Found ${sessions.length} sessions`);
+            return sessions.map((s: any) => ({
+              sessionId: s.id || s.session_id || s.sessionId || String(Math.random()),
+              athleteId: s.athlete_id || s.athleteId || s.player_id,
+              athleteName: s.athlete_name || s.athleteName || s.player_name || s.name,
+              athleteEmail: s.athlete_email || s.email,
+              level: s.level || s.skill_level,
+              sessionType: mapSessionTypeFromReboot(s),
+              team: s.team || s.team_name,
+              captureDate: s.capture_date || s.created_at || s.date,
+              metrics: s,
+            }));
+          }
+        }
+        
+        // Log error details for non-200 responses
+        const errorText = await response.text();
+        console.log(`[Reboot API] Error response: ${errorText.substring(0, 200)}`);
+        
+      } catch (endpointError: any) {
+        console.log(`[Reboot API] Endpoint ${endpoint} failed:`, endpointError.message);
+      }
+    }
+
+    // If none of the endpoints worked, throw an error with diagnostic info
+    throw new Error(
+      'Unable to connect to Reboot API. Tried multiple endpoints and all returned errors. ' +
+      'Please verify:\n' +
+      '1. REBOOT_API_KEY is correct\n' +
+      '2. REBOOT_API_BASE_URL is correct\n' +
+      '3. API key has proper permissions\n' +
+      '4. Contact Reboot Motion support for correct API endpoint'
+    );
+
+  } catch (error: any) {
+    console.error('[Reboot API] Fatal error:', error);
+    throw error;
+  }
 }
 
 /**
