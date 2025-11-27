@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { RefreshCw, User, Calendar, BarChart, ChevronRight } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { RefreshCw, User, Calendar, BarChart, ChevronRight, Crown } from 'lucide-react';
+import { formatDistanceToNow, differenceInDays, format as formatDate } from 'date-fns';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -23,6 +23,9 @@ interface Player {
   lastSessionDate: Date | null;
   sessionCount: number;
   lessonCount: number;
+  assessmentCompletedAt: Date | null;
+  assessmentVipExpiresAt: Date | null;
+  assessmentVipActive: boolean;
 }
 
 interface PlayersClientProps {
@@ -155,13 +158,24 @@ export default function PlayersClient({ players: initialPlayers }: PlayersClient
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border capitalize ${getTierColor(
-                          player.membershipTier
-                        )}`}
-                      >
-                        {player.membershipTier}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border capitalize ${getTierColor(
+                            player.membershipTier
+                          )}`}
+                        >
+                          {player.membershipTier}
+                        </span>
+                        {player.assessmentVipActive && player.assessmentVipExpiresAt && (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#E8B14E]/20 text-[#E8B14E] border border-[#E8B14E]/30"
+                            title={`VIP offer expires ${formatDate(new Date(player.assessmentVipExpiresAt), 'MMM d, yyyy')}`}
+                          >
+                            <Crown className="w-3 h-3" />
+                            VIP
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span

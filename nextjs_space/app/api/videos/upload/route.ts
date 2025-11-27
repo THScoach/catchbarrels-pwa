@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/db';
 import { uploadFile } from '@/lib/s3';
+import { canStartNewSession } from '@/lib/assessment-vip-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,58 @@ export async function POST(request: NextRequest) {
     const userId = (session.user as any).id;
     const userRole = (session.user as any).role || 'player';
     console.log(`[Video Upload] User ${userId} (role: ${userRole}) initiated upload`);
+
+    // Fetch user to check membership tier and enforce session caps
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        membershipTier: true,
+        membershipStatus: true,
+      },
+    });
+
+    if (!user) {
+      console.error('[Video Upload] User not found');
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Enforce session caps (exempt admins and coaches)
+    if (userRole !== 'admin' && userRole !== 'coach') {
+      // Get start of current week (Monday)
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek; // Adjust to Monday
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() + diff);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      // Count sessions this week
+      const sessionsThisWeek = await prisma.video.count({
+        where: {
+          userId,
+          uploadDate: {
+            gte: startOfWeek,
+          },
+        },
+      });
+
+      console.log(`[Video Upload] User ${userId} has ${sessionsThisWeek} sessions this week (tier: ${user.membershipTier})`);
+
+      // Check if user can start a new session
+      const canStart = canStartNewSession(user.membershipTier, sessionsThisWeek);
+      if (!canStart.allowed) {
+        console.log(`[Video Upload] Session cap reached for user ${userId}: ${canStart.reason}`);
+        return NextResponse.json(
+          { 
+            error: 'Session limit reached',
+            message: canStart.reason,
+            sessionsThisWeek,
+            membershipTier: user.membershipTier,
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     const formData = await request.formData();
     const videoFile = formData.get('video') as File;

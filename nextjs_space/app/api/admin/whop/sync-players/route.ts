@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/db';
-import { getWhopUserMemberships, getWhopProductTier } from '@/lib/whop-client';
+import { getWhopUserMemberships, getWhopProductTier, isAssessmentProduct, getAssessmentPurchaseDate } from '@/lib/whop-client';
+import { calculateVipExpiryDate, isVipActive } from '@/lib/assessment-vip-config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -81,7 +82,27 @@ export async function POST(request: NextRequest) {
 
           console.log(`[Whop Sync] Highest tier: ${highestTier}, updating user ${user.id}`);
 
-          // Update user with membership info
+          // Check for assessment purchase to enable VIP offer
+          const assessmentPurchaseDate = getAssessmentPurchaseDate(memberships);
+          let vipUpdateData: any = {};
+          
+          if (assessmentPurchaseDate) {
+            console.log(`[Whop Sync] User ${user.email} has purchased an assessment`);
+            
+            // Calculate VIP expiry (60 days from assessment purchase)
+            const vipExpiryDate = calculateVipExpiryDate(assessmentPurchaseDate);
+            const vipActive = isVipActive(vipExpiryDate);
+            
+            console.log(`[Whop Sync] VIP offer expires: ${vipExpiryDate.toISOString()}, Active: ${vipActive}`);
+            
+            vipUpdateData = {
+              assessmentCompletedAt: assessmentPurchaseDate,
+              assessmentVipExpiresAt: vipExpiryDate,
+              assessmentVipActive: vipActive,
+            };
+          }
+
+          // Update user with membership info and VIP status
           await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -92,6 +113,7 @@ export async function POST(request: NextRequest) {
                 ? new Date(highestMembership.expiresAt)
                 : null,
               lastWhopSync: new Date(),
+              ...vipUpdateData,
             },
           });
 

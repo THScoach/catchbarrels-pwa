@@ -95,6 +95,13 @@ export default async function DashboardPage() {
     expiresAt: user?.membershipExpiresAt,
   };
 
+  // Extract VIP offer info (Assessment → VIP Pricing)
+  const vipOfferInfo = {
+    assessmentCompletedAt: user?.assessmentCompletedAt,
+    vipExpiresAt: user?.assessmentVipExpiresAt,
+    vipActive: user?.assessmentVipActive || false,
+  };
+
   return (
     <DashboardClient 
       user={user}
@@ -103,6 +110,7 @@ export default async function DashboardPage() {
       recommendedDrills={recommendedDrills}
       latestAssessmentDate={latestAssessment?.completedAt || null}
       membershipInfo={membershipInfo}
+      vipOfferInfo={vipOfferInfo}
     />
   );
 }

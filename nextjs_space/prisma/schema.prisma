@@ -28,6 +28,11 @@ model User {
   membershipExpiresAt DateTime? // For subscription tracking
   lastWhopSync        DateTime? // Last time we synced with Whop
   
+  // Assessment → VIP Offer Tracking (Work Order 13)
+  assessmentCompletedAt DateTime? // When user purchased an assessment
+  assessmentVipExpiresAt DateTime? // 60 days after assessment purchase
+  assessmentVipActive   Boolean   @default(false) // Is VIP offer currently active?
+  
   // Trial Membership Tracking (7-day free trial post-assessment)
   trialTier           String?   // "athlete", "pro", "elite" - which tier trial
   trialStartDate      DateTime? // When trial started

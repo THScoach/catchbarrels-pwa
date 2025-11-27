@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Upload, TrendingUp, Play, ChevronRight, FileText, Sparkles } from 'lucide-react'
+import { Upload, TrendingUp, Play, ChevronRight, FileText, Sparkles, Crown, Clock } from 'lucide-react'
 import Link from 'next/link'
-import { format } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
 import { CoachRickDrawer } from '@/components/coach-rick-drawer'
 import { Tile, TileHeader } from '@/components/ui/tile'
 import { BarrelsButton } from '@/components/ui/barrels-button'
@@ -32,6 +32,11 @@ interface DashboardClientProps {
   recommendedDrills: any[]
   latestAssessmentDate: Date | null
   membershipInfo: any
+  vipOfferInfo: {
+    assessmentCompletedAt: Date | null
+    vipExpiresAt: Date | null
+    vipActive: boolean
+  }
 }
 
 export default function DashboardClient({
@@ -41,6 +46,7 @@ export default function DashboardClient({
   recommendedDrills,
   latestAssessmentDate,
   membershipInfo,
+  vipOfferInfo,
 }: DashboardClientProps) {
   const router = useRouter()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -109,6 +115,73 @@ export default function DashboardClient({
           variant="compact"
           text="Every swing is a data point. Try to record 15 clean swings per session to get the most accurate momentum analysis."
         />
+
+        {/* VIP Offer Banner (Assessment → VIP Pricing) */}
+        {vipOfferInfo.vipActive && vipOfferInfo.vipExpiresAt && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="rounded-2xl bg-gradient-to-br from-barrels-gold/20 via-barrels-gold/10 to-barrels-gold-light/5 border-2 border-barrels-gold/40 p-6 shadow-xl"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-barrels-gold to-barrels-gold-light flex items-center justify-center shadow-lg">
+                  <Crown className="w-6 h-6 text-barrels-black" />
+                </div>
+              </div>
+              
+              <div className="flex-1 space-y-3">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    Coach Rick VIP Access Unlocked
+                    <span className="text-sm font-normal px-2 py-1 rounded-full bg-barrels-gold/20 text-barrels-gold border border-barrels-gold/30">
+                      {(() => {
+                        const daysRemaining = differenceInDays(
+                          new Date(vipOfferInfo.vipExpiresAt),
+                          new Date()
+                        );
+                        return `${Math.max(0, daysRemaining)} days left`;
+                      })()}
+                    </span>
+                  </h3>
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    Because you completed a CatchBarrels Assessment, you can train with Coach Rick for a special VIP rate of <span className="font-bold text-barrels-gold">$99/month</span> for the next{' '}
+                    {(() => {
+                      const daysRemaining = differenceInDays(
+                        new Date(vipOfferInfo.vipExpiresAt),
+                        new Date()
+                      );
+                      return Math.max(0, daysRemaining);
+                    })()}{' '}
+                    days.
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://whop.com/barrels-pro/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block"
+                  >
+                    <BarrelsButton variant="primary" size="md">
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade to VIP Training
+                    </BarrelsButton>
+                  </a>
+                  
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <Clock className="w-4 h-4" />
+                    <span>
+                      Offer expires {format(new Date(vipOfferInfo.vipExpiresAt), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Primary Action - Start New Session */}
         <motion.div

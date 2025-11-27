@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Mail, Calendar, BarChart, Video, Target } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { ChevronLeft, Mail, Calendar, BarChart, Video, Target, Crown, Clock } from 'lucide-react';
+import { formatDistanceToNow, format, differenceInDays } from 'date-fns';
 import { motion } from 'framer-motion';
 
 interface PlayerDetailClientProps {
@@ -92,6 +92,63 @@ export default function PlayerDetailClient({ player }: PlayerDetailClientProps) 
             </div>
           </div>
         </div>
+        
+        {/* VIP Status (if applicable) */}
+        {player.assessmentCompletedAt && (
+          <div className="mt-6 pt-6 border-t border-[#E8B14E]/10">
+            <h3 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
+              <Crown className="w-4 h-4" />
+              Assessment VIP Status
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-[#E8B14E]/20 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-[#E8B14E]" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Assessment Completed</p>
+                  <p className="text-sm font-medium text-white">
+                    {format(new Date(player.assessmentCompletedAt), 'MMM d, yyyy')}
+                  </p>
+                </div>
+              </div>
+              
+              {player.assessmentVipExpiresAt && (
+                <div className="flex items-center space-x-3">
+                  <div className={`w-10 h-10 ${player.assessmentVipActive ? 'bg-green-500/20' : 'bg-gray-500/20'} rounded-lg flex items-center justify-center`}>
+                    <Clock className={`w-5 h-5 ${player.assessmentVipActive ? 'text-green-400' : 'text-gray-400'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">VIP Offer Status</p>
+                    <p className={`text-sm font-medium ${player.assessmentVipActive ? 'text-green-400' : 'text-gray-400'}`}>
+                      {player.assessmentVipActive ? (
+                        <>
+                          {differenceInDays(new Date(player.assessmentVipExpiresAt), new Date())} days remaining
+                        </>
+                      ) : (
+                        'Expired'
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {player.assessmentVipExpiresAt && (
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-[#E8B14E]/20 rounded-lg flex items-center justify-center">
+                    <Crown className="w-5 h-5 text-[#E8B14E]" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">VIP Expires</p>
+                    <p className="text-sm font-medium text-white">
+                      {format(new Date(player.assessmentVipExpiresAt), 'MMM d, yyyy')}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Recent Sessions */}

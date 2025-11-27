@@ -23,6 +23,9 @@ export default async function PlayersPage() {
       createdAt: true,
       updatedAt: true,
       lastWhopSync: true,
+      assessmentCompletedAt: true,
+      assessmentVipExpiresAt: true,
+      assessmentVipActive: true,
       _count: {
         select: {
           videos: true,

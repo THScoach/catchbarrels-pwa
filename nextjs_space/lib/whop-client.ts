@@ -136,6 +136,35 @@ export function getWhopProductTier(productId: string): string {
 }
 
 /**
+ * Check if a Whop product is an assessment product
+ * Assessment purchases unlock VIP pricing for BARRELS Pro
+ */
+export function isAssessmentProduct(productId: string): boolean {
+  // Assessment product IDs (TODO: Update with real Whop product IDs)
+  const assessmentProducts = [
+    'prod_assessment_standard_299',  // Standard In-Person Assessment - $299
+    'prod_assessment_pro_399',       // Pro Assessment + S2 Cognition - $399
+  ];
+  
+  return assessmentProducts.includes(productId);
+}
+
+/**
+ * Get assessment purchase date from memberships
+ * Returns the earliest assessment purchase date
+ */
+export function getAssessmentPurchaseDate(memberships: WhopMembership[]): Date | null {
+  const assessmentMemberships = memberships.filter(m => isAssessmentProduct(m.productId));
+  
+  if (assessmentMemberships.length === 0) return null;
+  
+  // If memberships have a created_at or similar field, use that
+  // For now, we'll use the current date as a fallback
+  // TODO: Update this when we have access to actual purchase dates from Whop API
+  return new Date();
+}
+
+/**
  * Check if a membership grants access to a specific tier
  */
 export function hasTierAccess(
