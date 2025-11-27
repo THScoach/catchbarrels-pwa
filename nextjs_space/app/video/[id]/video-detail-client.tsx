@@ -33,6 +33,8 @@ import { PlayerReflectionBox } from '@/components/analysis/player-reflection-box
 import { GoatyFeedbackBlock } from '@/components/analysis/goaty-feedback-block';
 import { DrillCard } from '@/components/analysis/drill-card';
 import { AEWCardsSection } from '@/components/analysis/aew-cards-section';
+import { CoachRickStructuredReport } from '@/components/coach-rick-structured-report';
+import type { StructuredCoachReport } from '@/lib/momentum-coaching';
 
 // Dynamic import with ssr: false to avoid chunk loading issues with recharts
 const ProgressCharts = dynamic(() => import('@/components/progress-charts').then(mod => ({ default: mod.ProgressCharts })), {
@@ -88,6 +90,12 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
   const [playerReflection, setPlayerReflection] = useState('');
   const [goatyMessages, setGoatyMessages] = useState<Array<{role: 'system' | 'user' | 'assistant', content: string}>>([]);
   const [sendingMessage, setSendingMessage] = useState(false);
+  
+  // Structured Coach Report state
+  const [structuredReport, setStructuredReport] = useState<StructuredCoachReport | null>(null);
+  const [loadingStructuredReport, setLoadingStructuredReport] = useState(false);
+  const [showStructuredReport, setShowStructuredReport] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Fetch signed URL for video playback
   useEffect(() => {
@@ -249,6 +257,34 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
       setCoachFeedback('Keep working on your mechanics. Practice makes perfect!');
     } finally {
       setLoadingFeedback(false);
+    }
+  };
+  
+  // Get structured Coach Rick report
+  const getStructuredReport = async () => {
+    setLoadingStructuredReport(true);
+    try {
+      const response = await fetch(`/api/videos/${video?.id}/structured-report`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch structured report');
+      }
+      
+      const data = await response.json();
+      setStructuredReport(data.report);
+      setIsAdmin(data.isAdmin || false);
+      setShowStructuredReport(true);
+      
+      toast.success('Full analysis loaded!', {
+        description: 'Coach Rick has analyzed your swing in detail.',
+      });
+    } catch (error) {
+      console.error('Error getting structured report:', error);
+      toast.error('Failed to load analysis', {
+        description: 'Please try again later.',
+      });
+    } finally {
+      setLoadingStructuredReport(false);
     }
   };
 
@@ -826,6 +862,44 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
                       })}
                     />
                   </div>
+                </div>
+                
+                {/* Structured Coach Rick Report Section */}
+                <div className="bg-gradient-to-br from-barrels-gold/10 to-barrels-gold-light/5 border border-barrels-gold/20 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-lg font-semibold text-white">Coach Rick's Full Analysis</h2>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Get a detailed breakdown with strengths, opportunities, and next session focus
+                      </p>
+                    </div>
+                    {!showStructuredReport && (
+                      <Button
+                        onClick={getStructuredReport}
+                        disabled={loadingStructuredReport}
+                        className="bg-gradient-to-r from-barrels-gold to-barrels-gold-light text-barrels-black font-semibold hover:opacity-90 transition-opacity"
+                      >
+                        {loadingStructuredReport ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            View Full Analysis
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {showStructuredReport && structuredReport && (
+                    <CoachRickStructuredReport 
+                      report={structuredReport} 
+                      isAdmin={isAdmin} 
+                    />
+                  )}
                 </div>
               </div>
             ) : (
