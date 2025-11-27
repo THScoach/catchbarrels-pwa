@@ -116,24 +116,101 @@ export const authOptions: NextAuthOptions = {
         url: 'https://whop.com/oauth',
         params: {
           scope: 'openid email profile',
+          response_type: 'code',
         },
       },
       token: {
         url: 'https://api.whop.com/api/v2/oauth/token',
+        async request(context) {
+          console.log('[Whop OAuth] Token exchange starting...');
+          console.log('[Whop OAuth] Token request context:', {
+            url: 'https://api.whop.com/api/v2/oauth/token',
+            hasCode: !!context.params.code,
+            hasClientId: !!context.provider.clientId,
+            hasClientSecret: !!context.provider.clientSecret,
+          });
+
+          try {
+            const response = await fetch('https://api.whop.com/api/v2/oauth/token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code: context.params.code as string,
+                redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`,
+                client_id: context.provider.clientId as string,
+                client_secret: context.provider.clientSecret as string,
+              }),
+            });
+
+            console.log('[Whop OAuth] Token response status:', response.status);
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('[Whop OAuth] Token exchange failed:', errorText);
+              throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
+            }
+
+            const tokens = await response.json();
+            console.log('[Whop OAuth] Token exchange successful, keys:', Object.keys(tokens));
+            return { tokens };
+          } catch (error) {
+            console.error('[Whop OAuth] Token exchange error:', error);
+            throw error;
+          }
+        },
       },
       userinfo: {
         url: 'https://api.whop.com/api/v2/me',
+        async request(context) {
+          console.log('[Whop OAuth] Fetching user profile...');
+          console.log('[Whop OAuth] Access token present:', !!context.tokens.access_token);
+
+          try {
+            const response = await fetch('https://api.whop.com/api/v2/me', {
+              headers: {
+                Authorization: `Bearer ${context.tokens.access_token}`,
+              },
+            });
+
+            console.log('[Whop OAuth] Userinfo response status:', response.status);
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('[Whop OAuth] Userinfo fetch failed:', errorText);
+              throw new Error(`Userinfo fetch failed: ${response.status} - ${errorText}`);
+            }
+
+            const profile = await response.json();
+            console.log('[Whop OAuth] User profile fetched, keys:', Object.keys(profile));
+            return profile;
+          } catch (error) {
+            console.error('[Whop OAuth] Userinfo fetch error:', error);
+            throw error;
+          }
+        },
       },
       checks: ['state'],
       profile(profile: any) {
-        console.log('[Whop OAuth] Profile received:', JSON.stringify(profile, null, 2));
-        return {
+        console.log('[Whop OAuth] Processing profile:', JSON.stringify(profile, null, 2));
+        
+        if (!profile.id) {
+          console.error('[Whop OAuth] Profile missing required "id" field');
+          throw new Error('Whop profile missing required "id" field');
+        }
+
+        const mappedProfile = {
           id: profile.id,
-          name: profile.name || profile.username,
+          name: profile.name || profile.username || 'Whop User',
           email: profile.email,
-          username: profile.username,
+          username: profile.username || profile.email,
           whopUserId: profile.id,
         };
+
+        console.log('[Whop OAuth] Mapped profile:', JSON.stringify(mappedProfile, null, 2));
+        return mappedProfile;
       },
     } as OAuthConfig<any>,
   ],
@@ -145,10 +222,18 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/login',
     newUser: '/dashboard', // Redirect new users here after first OAuth sign-in
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: true, // TEMPORARY: Enable debug mode to diagnose OAuthSignin error
   callbacks: {
     async jwt({ token, user, account }) {
+      console.log('[NextAuth JWT Callback] Called with:', {
+        hasUser: !!user,
+        hasAccount: !!account,
+        accountProvider: account?.provider,
+        tokenId: token.id,
+      });
+
       if (user) {
+        console.log('[NextAuth JWT] User data:', JSON.stringify(user, null, 2));
         token.id = user.id;
         token.username = (user as any).username;
         token.whopUserId = (user as any).whopUserId;
@@ -159,6 +244,7 @@ export const authOptions: NextAuthOptions = {
       // If this is a Whop OAuth login, sync membership data
       if (account?.provider === 'whop' && token.whopUserId) {
         console.log('[Whop OAuth] Processing Whop login for user:', token.whopUserId);
+        console.log('[Whop OAuth] Account data:', JSON.stringify(account, null, 2));
         try {
           // Find or create user in database
           let dbUser = await prisma.user.findUnique({
