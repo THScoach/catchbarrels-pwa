@@ -20,6 +20,73 @@ const REBOOT_API_BASE = process.env.REBOOT_API_BASE_URL;  // e.g., "https://api.
 const REBOOT_API_KEY = process.env.REBOOT_API_KEY;        // API key or bearer token
 
 /**
+ * Session type classification
+ * HITTING: Baseball hitting/batting sessions
+ * PITCHING: Baseball pitching sessions
+ * OTHER: Any other type of motion (fielding, etc.)
+ */
+export type SessionType = 'HITTING' | 'PITCHING' | 'OTHER';
+
+/**
+ * Maps Reboot's session type classification to our internal type
+ * 
+ * TODO: Update this based on actual Reboot API field names
+ * Reboot may use fields like:
+ * - activity_type
+ * - motion_type
+ * - tags
+ * - labels
+ * - session_category
+ * 
+ * @param raw - Raw session data from Reboot API
+ * @returns SessionType enum value
+ */
+export function mapSessionTypeFromReboot(raw: any): SessionType {
+  // TODO: Replace with actual Reboot API field mapping
+  // Example implementations (adjust based on actual API):
+  
+  // Option 1: Direct field mapping
+  // if (raw.activity_type === 'hitting') return 'HITTING';
+  // if (raw.activity_type === 'pitching') return 'PITCHING';
+  
+  // Option 2: Tags array
+  // if (raw.tags?.includes('hitting')) return 'HITTING';
+  // if (raw.tags?.includes('pitching')) return 'PITCHING';
+  
+  // Option 3: Motion type classification
+  // if (raw.motion_type?.toLowerCase().includes('hit')) return 'HITTING';
+  // if (raw.motion_type?.toLowerCase().includes('pitch')) return 'PITCHING';
+  
+  // Fallback: Default to HITTING for now (since hitting is primary use case)
+  // This should be updated once we have real Reboot API documentation
+  
+  const activityType = raw.activity_type || raw.motion_type || raw.type || '';
+  const lowerType = activityType.toLowerCase();
+  
+  if (lowerType.includes('hit') || lowerType.includes('bat')) {
+    return 'HITTING';
+  }
+  
+  if (lowerType.includes('pitch') || lowerType.includes('throw')) {
+    return 'PITCHING';
+  }
+  
+  // Check tags if available
+  if (raw.tags && Array.isArray(raw.tags)) {
+    const tagStr = raw.tags.join(' ').toLowerCase();
+    if (tagStr.includes('hitting') || tagStr.includes('batting')) {
+      return 'HITTING';
+    }
+    if (tagStr.includes('pitching') || tagStr.includes('throwing')) {
+      return 'PITCHING';
+    }
+  }
+  
+  // Default to HITTING if uncertain (can be changed to 'OTHER' if preferred)
+  return 'HITTING';
+}
+
+/**
  * Interface for a single Reboot session from their API
  * TODO: Update this based on actual Reboot API response
  */
@@ -29,6 +96,7 @@ export interface RebootSessionPayload {
   athleteName?: string;        // Player name
   athleteEmail?: string;       // Player email (if available)
   level?: string;              // "MLB", "Pro", "College", "HS", "Youth"
+  sessionType: SessionType;    // "HITTING", "PITCHING", or "OTHER"
   team?: string;               // Team or organization
   captureDate?: string;        // ISO date string
   metrics: Record<string, any>; // Full kinematic/timing data

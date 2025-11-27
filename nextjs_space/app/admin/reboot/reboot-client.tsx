@@ -37,6 +37,7 @@ interface RebootSession {
   athleteName: string | null;
   athleteEmail: string | null;
   level: string | null;
+  sessionType: string; // "HITTING", "PITCHING", or "OTHER"
   teamTag: string | null;
   swingDate: Date | null;
   metrics: any; // JSON payload
@@ -63,6 +64,7 @@ export default function RebootClient({ sessions, stats }: Props) {
   const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
+  const [selectedSessionType, setSelectedSessionType] = useState<string>('HITTING'); // Default to HITTING
   const [selectedSession, setSelectedSession] = useState<RebootSession | null>(null);
 
   // Handle sync from Reboot API
@@ -100,8 +102,12 @@ export default function RebootClient({ sessions, stats }: Props) {
       session.teamTag?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesLevel = selectedLevel === 'all' || session.level === selectedLevel;
+    
+    const matchesSessionType = 
+      selectedSessionType === 'ALL' || 
+      session.sessionType === selectedSessionType;
 
-    return matchesSearch && matchesLevel;
+    return matchesSearch && matchesLevel && matchesSessionType;
   });
 
   // Level badge color
@@ -221,6 +227,20 @@ export default function RebootClient({ sessions, stats }: Props) {
                 <option value="Youth">Youth</option>
               </select>
             </div>
+            
+            {/* Session Type Filter */}
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <select
+                value={selectedSessionType}
+                onChange={(e) => setSelectedSessionType(e.target.value)}
+                className="pl-10 pr-4 py-2 bg-barrels-black border border-gray-700 text-white rounded-md appearance-none cursor-pointer"
+              >
+                <option value="HITTING">Hitting</option>
+                <option value="PITCHING">Pitching</option>
+                <option value="ALL">All Types</option>
+              </select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -252,9 +272,18 @@ export default function RebootClient({ sessions, stats }: Props) {
                   className="flex items-center justify-between p-4 bg-barrels-black hover:bg-gray-900 border border-gray-800 rounded-lg cursor-pointer transition-colors group"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <Badge className={`${getLevelColor(session.level)} text-white`}>
                         {session.level || 'Unknown'}
+                      </Badge>
+                      <Badge className={`${
+                        session.sessionType === 'HITTING' 
+                          ? 'bg-emerald-600' 
+                          : session.sessionType === 'PITCHING' 
+                          ? 'bg-blue-600' 
+                          : 'bg-gray-600'
+                      } text-white`}>
+                        {session.sessionType}
                       </Badge>
                       <span className="font-medium text-white">
                         {session.athleteName || 'Unknown Athlete'}
@@ -333,6 +362,18 @@ export default function RebootClient({ sessions, stats }: Props) {
                       <div className="text-sm text-gray-400">Level</div>
                       <Badge className={`${getLevelColor(selectedSession.level)} text-white`}>
                         {selectedSession.level || 'Unknown'}
+                      </Badge>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-400">Session Type</div>
+                      <Badge className={`${
+                        selectedSession.sessionType === 'HITTING' 
+                          ? 'bg-emerald-600' 
+                          : selectedSession.sessionType === 'PITCHING' 
+                          ? 'bg-blue-600' 
+                          : 'bg-gray-600'
+                      } text-white`}>
+                        {selectedSession.sessionType}
                       </Badge>
                     </div>
                     {selectedSession.teamTag && (

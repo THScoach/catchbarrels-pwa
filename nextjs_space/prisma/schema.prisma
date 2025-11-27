@@ -1360,6 +1360,7 @@ model RebootSession {
   athleteName     String?  // Name from Reboot
   athleteEmail    String?  // Email from Reboot (if available)
   level           String?  // "MLB", "Pro", "College", "HS", "Youth"
+  sessionType     String   @default("HITTING")  // "HITTING", "PITCHING", "OTHER"
   teamTag         String?  // Team or organization
   swingDate       DateTime? // When the swing was captured
   metrics         Json      // Full payload from Reboot API (kinematic/timing data)
@@ -1369,6 +1370,7 @@ model RebootSession {
   @@map("reboot_sessions")
   @@index([rebootAthleteId])
   @@index([level])
+  @@index([sessionType])
   @@index([swingDate])
   @@index([createdAt])
 }

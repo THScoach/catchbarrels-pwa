@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/db';
-import { fetchRebootSessions, RebootSessionPayload } from '@/lib/reboot/reboot-client';
+import { fetchRebootSessions, RebootSessionPayload, mapSessionTypeFromReboot } from '@/lib/reboot/reboot-client';
 import { REBOOT_SYNC_ENABLED } from '@/lib/config/reboot-flags';
 
 export const dynamic = 'force-dynamic';
@@ -76,12 +76,15 @@ export async function POST(request: NextRequest) {
         });
 
         // Map Reboot payload to our schema
+        const sessionType = session.sessionType || mapSessionTypeFromReboot(session.metrics);
+        
         const data = {
           rebootSessionId: session.sessionId,
           rebootAthleteId: session.athleteId || null,
           athleteName: session.athleteName || null,
           athleteEmail: session.athleteEmail || null,
           level: session.level || null,
+          sessionType,  // "HITTING", "PITCHING", or "OTHER"
           teamTag: session.team || null,
           swingDate: session.captureDate ? new Date(session.captureDate) : null,
           metrics: session.metrics, // Store full payload as JSON

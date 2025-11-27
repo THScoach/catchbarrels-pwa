@@ -28,13 +28,15 @@ export default async function RebootPage() {
     take: 200, // Limit to most recent 200 for performance
   });
 
-  // Get summary stats
-  const totalCount = await prisma.rebootSession.count();
-  const mlbCount = await prisma.rebootSession.count({ where: { level: 'MLB' } });
-  const proCount = await prisma.rebootSession.count({ where: { level: 'Pro' } });
-  const collegeCount = await prisma.rebootSession.count({ where: { level: 'College' } });
-  const hsCount = await prisma.rebootSession.count({ where: { level: 'HS' } });
-  const youthCount = await prisma.rebootSession.count({ where: { level: 'Youth' } });
+  // Get summary stats (HITTING only by default, as per spec)
+  // Note: Stats show only HITTING sessions to align with primary use case
+  const hittingFilter = { sessionType: 'HITTING' };
+  const totalCount = await prisma.rebootSession.count({ where: hittingFilter });
+  const mlbCount = await prisma.rebootSession.count({ where: { ...hittingFilter, level: 'MLB' } });
+  const proCount = await prisma.rebootSession.count({ where: { ...hittingFilter, level: 'Pro' } });
+  const collegeCount = await prisma.rebootSession.count({ where: { ...hittingFilter, level: 'College' } });
+  const hsCount = await prisma.rebootSession.count({ where: { ...hittingFilter, level: 'HS' } });
+  const youthCount = await prisma.rebootSession.count({ where: { ...hittingFilter, level: 'Youth' } });
 
   const stats = {
     total: totalCount,
