@@ -156,6 +156,13 @@ model Video {
   // AI Coach feedback
   coachFeedback   String?
   
+  // Advanced Video Player - A-B-C Timing Tags (THSS)
+  tagA            Float?    // Trigger/Load Start (seconds)
+  tagB            Float?    // Fire/Launch (seconds)
+  tagC            Float?    // Contact (seconds)
+  tagSource       String?   // "player" | "coach" - who set the tags
+  tagsUpdatedAt   DateTime? // When tags were last modified
+  
   // Community Sharing & Privacy
   isPublic        Boolean   @default(false) // Public videos visible in community feed
   shareableLink   String?   @unique // Unique ID for public sharing (e.g., "abc123xyz")
