@@ -61,8 +61,9 @@ export default function LoginClient() {
           description: 'Redirecting...',
         });
         
-        // Navigate to callback URL (no router.refresh() needed with NextAuth)
-        router.push(callbackUrl);
+        // Navigate to callback URL (admin users go to /admin, others to dashboard)
+        const redirectUrl = loginMode === 'admin' ? '/admin' : callbackUrl;
+        router.push(redirectUrl);
       }
     } catch (error) {
       console.error('Login error:', error);

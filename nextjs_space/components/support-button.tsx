@@ -1,26 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageCircle } from 'lucide-react';
-import { SupportPanel } from './support-panel';
+import { AlertCircle } from 'lucide-react';
+import { ReportIssueModal } from './report-issue-modal';
 
 export function SupportButton() {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      {/* Floating Support Button */}
       <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-24 right-6 z-40 flex items-center gap-2 px-4 py-3 bg-barrels-gold hover:bg-barrels-gold-light text-black font-medium rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 group"
-        aria-label="Need help?"
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-20 right-4 z-40 w-14 h-14 bg-gradient-to-r from-[#E8B14E] to-[#F5C76E] rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+        title="Report an Issue"
       >
-        <MessageCircle className="w-5 h-5" />
-        <span className="text-sm font-semibold">Need help?</span>
+        <AlertCircle className="w-6 h-6 text-black" />
       </button>
-
-      {/* Support Panel */}
-      <SupportPanel open={open} onOpenChange={setOpen} />
+      <ReportIssueModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );
 }
