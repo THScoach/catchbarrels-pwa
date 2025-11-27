@@ -44,18 +44,37 @@ export default function PlayersClient({ players: initialPlayers }: PlayersClient
         method: 'POST',
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to sync players');
+        toast.error(result.error || 'Failed to sync players from Whop');
+        return;
       }
 
-      const result = await response.json();
-      toast.success(`Synced ${result.syncedCount} players from Whop`);
+      // Show detailed success message
+      const { createdCount, updatedCount, skippedCount, totalWhopUsers, errors } = result;
+      
+      if (createdCount > 0 || updatedCount > 0) {
+        let message = `Successfully synced ${totalWhopUsers} Whop customers!\n`;
+        if (createdCount > 0) message += `✓ Created ${createdCount} new player accounts\n`;
+        if (updatedCount > 0) message += `✓ Updated ${updatedCount} existing players\n`;
+        if (skippedCount > 0) message += `⚠️  Skipped ${skippedCount} (no email)`;
+        
+        toast.success(message, { duration: 6000 });
+      } else {
+        toast.info('No new players to sync');
+      }
+      
+      if (errors && errors.length > 0) {
+        console.error('Sync errors:', errors);
+        toast.warning(`Synced with ${errors.length} errors. Check console for details.`);
+      }
       
       // Refresh the page to show updated data
-      window.location.reload();
+      setTimeout(() => window.location.reload(), 2000);
     } catch (error) {
       console.error('Sync error:', error);
-      toast.error('Failed to sync players from Whop');
+      toast.error('Failed to sync players from Whop. Check console for details.');
     } finally {
       setSyncing(false);
     }

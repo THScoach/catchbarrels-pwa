@@ -33,6 +33,8 @@ export interface WhopMembership {
   cancelAtPeriodEnd: boolean;
   expiresAt?: string;
   licenseKey?: string;
+  userEmail?: string;
+  userName?: string;
 }
 
 /**
@@ -106,9 +108,105 @@ export async function getWhopUserMemberships(
       cancelAtPeriodEnd: m.cancel_at_period_end || false,
       expiresAt: m.expires_at || undefined,
       licenseKey: m.license_key,
+      userEmail: m.user?.email,
+      userName: m.user?.name || m.user?.username,
     }));
   } catch (error) {
     console.error("Error fetching Whop user memberships:", error);
+    return [];
+  }
+}
+
+/**
+ * Get ALL memberships from Whop (for admin sync)
+ * This fetches all customers who have purchased products, regardless of whether
+ * they already have an account in CatchBarrels
+ */
+export async function getAllWhopMemberships(): Promise<WhopMembership[]> {
+  try {
+    console.log('[Whop Client] Initializing Whop client...');
+    const client = getWhopClient();
+    if (!client) {
+      console.error('[Whop Client] ❌ Failed to initialize Whop client - check WHOP_API_KEY');
+      return [];
+    }
+
+    console.log('[Whop Client] ✓ Client initialized, fetching all memberships...');
+    
+    // Fetch ALL memberships without any filters
+    // This will return all customers who have purchased any of your products
+    const response = await client.memberships.list({
+      per_page: 100, // Fetch 100 at a time (max allowed by Whop)
+    } as any);
+
+    const data = (response as any).data || [];
+    console.log(`[Whop Client] ✓ Fetched ${data.length} memberships from first page`);
+
+    // Check if there are more pages
+    const pagination = (response as any).pagination;
+    let allMemberships = [...data];
+    
+    if (pagination && pagination.next_cursor) {
+      console.log('[Whop Client] → Multiple pages detected, fetching all pages...');
+      let cursor = pagination.next_cursor;
+      let pageCount = 1;
+      
+      while (cursor) {
+        try {
+          const nextPage = await client.memberships.list({
+            per_page: 100,
+            starting_after: cursor,
+          } as any);
+          
+          const nextData = (nextPage as any).data || [];
+          allMemberships.push(...nextData);
+          pageCount++;
+          console.log(`[Whop Client] ✓ Fetched page ${pageCount}: ${nextData.length} memberships (total: ${allMemberships.length})`);
+          
+          cursor = (nextPage as any).pagination?.next_cursor;
+        } catch (error) {
+          console.error('[Whop Client] ❌ Error fetching next page:', error);
+          break;
+        }
+      }
+    }
+
+    console.log(`[Whop Client] ✓ Total memberships fetched: ${allMemberships.length}`);
+
+    // Map to our interface
+    const mappedMemberships = allMemberships.map((m: any) => ({
+      id: m.id || "",
+      userId: m.user?.id || "",
+      productId: m.product?.id || "",
+      planId: m.plan?.id,
+      status: m.status || "unknown",
+      valid: m.valid || false,
+      cancelAtPeriodEnd: m.cancel_at_period_end || false,
+      expiresAt: m.expires_at || undefined,
+      licenseKey: m.license_key,
+      userEmail: m.user?.email,
+      userName: m.user?.name || m.user?.username,
+    }));
+
+    console.log(`[Whop Client] ✓ Mapped ${mappedMemberships.length} memberships`);
+    
+    // Log a sample for debugging
+    if (mappedMemberships.length > 0) {
+      console.log('[Whop Client] Sample membership:', {
+        userId: mappedMemberships[0].userId,
+        email: mappedMemberships[0].userEmail,
+        productId: mappedMemberships[0].productId,
+        valid: mappedMemberships[0].valid,
+      });
+    }
+
+    return mappedMemberships;
+  } catch (error) {
+    console.error('[Whop Client] ❌ Error fetching all Whop memberships:', error);
+    if (error instanceof Error) {
+      console.error('[Whop Client] Error message:', error.message);
+      console.error('[Whop Client] Error stack:', error.stack);
+    }
     return [];
   }
 }
