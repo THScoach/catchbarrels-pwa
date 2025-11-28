@@ -415,9 +415,10 @@ export const authOptions: NextAuthOptions = {
         const urlObj = new URL(url);
         if (urlObj.origin === baseUrl) {
           console.log('[NextAuth Redirect] Same origin URL, allowing:', url);
-          // IMPORTANT: Don't redirect back to login or error pages
-          if (urlObj.pathname === '/auth/login' || urlObj.pathname === '/auth/error') {
-            console.log('[NextAuth Redirect] Avoiding loop, redirecting to dashboard instead');
+          // IMPORTANT: Don't redirect back to login page (causes loop)
+          // BUT: Allow redirects to /auth/error (that's where errors should go!)
+          if (urlObj.pathname === '/auth/login') {
+            console.log('[NextAuth Redirect] Avoiding login loop, redirecting to dashboard instead');
             return `${baseUrl}/dashboard`;
           }
           return url;
