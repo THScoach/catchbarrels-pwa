@@ -89,6 +89,8 @@ model User {
   timingSessions  TimingSession[] @relation("UserTimingSessions")
   s2Reports       S2CognitionReport[] @relation("UserS2Reports")
   hittraxSessions HitTraxSession[] @relation("UserHitTraxSessions")
+  importSessions  ImportSession[]  @relation("UserImportSessions")
+  sensorSwings    SensorSwing[]    @relation("UserSensorSwings")
   onTheBallHistory PlayerOnTheBallHistory[] @relation("UserOnTheBallHistory")
   trainingSessions TrainingSession[] @relation("UserTrainingSessions")
   playerLessons    PlayerLesson[] @relation("UserPlayerLessons")
@@ -1178,6 +1180,10 @@ model HitTraxSession {
   level               String?                     // "youth" | "hs" | "college" | "pro"
   notes               String?                     @db.Text
   
+  // Import tracking (WO-IMPORT-01)
+  importSessionId     String?
+  importSession       ImportSession?              @relation("ImportHitTraxSessions", fields: [importSessionId], references: [id])
+  
   createdAt           DateTime                    @default(now())
   updatedAt           DateTime                    @updatedAt
   
@@ -1187,6 +1193,7 @@ model HitTraxSession {
   @@map("hittrax_sessions")
   @@index([userId])
   @@index([sessionDate])
+  @@index([importSessionId])
 }
 
 model HitTraxEvent {
@@ -1226,6 +1233,9 @@ model HitTraxEvent {
   // Player context
   batting             String?          @db.Text // L or R
   playerLevel         String?          @db.Text // youth, hs, college, pro
+  
+  // Sensor data link (WO-IMPORT-01)
+  sensorSwing         SensorSwing?     // One-to-one via sensorSwing.hittraxEventId
   
   createdAt           DateTime         @default(now())
   
@@ -1436,4 +1446,97 @@ model PodBooking {
   @@index([userId])
   @@index([podSlotId])
   @@index([status])
+}
+// ============================================================================
+// IMPORT SYSTEM MODELS (WO-IMPORT-01)
+// Smart HitTrax + Bat Sensor (Blast/DK) Import System
+// ============================================================================
+
+// ImportSession - Tracks each import operation (per-player or bulk)
+model ImportSession {
+  id                String   @id @default(uuid())
+  userId            String   // Coach/admin who initiated import
+  user              User     @relation("UserImportSessions", fields: [userId], references: [id], onDelete: Cascade)
+  
+  importType        String   // "per_player" | "bulk"
+  sourceTypes       String[] // ["hittrax", "blast", "dk"]
+  
+  // File tracking
+  fileNames         String[] @db.Text
+  fileCount         Int      @default(0)
+  
+  // Statistics
+  totalSwings       Int      @default(0)
+  matchedSwings     Int      @default(0)
+  unmatchedSwings   Int      @default(0)
+  playersDetected   Int      @default(0)
+  
+  status            String   @default("processing") // "processing", "completed", "failed"
+  errorMessage      String?  @db.Text
+  
+  // Links to created data
+  hittraxSessions   HitTraxSession[] @relation("ImportHitTraxSessions")
+  sensorSwings      SensorSwing[]    @relation("ImportSensorSwings")
+  
+  createdAt         DateTime @default(now())
+  completedAt       DateTime?
+  
+  @@map("import_sessions")
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+// SensorSwing - Store bat sensor data (Blast, Diamond Kinetics)
+model SensorSwing {
+  id                String   @id @default(uuid())
+  
+  // Player assignment
+  userId            String?
+  user              User?    @relation("UserSensorSwings", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Session context
+  importSessionId   String?
+  importSession     ImportSession? @relation("ImportSensorSwings", fields: [importSessionId], references: [id], onDelete: Cascade)
+  
+  // Sensor metadata
+  sensorType        String   // "blast" | "diamond_kinetics"
+  sensorDeviceId    String?  // Device serial/ID
+  sensorTimestamp   DateTime // Original sensor timestamp
+  
+  // Matching to HitTrax
+  hittraxEventId    String?  @unique
+  hittraxEvent      HitTraxEvent? @relation(fields: [hittraxEventId], references: [id], onDelete: SetNull)
+  matchTimeDelta    Float?   // Milliseconds difference from match (if matched)
+  
+  // Core sensor metrics
+  batSpeed          Float?   // mph
+  attackAngle       Float?   // degrees
+  timeToContact     Float?   // milliseconds
+  peakHandSpeed     Float?   // mph
+  
+  // Blast-specific metrics
+  blastFactor       Float?   // Blast proprietary metric
+  powerOutput       Float?   // Watts
+  
+  // DK-specific metrics
+  rotationMetric    Float?   // DK rotation score
+  
+  // Raw data storage (for future use)
+  rawDataJson       Json?    // Full sensor payload
+  
+  // Assignment status
+  assigned          Boolean  @default(false)
+  assignedAt        DateTime?
+  assignedBy        String?  // Admin who assigned
+  
+  createdAt         DateTime @default(now())
+  
+  @@map("sensor_swings")
+  @@index([userId])
+  @@index([sensorTimestamp])
+  @@index([assigned])
+  @@index([sensorType])
+  @@index([hittraxEventId])
+  @@index([importSessionId])
 }
