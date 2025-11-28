@@ -7,7 +7,7 @@ import { EnhancedVideoPlayer } from '@/components/enhanced-video-player';
 import { SkeletonExtractor } from '@/components/skeleton-extractor';
 // Removed AutoSkeletonExtractor - replaced with opt-in only
 import { JointOverlayCompare } from '@/components/joint-overlay-compare';
-import { MotionTab } from '@/components/motion-tab';
+import { FlowOverlayReport } from '@/components/flow-overlay-report';
 import { VideoLoadErrorState } from '@/components/ui/error-state';
 import { BarrelsTabs } from '@/components/ui/barrels-tabs';
 import { RickTip } from '@/components/ui/rick-tip';
@@ -47,7 +47,7 @@ const ProgressCharts = dynamic(() => import('@/components/progress-charts').then
 });
 
 export function VideoDetailClient({ video, previousScores, personalBests, userHeight, userHandedness }: any) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'motion' | 'breakdown' | 'drills' | 'history'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'flow' | 'breakdown' | 'drills' | 'history'>('overview');
   const [assessmentHistory, setAssessmentHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
@@ -677,7 +677,7 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
         <BarrelsTabs
           tabs={[
             { id: 'overview', label: 'Overview' },
-            { id: 'motion', label: 'Motion' },
+            { id: 'flow', label: 'Flow' },
             { id: 'breakdown', label: 'Breakdown' },
             { id: 'drills', label: 'Drills' },
             { id: 'history', label: 'History' },
@@ -910,17 +910,15 @@ export function VideoDetailClient({ video, previousScores, personalBests, userHe
               </div>
             )}
           </div>
-        ) : activeTab === 'motion' ? (
+        ) : activeTab === 'flow' ? (
           <div className="space-y-6">
             <RickTip
               variant="compact"
-              text="Gold dots show your joint flow. Watch how your hips start the sequence and energy transfers through your body."
+              text="Watch your momentum transfer from Ground → Engine → Barrel. The overlay shows key timing points (A-B-C) and flow efficiency."
             />
-            <MotionTab
+            <FlowOverlayReport
               videoId={video.id}
               videoUrl={videoUrl || ''}
-              initialJointData={video.jointData as any}
-              jointAnalyzed={video.jointAnalyzed || false}
             />
           </div>
         ) : activeTab === 'breakdown' ? (

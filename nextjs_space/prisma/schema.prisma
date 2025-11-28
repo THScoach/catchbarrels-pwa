@@ -197,6 +197,16 @@ model Video {
   threeDData      Json?     // 3D metrics from OnForm when available
   cameraAngle     String?   // "face-on" | "side" | "overhead" - capture angle
   
+  // Flow Overlay Report (WO18) - Replaces second motion video analyzer
+  flowOverlayMp4Url         String?   // S3 URL to flow overlay video (skeleton + A/B/C markers)
+  flowOverlayGifUrl         String?   // S3 URL to flow overlay GIF for quick preview
+  flowMomentumScore         Float?    // 0-100, overall momentum flow score
+  flowTempoRatio            String?   // e.g. "2.8 : 1.0" (Load:Fire ratio)
+  flowSmoothnessScore       Float?    // 0-100, kinematic sequence smoothness
+  flowTransferEfficiency    Float?    // 0-100, energy transfer efficiency
+  flowReportGenerated       Boolean   @default(false)  // Whether flow report has been generated
+  flowReportGeneratedAt     DateTime? // When flow report was last generated
+  
   uploadDate      DateTime  @default(now())
   
   // Relations
