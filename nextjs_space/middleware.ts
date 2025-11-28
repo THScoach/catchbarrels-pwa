@@ -27,6 +27,7 @@ export async function middleware(request: NextRequest) {
     '/api/dev', // Allow dev endpoints for seeding/testing
     '/api/signup', // Allow signup endpoint
     '/api/webhooks', // Allow webhook endpoints
+    '/api/admin/cron', // Allow cron endpoints (protected by CRON_SECRET)
   ];
 
   // Check if path is public

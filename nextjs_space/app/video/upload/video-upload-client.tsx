@@ -7,11 +7,17 @@ import { UploadErrorState } from '@/components/ui/error-state';
 import { OnFormImportPanel } from '@/components/onform/onform-import-panel';
 import { RickTip } from '@/components/ui/rick-tip';
 import { BarrelsButton } from '@/components/ui/barrels-button';
+import UpgradeModal from '@/components/upgrade-modal';
 import { toast } from 'sonner';
 import { Upload, Loader2, CheckCircle, AlertCircle, Video as VideoIcon, Info, Zap } from 'lucide-react';
 import { HelpBeacon } from '@/components/help/HelpBeacon';
+import type { MembershipTier } from '@/lib/membership-tiers';
 
-export function VideoUploadClient() {
+interface VideoUploadClientProps {
+  membershipTier: MembershipTier;
+}
+
+export function VideoUploadClient({ membershipTier }: VideoUploadClientProps) {
   const router = useRouter();
   const [mode, setMode] = useState<'upload' | 'onform'>('upload');
   const [uploading, setUploading] = useState(false);
@@ -29,6 +35,10 @@ export function VideoUploadClient() {
   
   // OnForm import states
   const [showOnFormPanel, setShowOnFormPanel] = useState(false);
+  
+  // Upgrade modal states (WO16)
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<'session_limit' | 'swing_limit' | 'no_access'>('session_limit');
 
   // Analysis steps for progress display
   const analysisSteps = [
@@ -129,6 +139,28 @@ export function VideoUploadClient() {
             setTimeout(() => {
               router.push('/video');
             }, 1500);
+          }
+        } else if (xhr.status === 403) {
+          // Session or swing limit reached - show upgrade modal (WO16)
+          setUploading(false);
+          setProgress(0);
+          
+          try {
+            const response = JSON.parse(xhr.responseText);
+            const errorMessage = response.error || response.message || '';
+            
+            // Determine upgrade reason based on error message
+            if (errorMessage.toLowerCase().includes('swing')) {
+              setUpgradeReason('swing_limit');
+            } else {
+              setUpgradeReason('session_limit');
+            }
+            
+            setIsUpgradeModalOpen(true);
+          } catch (err) {
+            // Default to session limit if can't parse response
+            setUpgradeReason('session_limit');
+            setIsUpgradeModalOpen(true);
           }
         } else if (xhr.status >= 500) {
           // Server error - catastrophic failure
@@ -491,6 +523,14 @@ export function VideoUploadClient() {
       <HelpBeacon 
         pageId="video-upload"
         variant="icon"
+      />
+
+      {/* Upgrade Modal (WO16) */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        currentTier={membershipTier}
+        reason={upgradeReason}
       />
     </div>
   );

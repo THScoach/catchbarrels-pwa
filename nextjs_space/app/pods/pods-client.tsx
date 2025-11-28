@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { format, addDays, startOfWeek, isSaturday, isSunday } from 'date-fns';
+import UpgradeModal from '@/components/upgrade-modal';
+import type { MembershipTier } from '@/lib/membership-tiers';
 
 interface PodSlot {
   id: string;
@@ -55,6 +57,9 @@ export default function PodsClient({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  // Upgrade modal state (WO16)
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   // Get next 4 weekends (Saturdays and Sundays)
   const getUpcomingWeekends = () => {
@@ -198,11 +203,12 @@ export default function PodsClient({
                 </div>
 
                 <div className="pt-4">
-                  <Link href="/purchase-required">
-                    <Button className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-semibold">
-                      Upgrade to Hybrid - $199/month
-                    </Button>
-                  </Link>
+                  <Button 
+                    onClick={() => setIsUpgradeModalOpen(true)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-semibold"
+                  >
+                    See Hybrid Plan
+                  </Button>
                 </div>
 
                 <p className="text-xs text-gray-500">
@@ -212,6 +218,14 @@ export default function PodsClient({
             </Card>
           </motion.div>
         </div>
+
+        {/* Upgrade Modal (WO16) */}
+        <UpgradeModal
+          isOpen={isUpgradeModalOpen}
+          onClose={() => setIsUpgradeModalOpen(false)}
+          currentTier={userTier as MembershipTier}
+          reason="no_access"
+        />
       </div>
     );
   }
