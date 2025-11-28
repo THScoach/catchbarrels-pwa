@@ -122,42 +122,55 @@ export const authOptions: NextAuthOptions = {
       token: {
         url: 'https://api.whop.com/api/v2/oauth/token',
         async request(context) {
-          console.log('[Whop OAuth] Token exchange starting...');
-          console.log('[Whop OAuth] Token request context:', {
-            url: 'https://api.whop.com/api/v2/oauth/token',
-            hasCode: !!context.params.code,
-            hasClientId: !!context.provider.clientId,
-            hasClientSecret: !!context.provider.clientSecret,
-          });
+          console.log('[Whop OAuth] ========== TOKEN EXCHANGE START ==========');
+          console.log('[Whop OAuth] Callback URL:', `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`);
+          console.log('[Whop OAuth] Code present:', !!context.params.code);
+          console.log('[Whop OAuth] Code value (first 20 chars):', context.params.code ? (context.params.code as string).substring(0, 20) + '...' : 'MISSING');
+          console.log('[Whop OAuth] Client ID:', context.provider.clientId ? 'Present' : 'MISSING');
+          console.log('[Whop OAuth] Client Secret:', context.provider.clientSecret ? 'Present' : 'MISSING');
 
           try {
+            const requestBody = new URLSearchParams({
+              grant_type: 'authorization_code',
+              code: context.params.code as string,
+              redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`,
+              client_id: context.provider.clientId as string,
+              client_secret: context.provider.clientSecret as string,
+            });
+            
+            console.log('[Whop OAuth] Request body params:', Array.from(requestBody.keys()).join(', '));
+
             const response = await fetch('https://api.whop.com/api/v2/oauth/token', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
               },
-              body: new URLSearchParams({
-                grant_type: 'authorization_code',
-                code: context.params.code as string,
-                redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`,
-                client_id: context.provider.clientId as string,
-                client_secret: context.provider.clientSecret as string,
-              }),
+              body: requestBody,
             });
 
             console.log('[Whop OAuth] Token response status:', response.status);
+            console.log('[Whop OAuth] Token response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
             
             if (!response.ok) {
               const errorText = await response.text();
-              console.error('[Whop OAuth] Token exchange failed:', errorText);
+              console.error('[Whop OAuth] ❌ Token exchange FAILED');
+              console.error('[Whop OAuth] Status:', response.status);
+              console.error('[Whop OAuth] Error body:', errorText);
               throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
             }
 
             const tokens = await response.json();
-            console.log('[Whop OAuth] Token exchange successful, keys:', Object.keys(tokens));
+            console.log('[Whop OAuth] ✅ Token exchange SUCCESS');
+            console.log('[Whop OAuth] Received token keys:', Object.keys(tokens));
+            console.log('[Whop OAuth] Access token present:', !!tokens.access_token);
+            console.log('[Whop OAuth] Token type:', tokens.token_type);
+            console.log('[Whop OAuth] ========== TOKEN EXCHANGE END ==========');
             return { tokens };
           } catch (error) {
-            console.error('[Whop OAuth] Token exchange error:', error);
+            console.error('[Whop OAuth] ❌ Token exchange EXCEPTION:', error);
+            console.error('[Whop OAuth] Error name:', (error as Error).name);
+            console.error('[Whop OAuth] Error message:', (error as Error).message);
+            console.error('[Whop OAuth] Error stack:', (error as Error).stack);
             throw error;
           }
         },
@@ -165,8 +178,9 @@ export const authOptions: NextAuthOptions = {
       userinfo: {
         url: 'https://api.whop.com/api/v2/me',
         async request(context) {
-          console.log('[Whop OAuth] Fetching user profile...');
-          console.log('[Whop OAuth] Access token present:', !!context.tokens.access_token);
+          console.log('[Whop OAuth] ========== USERINFO FETCH START ==========');
+          console.log('[Whop OAuth] Access token:', context.tokens.access_token ? 'Present (length: ' + (context.tokens.access_token as string).length + ')' : 'MISSING');
+          console.log('[Whop OAuth] Token type:', context.tokens.token_type || 'not specified');
 
           try {
             const response = await fetch('https://api.whop.com/api/v2/me', {
@@ -176,28 +190,40 @@ export const authOptions: NextAuthOptions = {
             });
 
             console.log('[Whop OAuth] Userinfo response status:', response.status);
+            console.log('[Whop OAuth] Userinfo response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
 
             if (!response.ok) {
               const errorText = await response.text();
-              console.error('[Whop OAuth] Userinfo fetch failed:', errorText);
+              console.error('[Whop OAuth] ❌ Userinfo fetch FAILED');
+              console.error('[Whop OAuth] Status:', response.status);
+              console.error('[Whop OAuth] Error body:', errorText);
               throw new Error(`Userinfo fetch failed: ${response.status} - ${errorText}`);
             }
 
             const profile = await response.json();
-            console.log('[Whop OAuth] User profile fetched, keys:', Object.keys(profile));
+            console.log('[Whop OAuth] ✅ Userinfo fetch SUCCESS');
+            console.log('[Whop OAuth] Profile keys:', Object.keys(profile));
+            console.log('[Whop OAuth] Profile.id:', profile.id || 'MISSING');
+            console.log('[Whop OAuth] Profile.email:', profile.email || 'MISSING');
+            console.log('[Whop OAuth] Profile.name:', profile.name || 'MISSING');
+            console.log('[Whop OAuth] ========== USERINFO FETCH END ==========');
             return profile;
           } catch (error) {
-            console.error('[Whop OAuth] Userinfo fetch error:', error);
+            console.error('[Whop OAuth] ❌ Userinfo fetch EXCEPTION:', error);
+            console.error('[Whop OAuth] Error name:', (error as Error).name);
+            console.error('[Whop OAuth] Error message:', (error as Error).message);
             throw error;
           }
         },
       },
       checks: ['state'],
       profile(profile: any) {
-        console.log('[Whop OAuth] Processing profile:', JSON.stringify(profile, null, 2));
+        console.log('[Whop OAuth] ========== PROFILE MAPPING START ==========');
+        console.log('[Whop OAuth] Raw profile data:', JSON.stringify(profile, null, 2));
         
         if (!profile.id) {
-          console.error('[Whop OAuth] Profile missing required "id" field');
+          console.error('[Whop OAuth] ❌ CRITICAL: Profile missing required "id" field');
+          console.error('[Whop OAuth] Available profile keys:', Object.keys(profile));
           throw new Error('Whop profile missing required "id" field');
         }
 
@@ -209,7 +235,9 @@ export const authOptions: NextAuthOptions = {
           whopUserId: profile.id,
         };
 
+        console.log('[Whop OAuth] ✅ Profile mapped successfully');
         console.log('[Whop OAuth] Mapped profile:', JSON.stringify(mappedProfile, null, 2));
+        console.log('[Whop OAuth] ========== PROFILE MAPPING END ==========');
         return mappedProfile;
       },
     } as OAuthConfig<any>,
