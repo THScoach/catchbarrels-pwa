@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { Crown, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
+import { Crown, TrendingUp, Calendar, AlertCircle, Zap, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,9 @@ interface MembershipUsageCardProps {
   assessmentDaysLeft?: number;
   assessmentSessionsUsed?: number;
   assessmentSessionsAllowed?: number;
+  // POD Credits (for Hybrid tier)
+  podCreditsAvailable?: number;
+  podCreditsUsed?: number;
 }
 
 export function MembershipUsageCard({
@@ -28,11 +31,14 @@ export function MembershipUsageCard({
   assessmentDaysLeft,
   assessmentSessionsUsed,
   assessmentSessionsAllowed,
+  podCreditsAvailable = 0,
+  podCreditsUsed = 0,
 }: MembershipUsageCardProps) {
   const config = getTierConfig(tier);
   const limit = config.sessionsPerWeek;
   const isUnlimited = limit === 'unlimited';
   const isActive = membershipStatus === 'active';
+  const isHybridTier = tier === 'hybrid';
 
   // Calculate usage percentage for progress bar
   const usagePercent = isUnlimited 
@@ -169,6 +175,50 @@ export function MembershipUsageCard({
               <div className="text-xs text-gray-400">
                 ~{config.sessionsPerMonth}
               </div>
+
+              {/* Swing Limit Display */}
+              {config.swingsPerSession > 0 && (
+                <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-barrels-gold" />
+                    <span className="text-sm text-gray-300">Swings per Lesson</span>
+                  </div>
+                  <span className="text-sm font-medium text-barrels-gold">
+                    Up to {config.swingsPerSession}
+                  </span>
+                </div>
+              )}
+
+              {/* POD Credits (Hybrid tier only) */}
+              {isHybridTier && (
+                <div className="space-y-2 pt-2 border-t border-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-purple-400" />
+                      <span className="text-sm text-gray-300">POD Credits</span>
+                    </div>
+                    <span className={`text-sm font-medium ${podCreditsAvailable > 0 ? 'text-purple-400' : 'text-gray-500'}`}>
+                      {podCreditsAvailable} available
+                    </span>
+                  </div>
+                  
+                  {podCreditsAvailable > 0 ? (
+                    <Link href="/pods">
+                      <motion.button
+                        className="w-full py-2 px-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-lg text-sm"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        Book POD Session
+                      </motion.button>
+                    </Link>
+                  ) : (
+                    <div className="text-xs text-gray-500">
+                      {podCreditsUsed > 0 ? 'POD credit used this month' : 'No POD credits available'}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Warning for users at/near limit */}
               {!isUnlimited && sessionsUsedThisWeek >= (limit as number) && (

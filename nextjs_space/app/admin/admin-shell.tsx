@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Users, BarChart3, FileText, Settings, Eye, LogOut, FileBarChart, Upload } from 'lucide-react';
+import { Users, BarChart3, FileText, Settings, Eye, LogOut, FileBarChart, Upload, MapPin } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { motion } from 'framer-motion';
 
@@ -21,6 +21,7 @@ export default function AdminShell({ session, children }: AdminShellProps) {
     { id: 'overview', label: 'Overview', icon: BarChart3, path: '/admin' },
     { id: 'players', label: 'Players', icon: Users, path: '/admin/players' },
     { id: 'sessions', label: 'Sessions', icon: FileText, path: '/admin/sessions' },
+    { id: 'pods', label: 'PODs', icon: MapPin, path: '/admin/pods' },
     { id: 'reports', label: 'Reports', icon: FileBarChart, path: '/admin/reports' },
     { id: 'uploads', label: 'Uploads', icon: Upload, path: '/admin/uploads' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/admin/settings' },

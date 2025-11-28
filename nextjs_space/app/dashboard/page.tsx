@@ -46,6 +46,8 @@ export default async function DashboardPage() {
     status: user?.membershipStatus || 'inactive',
     expiresAt: user?.membershipExpiresAt,
     sessionsThisWeek,
+    podCreditsAvailable: user?.podCreditsAvailable || 0,
+    podCreditsUsed: user?.podCreditsUsed || 0,
   };
 
   // Extract VIP offer info (Assessment → VIP Pricing)

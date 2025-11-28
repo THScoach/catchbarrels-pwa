@@ -86,6 +86,8 @@ export default function DashboardClient({
           sessionsUsedThisWeek={membershipInfo.sessionsThisWeek || 0}
           membershipStatus={membershipInfo.status}
           membershipExpiresAt={membershipInfo.expiresAt}
+          podCreditsAvailable={membershipInfo.podCreditsAvailable}
+          podCreditsUsed={membershipInfo.podCreditsUsed}
         />
 
         {/* Core Scores Row */}
