@@ -17,6 +17,17 @@ interface Booking {
   attendedAt: Date | null;
   markedBy: string | null;
   notes: string | null;
+  // Diamond Kinetics Metrics (WO15)
+  swingsCaptured?: number | null;
+  avgBarrelSpeed?: number | null;
+  avgImpactMomentum?: number | null;
+  avgAttackAngle?: number | null;
+  avgHandSpeed?: number | null;
+  avgTimeToContact?: number | null;
+  dkSessionId?: string | null;
+  barrelsScore?: number | null;
+  sequenceGrade?: string | null;
+  dkSyncedAt?: Date | null;
   user: {
     id: string;
     name: string | null;
@@ -182,6 +193,46 @@ export default function PodsAdminClient({ slots }: PodsAdminClientProps) {
                             )}
                           </div>
                           <p className="text-sm text-gray-400">{booking.user.email}</p>
+                          
+                          {/* DK Metrics Display (WO15) */}
+                          {booking.swingsCaptured !== null && booking.swingsCaptured !== undefined && (
+                            <div className="mt-2 p-3 bg-purple-900/20 rounded border border-purple-700/30">
+                              <p className="text-xs text-purple-300 font-medium mb-2">Diamond Kinetics Metrics</p>
+                              <div className="flex flex-wrap gap-3 text-xs">
+                                <span className="text-gray-300">
+                                  <span className="font-semibold text-white">{booking.swingsCaptured}</span> swings
+                                </span>
+                                {booking.avgBarrelSpeed && (
+                                  <span className="text-gray-300">
+                                    <span className="font-semibold text-white">{booking.avgBarrelSpeed.toFixed(1)}</span> mph
+                                  </span>
+                                )}
+                                {booking.avgImpactMomentum && (
+                                  <span className="text-gray-300">
+                                    <span className="font-semibold text-white">{booking.avgImpactMomentum.toFixed(1)}</span> momentum
+                                  </span>
+                                )}
+                                {booking.barrelsScore && (
+                                  <span className="text-gray-300">
+                                    score{' '}
+                                    <span className={`font-semibold ${
+                                      booking.sequenceGrade === 'green' ? 'text-green-400' :
+                                      booking.sequenceGrade === 'yellow' ? 'text-yellow-400' :
+                                      'text-red-400'
+                                    }`}>
+                                      {booking.barrelsScore.toFixed(0)}
+                                    </span>
+                                    {booking.sequenceGrade && (
+                                      <span className="ml-1">
+                                        ({booking.sequenceGrade})
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
                           {booking.notes && (
                             <div className="mt-2 p-2 bg-gray-900/50 rounded border border-gray-800">
                               <p className="text-xs text-gray-400 flex items-center gap-2">

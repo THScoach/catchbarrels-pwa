@@ -38,6 +38,9 @@ model User {
   assessmentVipExpiresAt DateTime? // 60 days after assessment purchase
   assessmentVipActive   Boolean   @default(false) // Is VIP offer currently active?
   
+  // Diamond Kinetics Integration (WO15)
+  dkPlayerId        String?   // Diamond Kinetics player identifier for API lookups
+  
   // Trial Membership Tracking (7-day free trial post-assessment)
   trialTier           String?   // "athlete", "pro", "elite" - which tier trial
   trialStartDate      DateTime? // When trial started
@@ -1437,6 +1440,18 @@ model PodBooking {
   creditDeducted Boolean @default(true) // Was POD credit deducted for this booking?
   
   notes       String?   @db.Text // Coach notes about the session
+  
+  // Diamond Kinetics Swing Metrics (WO15)
+  swingsCaptured      Int?     // Number of swings captured by DK sensor
+  avgBarrelSpeed      Float?   // Average bat speed (mph)
+  avgImpactMomentum   Float?   // Average impact momentum (DK units)
+  avgAttackAngle      Float?   // Average attack angle (degrees)
+  avgHandSpeed        Float?   // Average hand speed (mph or DK units)
+  avgTimeToContact    Float?   // Average time to contact (seconds)
+  dkSessionId         String?  // DK session identifier
+  barrelsScore        Float?   // Composite BARRELS score (0-100)
+  sequenceGrade       String?  // green, yellow, or red based on barrelsScore
+  dkSyncedAt          DateTime? // When DK data was last synced
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

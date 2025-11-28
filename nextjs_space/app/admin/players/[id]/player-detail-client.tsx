@@ -244,6 +244,46 @@ export default function PlayerDetailClient({ player }: PlayerDetailClientProps) 
         </div>
       )}
 
+      {/* Diamond Kinetics Integration (WO15) */}
+      <div className="bg-[#1A1A1A] border border-purple-500/20 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
+          <Database className="w-4 h-4" />
+          Diamond Kinetics Integration
+        </h3>
+        
+        {player.dkPlayerId ? (
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+              <Link2 className="w-5 h-5 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">DK Player ID</p>
+              <p className="text-sm font-medium text-white font-mono">
+                {player.dkPlayerId}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gray-500/20 rounded-lg flex items-center justify-center">
+              <Database className="w-5 h-5 text-gray-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">No DK Player ID set</p>
+              <p className="text-xs text-gray-500">POD swing metrics require DK Player ID to be configured</p>
+            </div>
+          </div>
+        )}
+        
+        <div className="mt-3 text-xs text-gray-500">
+          <p>
+            Note: When a POD session is marked as "Attended", BARRELS automatically pulls Diamond Kinetics
+            swing data for the athlete and displays metrics (swings, barrel speed, momentum, etc.) in the POD management view.
+            DK Player ID can be set via database or future admin tools.
+          </p>
+        </div>
+      </div>
+
       {/* Recent Sessions */}
       <div className="bg-[#1A1A1A] border border-[#E8B14E]/20 rounded-xl p-6">
         <h2 className="text-lg font-bold text-white mb-4">Recent Sessions</h2>
