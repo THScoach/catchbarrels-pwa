@@ -253,100 +253,138 @@ export const authOptions: NextAuthOptions = {
   debug: true, // TEMPORARY: Enable debug mode to diagnose OAuthSignin error
   callbacks: {
     async jwt({ token, user, account }) {
-      console.log('[NextAuth JWT Callback] Called with:', {
-        hasUser: !!user,
-        hasAccount: !!account,
-        accountProvider: account?.provider,
-        tokenId: token.id,
-      });
+      console.log('[NextAuth JWT Callback] ========== JWT CALLBACK START ==========');
+      console.log('[NextAuth JWT Callback] Has user:', !!user);
+      console.log('[NextAuth JWT Callback] Has account:', !!account);
+      console.log('[NextAuth JWT Callback] Account provider:', account?.provider);
+      console.log('[NextAuth JWT Callback] Token ID:', token.id);
 
-      if (user) {
-        console.log('[NextAuth JWT] User data:', JSON.stringify(user, null, 2));
-        token.id = user.id;
-        token.username = (user as any).username;
-        token.whopUserId = (user as any).whopUserId;
-        token.isCoach = (user as any).isCoach || false;
-        token.role = (user as any).role || 'player';
-      }
-      
-      // If this is a Whop OAuth login, sync membership data
-      if (account?.provider === 'whop' && token.whopUserId) {
-        console.log('[Whop OAuth] Processing Whop login for user:', token.whopUserId);
-        console.log('[Whop OAuth] Account data:', JSON.stringify(account, null, 2));
-        try {
-          // Find or create user in database
-          let dbUser = await prisma.user.findUnique({
-            where: { whopUserId: token.whopUserId as string },
-          });
-
-          if (!dbUser) {
-            console.log('[Whop OAuth] Creating new user from Whop data');
-            // Create new user from Whop OAuth data
-            dbUser = await prisma.user.create({
-              data: {
-                username: token.username as string || token.email as string || `whop_${token.whopUserId}`,
-                email: token.email as string,
-                name: token.name as string,
-                whopUserId: token.whopUserId as string,
-                membershipTier: 'free',
-                membershipStatus: 'inactive',
-                profileComplete: false,
-              },
+      try {
+        if (user) {
+          console.log('[NextAuth JWT] Processing user data from profile');
+          console.log('[NextAuth JWT] User keys:', Object.keys(user));
+          console.log('[NextAuth JWT] User.id:', user.id);
+          console.log('[NextAuth JWT] User.email:', user.email);
+          
+          token.id = user.id;
+          token.username = (user as any).username;
+          token.whopUserId = (user as any).whopUserId;
+          token.isCoach = (user as any).isCoach || false;
+          token.role = (user as any).role || 'player';
+          
+          console.log('[NextAuth JWT] Token updated with user data');
+        }
+        
+        // If this is a Whop OAuth login, sync membership data
+        if (account?.provider === 'whop' && token.whopUserId) {
+          console.log('[NextAuth JWT] ========== WHOP MEMBERSHIP SYNC START ==========');
+          console.log('[NextAuth JWT] Whop User ID:', token.whopUserId);
+          
+          try {
+            // Find or create user in database
+            let dbUser = await prisma.user.findUnique({
+              where: { whopUserId: token.whopUserId as string },
             });
-            console.log('[Whop OAuth] New user created:', dbUser.id);
-          } else {
-            console.log('[Whop OAuth] Existing user found:', dbUser.id);
-          }
 
-          // Sync membership data from Whop
-          const memberships = await getWhopUserMemberships(token.whopUserId as string);
-          const activeMemberships = memberships.filter((m) => m.valid);
-
-          if (activeMemberships.length > 0) {
-            // Get highest tier membership
-            const tierPriority: Record<string, number> = {
-              elite: 3,
-              pro: 2,
-              athlete: 1,
-              free: 0,
-            };
-
-            let highestTier = 'free';
-            let highestMembership = activeMemberships[0];
-
-            for (const membership of activeMemberships) {
-              const tier = getWhopProductTier(membership.productId);
-              if (tierPriority[tier] > tierPriority[highestTier]) {
-                highestTier = tier;
-                highestMembership = membership;
-              }
+            if (!dbUser) {
+              console.log('[NextAuth JWT] User not found in DB, creating new user');
+              // Create new user from Whop OAuth data
+              dbUser = await prisma.user.create({
+                data: {
+                  username: token.username as string || token.email as string || `whop_${token.whopUserId}`,
+                  email: token.email as string,
+                  name: token.name as string,
+                  whopUserId: token.whopUserId as string,
+                  membershipTier: 'free',
+                  membershipStatus: 'inactive',
+                  profileComplete: false,
+                },
+              });
+              console.log('[NextAuth JWT] ✅ New user created in DB:', dbUser.id);
+            } else {
+              console.log('[NextAuth JWT] ✅ Existing user found in DB:', dbUser.id);
             }
 
-            // Update user with membership info
-            await prisma.user.update({
-              where: { id: dbUser.id },
-              data: {
-                whopMembershipId: highestMembership.id,
-                membershipTier: highestTier,
-                membershipStatus: 'active',
-                membershipExpiresAt: highestMembership.expiresAt
-                  ? new Date(highestMembership.expiresAt)
-                  : null,
-                lastWhopSync: new Date(),
-              },
+            // Sync membership data from Whop
+            console.log('[NextAuth JWT] Fetching Whop memberships...');
+            const memberships = await getWhopUserMemberships(token.whopUserId as string);
+            console.log('[NextAuth JWT] Found memberships:', memberships.length);
+            
+            const activeMemberships = memberships.filter((m) => m.valid);
+            console.log('[NextAuth JWT] Active memberships:', activeMemberships.length);
+
+            if (activeMemberships.length > 0) {
+              // Get highest tier membership
+              const tierPriority: Record<string, number> = {
+                elite: 3,
+                pro: 2,
+                athlete: 1,
+                free: 0,
+              };
+
+              let highestTier = 'free';
+              let highestMembership = activeMemberships[0];
+
+              for (const membership of activeMemberships) {
+                const tier = getWhopProductTier(membership.productId);
+                console.log('[NextAuth JWT] Membership:', membership.id, 'Tier:', tier);
+                if (tierPriority[tier] > tierPriority[highestTier]) {
+                  highestTier = tier;
+                  highestMembership = membership;
+                }
+              }
+
+              console.log('[NextAuth JWT] Highest tier:', highestTier);
+              
+              // Update user with membership info
+              await prisma.user.update({
+                where: { id: dbUser.id },
+                data: {
+                  whopMembershipId: highestMembership.id,
+                  membershipTier: highestTier,
+                  membershipStatus: 'active',
+                  membershipExpiresAt: highestMembership.expiresAt
+                    ? new Date(highestMembership.expiresAt)
+                    : null,
+                  lastWhopSync: new Date(),
+                },
+              });
+
+              console.log('[NextAuth JWT] ✅ User membership updated');
+              
+              token.membershipTier = highestTier;
+              token.membershipStatus = 'active';
+            } else {
+              console.log('[NextAuth JWT] ⚠️  No active memberships found');
+            }
+
+            token.id = dbUser.id;
+            console.log('[NextAuth JWT] ========== WHOP MEMBERSHIP SYNC END ==========');
+          } catch (syncError) {
+            console.error('[NextAuth JWT] ❌ Error syncing Whop membership:', syncError);
+            console.error('[NextAuth JWT] Error details:', {
+              name: (syncError as Error).name,
+              message: (syncError as Error).message,
+              stack: (syncError as Error).stack,
             });
-
-            token.membershipTier = highestTier;
-            token.membershipStatus = 'active';
+            // Don't throw - allow login to proceed even if sync fails
           }
-
-          token.id = dbUser.id;
-        } catch (error) {
-          console.error('Error syncing Whop membership:', error);
         }
+        
+        console.log('[NextAuth JWT] ========== JWT CALLBACK END ==========');
+        console.log('[NextAuth JWT] Final token:', { id: token.id, role: token.role, membershipTier: token.membershipTier });
+        return token;
+        
+      } catch (error) {
+        console.error('[NextAuth JWT] ❌ CRITICAL ERROR in JWT callback:', error);
+        console.error('[NextAuth JWT] Error details:', {
+          name: (error as Error).name,
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+        });
+        // Return token as-is to prevent complete auth failure
+        return token;
       }
-      
-      return token;
     },
     async session({ session, token }) {
       if (session.user) {
@@ -361,71 +399,40 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Handle callback URLs properly with context-aware redirects
+      console.log('[NextAuth Redirect] ========== REDIRECT START ==========');
+      console.log('[NextAuth Redirect] url:', url);
+      console.log('[NextAuth Redirect] baseUrl:', baseUrl);
+      
       try {
-        console.log('[NextAuth Redirect] url:', url, 'baseUrl:', baseUrl);
-        
-        // First, check if URL is relative
+        // Case 1: Relative path (starts with /)
         if (url.startsWith('/')) {
-          console.log('[NextAuth Redirect] Relative URL detected:', url);
-          return `${baseUrl}${url}`;
+          const fullUrl = `${baseUrl}${url}`;
+          console.log('[NextAuth Redirect] Relative path detected, returning:', fullUrl);
+          return fullUrl;
         }
         
-        // Parse the URL to extract callback parameters
-        let targetUrl = url;
-        try {
-          const urlObj = new URL(url);
-          
-          // Check if this URL has a callbackUrl parameter
-          const callbackUrl = urlObj.searchParams.get('callbackUrl');
-          if (callbackUrl) {
-            console.log('[NextAuth Redirect] Found callbackUrl parameter:', callbackUrl);
-            // Use the callback URL if it's on the same origin
-            if (callbackUrl.startsWith('/')) {
-              targetUrl = `${baseUrl}${callbackUrl}`;
-            } else if (callbackUrl.startsWith(baseUrl)) {
-              targetUrl = callbackUrl;
-            }
+        // Case 2: Absolute URL - check if same origin
+        const urlObj = new URL(url);
+        if (urlObj.origin === baseUrl) {
+          console.log('[NextAuth Redirect] Same origin URL, allowing:', url);
+          // IMPORTANT: Don't redirect back to login or error pages
+          if (urlObj.pathname === '/auth/login' || urlObj.pathname === '/auth/error') {
+            console.log('[NextAuth Redirect] Avoiding loop, redirecting to dashboard instead');
+            return `${baseUrl}/dashboard`;
           }
-          
-          // If URL is on the same origin, allow it
-          if (urlObj.origin === baseUrl) {
-            console.log('[NextAuth Redirect] Same origin URL detected');
-            
-            // If the URL is the base URL or login page without a callback, redirect to dashboard
-            if (urlObj.pathname === '/' || 
-                urlObj.pathname === '/auth/login' || 
-                urlObj.pathname === '/auth/admin-login') {
-              
-              // Check if this is an admin login
-              const isAdminLogin = urlObj.pathname === '/auth/admin-login' || 
-                                  urlObj.searchParams.has('admin');
-              
-              const defaultRedirect = isAdminLogin ? `${baseUrl}/admin` : `${baseUrl}/dashboard`;
-              console.log('[NextAuth Redirect] Login page detected, redirecting to', defaultRedirect);
-              return callbackUrl || defaultRedirect;
-            }
-            
-            // Allow the URL if it's on the same origin
-            return targetUrl;
-          }
-        } catch (parseError) {
-          console.log('[NextAuth Redirect] URL parse error, treating as relative');
+          return url;
         }
         
-        // If URL equals base URL, redirect to dashboard
-        if (url === baseUrl || url === `${baseUrl}/`) {
-          console.log('[NextAuth Redirect] Base URL detected, redirecting to dashboard');
-          return `${baseUrl}/dashboard`;
-        }
-        
-        // Default fallback to dashboard
-        console.log('[NextAuth Redirect] Fallback to dashboard');
+        // Case 3: Different origin - reject and go to dashboard
+        console.log('[NextAuth Redirect] Different origin detected, redirecting to dashboard');
         return `${baseUrl}/dashboard`;
+        
       } catch (error) {
-        console.error('[NextAuth Redirect] Error:', error);
-        // Fallback to dashboard on error
+        console.error('[NextAuth Redirect] Error parsing URL:', error);
+        console.log('[NextAuth Redirect] Falling back to dashboard');
         return `${baseUrl}/dashboard`;
+      } finally {
+        console.log('[NextAuth Redirect] ========== REDIRECT END ==========');
       }
     },
   },

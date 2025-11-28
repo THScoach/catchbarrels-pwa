@@ -14,14 +14,19 @@ import { getToken } from 'next-auth/jwt';
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   
+  // Log all requests for debugging OAuth flow
+  console.log('[Middleware] Request:', { pathname, search, method: request.method });
+  
   // Public paths that don't require authentication
   const publicPaths = [
     '/auth/login',
     '/auth/admin-login',
     '/auth/whop-redirect',
-    '/api/auth',
+    '/auth/error', // CRITICAL: Allow error page to display
+    '/api/auth', // Allow all NextAuth API routes including callbacks
     '/api/dev', // Allow dev endpoints for seeding/testing
     '/api/signup', // Allow signup endpoint
+    '/api/webhooks', // Allow webhook endpoints
   ];
 
   // Check if path is public
@@ -36,6 +41,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/robots') ||
     pathname.includes('.')
   ) {
+    console.log('[Middleware] Allowing public path:', pathname);
     return NextResponse.next();
   }
 
@@ -45,8 +51,16 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  console.log('[Middleware] Authentication check:', { 
+    pathname, 
+    hasToken: !!token,
+    tokenId: token?.id,
+    role: (token as any)?.role
+  });
+
   // If not authenticated, redirect to login
   if (!token) {
+    console.log('[Middleware] No token found, redirecting to login');
     // Save the target URL for post-login redirect
     const loginUrl = new URL('/auth/login', request.url);
     
@@ -55,8 +69,11 @@ export async function middleware(request: NextRequest) {
       loginUrl.searchParams.set('callbackUrl', pathname + search);
     }
     
+    console.log('[Middleware] Redirect target:', loginUrl.toString());
     return NextResponse.redirect(loginUrl);
   }
+
+  console.log('[Middleware] User authenticated, role:', (token as any).role);
 
   // Check if user is admin/coach (they get full access to everything)
   const userRole = (token as any).role || 'player';
