@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/db';
 import { uploadFile } from '@/lib/s3';
-import { canStartNewSession, type MembershipTier } from '@/lib/membership-tiers';
+import { canStartNewSession, getTierConfig, type MembershipTier } from '@/lib/membership-tiers';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,20 +37,31 @@ export async function POST(request: NextRequest) {
 
     // Enforce session caps (exempt admins and coaches)
     if (userRole !== 'admin' && userRole !== 'coach') {
-      // Get start of current week (Monday)
+      // Get start of current week (Sunday 12:01 AM CST)
+      // CST is UTC-6 (or UTC-5 during DST)
       const now = new Date();
-      const dayOfWeek = now.getDay();
-      const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek; // Adjust to Monday
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() + diff);
-      startOfWeek.setHours(0, 0, 0, 0);
+      
+      // Convert to CST (for simplicity, using UTC-6)
+      const cstOffset = -6 * 60; // CST is UTC-6
+      const cstNow = new Date(now.getTime() + (cstOffset + now.getTimezoneOffset()) * 60000);
+      
+      // Get Sunday of this week at 00:01 CST
+      const dayOfWeek = cstNow.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysFromSunday = dayOfWeek; // Days since Sunday
+      
+      const startOfWeek = new Date(cstNow);
+      startOfWeek.setDate(cstNow.getDate() - daysFromSunday);
+      startOfWeek.setHours(0, 1, 0, 0); // 12:01 AM
+      
+      // Convert back to UTC for database comparison
+      const startOfWeekUTC = new Date(startOfWeek.getTime() - (cstOffset + now.getTimezoneOffset()) * 60000);
 
       // Count sessions this week
       const sessionsThisWeek = await prisma.video.count({
         where: {
           userId,
           uploadDate: {
-            gte: startOfWeek,
+            gte: startOfWeekUTC,
           },
         },
       });
@@ -141,6 +152,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get swing limit for user's tier
+    const tierConfig = getTierConfig(user.membershipTier as MembershipTier);
+    const swingLimit = tierConfig.swingsPerSession;
+    
+    console.log(`[Video Upload] User tier: ${user.membershipTier}, Swing limit: ${swingLimit}`);
+
     // Create video record in database
     console.log(`[Video Upload] Creating database record for user ${userId}`);
     const video = await prisma.video.create({
@@ -153,6 +170,8 @@ export async function POST(request: NextRequest) {
         thumbnailUrl: '', // Will be generated later
         analyzed: false,
         skeletonStatus: 'PENDING', // Automatic skeleton extraction will process this
+        swingCount: 0, // Will be updated during analysis
+        swingLimit: swingLimit, // Store tier's swing limit at upload time
       },
     });
 

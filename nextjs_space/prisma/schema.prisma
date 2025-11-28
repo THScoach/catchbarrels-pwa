@@ -23,10 +23,15 @@ model User {
   
   // Whop Membership Tracking (Phase 6)
   whopMembershipId    String?   // Current Whop membership ID
-  membershipTier      String    @default("free") // "free", "athlete", "pro", "elite"
+  membershipTier      String    @default("free") // "free", "starter", "performance", "hybrid", "pro"
   membershipStatus    String    @default("inactive") // "active", "inactive", "cancelled", "expired"
   membershipExpiresAt DateTime? // For subscription tracking
   lastWhopSync        DateTime? // Last time we synced with Whop
+  
+  // POD Credits (Hybrid tier only - WO13)
+  podCreditsAvailable Int       @default(0)      // Current available POD credits
+  podCreditsUsed      Int       @default(0)      // Total POD credits used (historical)
+  podCreditsLastReset DateTime? // Last monthly reset (for Hybrid tier)
   
   // Assessment → VIP Offer Tracking (Work Order 13)
   assessmentCompletedAt DateTime? // When user purchased an assessment
@@ -89,6 +94,7 @@ model User {
   playerLessons    PlayerLesson[] @relation("UserPlayerLessons")
   brainTestSessions BrainTestSession[] @relation("UserBrainTestSessions")
   supportTickets   SupportTicket[] @relation("UserSupportTickets")
+  podBookings      PodBooking[] @relation("UserPodBookings")
 }
 
 model Video {
@@ -108,6 +114,10 @@ model Video {
   originalUrl     String?   // For imported videos (OnForm share link, Hudl link, etc.)
   videoUrl        String    // S3 URL or mock URL
   thumbnailUrl    String?   // Mock thumbnail
+  
+  // Swing Limits (WO13)
+  swingCount      Int       @default(0) // Number of swings analyzed in this video
+  swingLimit      Int?      // Max swings allowed (based on tier at upload time)
   
   // Video Processing for Joint Analysis
   impactFrame     Int?      // Frame number where ball impact occurs
@@ -1373,4 +1383,57 @@ model RebootSession {
   @@index([sessionType])
   @@index([swingDate])
   @@index([createdAt])
+}
+
+// POD Scheduling System (WO13)
+// Defines available time slots for in-person POD sessions
+model PodSlot {
+  id          String   @id @default(cuid())
+  date        DateTime // Date of the POD session (only Saturdays and Sundays)
+  dayOfWeek   String   // "Saturday" or "Sunday"
+  startTime   String   // "12:00", "12:30", "13:00", "13:30", "14:00"
+  endTime     String   // "12:30", "13:00", "13:30", "14:00", "14:30"
+  maxAthletes Int      @default(3) // Maximum 3 athletes per pod
+  
+  bookings    PodBooking[] @relation("PodSlotBookings")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([date, startTime]) // One slot per date+time combination
+  @@map("pod_slots")
+  @@index([date])
+  @@index([dayOfWeek])
+}
+
+// POD Bookings (WO13)
+// Tracks which athletes are booked for which POD slots
+model PodBooking {
+  id          String   @id @default(cuid())
+  
+  userId      String
+  user        User     @relation("UserPodBookings", fields: [userId], references: [id], onDelete: Cascade)
+  
+  podSlotId   String
+  podSlot     PodSlot  @relation("PodSlotBookings", fields: [podSlotId], references: [id], onDelete: Cascade)
+  
+  status      String   @default("confirmed") // "confirmed", "attended", "no_show", "cancelled"
+  
+  // Attendance tracking
+  attendedAt  DateTime? // When athlete marked as attended by coach
+  markedBy    String?   // Coach/admin who marked attendance
+  
+  // Credit deduction tracking
+  creditDeducted Boolean @default(true) // Was POD credit deducted for this booking?
+  
+  notes       String?   @db.Text // Coach notes about the session
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, podSlotId]) // One booking per user per slot
+  @@map("pod_bookings")
+  @@index([userId])
+  @@index([podSlotId])
+  @@index([status])
 }

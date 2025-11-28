@@ -2,10 +2,10 @@
  * CatchBarrels Membership Tiers Configuration
  * 
  * Single source of truth for all membership tier details, pricing, and limits.
- * Work Order 13: Clean membership/usage system tied to Whop.
+ * Work Order 13: Membership tiers + POD credits + swing limits.
  */
 
-export type MembershipTier = 'free' | 'athlete' | 'pro' | 'elite';
+export type MembershipTier = 'free' | 'starter' | 'performance' | 'hybrid' | 'pro';
 
 export interface TierConfig {
   id: MembershipTier;
@@ -15,6 +15,8 @@ export interface TierConfig {
   billingCycle: 'month' | 'year' | null;
   sessionsPerWeek: number | 'unlimited';
   sessionsPerMonth: string; // Estimated for display (e.g., "4 per month")
+  swingsPerSession: number; // Max swings allowed per session
+  podCreditsPerMonth?: number; // POD credits for in-person sessions (Hybrid tier only)
   whopProductIds: string[]; // Whop product IDs that grant this tier
   features: string[];
   upgradeMessage: string;
@@ -25,7 +27,8 @@ export interface TierConfig {
 /**
  * Membership Tiers Configuration
  * 
- * NOTE: "Session" = 1 analyzed video upload (up to ~15 swings per session)
+ * NOTE: "Lesson" = 1 analyzed video upload session
+ * Each lesson has a maximum number of swings that can be analyzed
  */
 export const MEMBERSHIP_TIERS: Record<MembershipTier, TierConfig> = {
   free: {
@@ -36,6 +39,7 @@ export const MEMBERSHIP_TIERS: Record<MembershipTier, TierConfig> = {
     billingCycle: null,
     sessionsPerWeek: 0,
     sessionsPerMonth: '0',
+    swingsPerSession: 0,
     whopProductIds: [],
     features: [
       'View dashboard',
@@ -47,71 +51,100 @@ export const MEMBERSHIP_TIERS: Record<MembershipTier, TierConfig> = {
     icon: '⭐',
   },
 
-  athlete: {
-    id: 'athlete',
-    slug: 'athlete',
-    displayName: 'BARRELS Athlete',
+  starter: {
+    id: 'starter',
+    slug: 'starter',
+    displayName: 'Starter',
     price: 49,
     billingCycle: 'month',
     sessionsPerWeek: 1,
     sessionsPerMonth: '4 per month',
-    whopProductIds: ['prod_kNyobCww4tc2p'], // BARRELS Athlete from Whop
+    swingsPerSession: 15,
+    whopProductIds: ['prod_kNyobCww4tc2p'], // TODO: Update with real Whop product ID
     features: [
-      '1 remote session per week',
-      '~15 swings analyzed per session',
+      '1 remote lesson per week',
+      'Up to 15 swings per lesson',
       'BARREL Score & 4B breakdown',
       'Basic Coach Rick insights',
       'Progress tracking',
     ],
-    upgradeMessage: 'Upgrade to BARRELS Athlete for 1 session/week at $49/month',
+    upgradeMessage: 'Upgrade to Starter for 1 lesson/week at $49/month',
     color: 'text-blue-400',
     icon: '🏏',
   },
 
-  pro: {
-    id: 'pro',
-    slug: 'pro',
-    displayName: 'BARRELS Pro',
+  performance: {
+    id: 'performance',
+    slug: 'performance',
+    displayName: 'Performance',
     price: 99,
     billingCycle: 'month',
     sessionsPerWeek: 2,
     sessionsPerMonth: '8 per month',
-    whopProductIds: ['prod_O4CB6y0IzNJLe'], // BARRELS Pro from Whop
+    swingsPerSession: 15,
+    whopProductIds: ['prod_O4CB6y0IzNJLe'], // TODO: Update with real Whop product ID
     features: [
-      '2 remote sessions per week',
-      '~15 swings analyzed per session',
+      '2 remote lessons per week',
+      'Up to 15 swings per lesson',
       'Advanced biomechanics',
       'Kinematic sequence analysis',
       'Full Coach Rick reports',
       '52-pitch assessment access',
     ],
-    upgradeMessage: 'Upgrade to BARRELS Pro for 2 sessions/week at $99/month',
+    upgradeMessage: 'Upgrade to Performance for 2 lessons/week at $99/month',
     color: 'text-barrels-gold',
     icon: '💪',
   },
 
-  elite: {
-    id: 'elite',
-    slug: 'elite',
-    displayName: 'BARRELS Elite',
+  hybrid: {
+    id: 'hybrid',
+    slug: 'hybrid',
+    displayName: 'Hybrid',
     price: 199,
+    billingCycle: 'month',
+    sessionsPerWeek: 1,
+    sessionsPerMonth: '4 remote + 1 in-person',
+    swingsPerSession: 15,
+    podCreditsPerMonth: 1,
+    whopProductIds: ['prod_HYBRID_199'], // TODO: Update with real Whop product ID
+    features: [
+      '1 remote lesson per week',
+      '1 in-person POD session per month',
+      'Up to 15 swings per lesson',
+      'Advanced biomechanics',
+      'Priority POD booking',
+      'Full Coach Rick reports',
+      'In-person coaching',
+    ],
+    upgradeMessage: 'Upgrade to Hybrid for remote + in-person training at $199/month',
+    color: 'text-purple-400',
+    icon: '🔥',
+  },
+
+  pro: {
+    id: 'pro',
+    slug: 'pro',
+    displayName: 'Pro',
+    price: 997,
     billingCycle: 'month',
     sessionsPerWeek: 'unlimited',
     sessionsPerMonth: 'Unlimited',
+    swingsPerSession: 25,
     whopProductIds: [
-      'prod_vCV6UQH3K18QZ', // BARRELS Elite (The Inner Circle)
-      'prod_zH1wnZs0JKKfd', // The 90-Day Transformation
+      'prod_PRO_997', // TODO: Update with real Whop product ID
+      'prod_zH1wnZs0JKKfd', // The 90-Day Transformation (if still applicable)
     ],
     features: [
-      'Unlimited remote sessions',
+      'Unlimited remote lessons',
+      'Up to 25 swings per lesson',
       'Unlimited assessments',
       'Priority support',
       'Custom training plans',
       'Live coaching access',
       'All features included',
     ],
-    upgradeMessage: 'Upgrade to BARRELS Elite for unlimited sessions at $199/month',
-    color: 'text-purple-400',
+    upgradeMessage: 'Upgrade to Pro for unlimited lessons at $997/month',
+    color: 'text-emerald-400',
     icon: '⚡',
   },
 };
@@ -219,7 +252,7 @@ export function canStartNewSession(
   if (limit === 0) {
     return {
       allowed: false,
-      reason: `You need an active BARRELS membership to upload swing analysis. Upgrade to ${MEMBERSHIP_TIERS.athlete.displayName} ($${MEMBERSHIP_TIERS.athlete.price}/month) to start training!`,
+      reason: `You need an active BARRELS membership to upload swing analysis. Upgrade to ${MEMBERSHIP_TIERS.starter.displayName} ($${MEMBERSHIP_TIERS.starter.price}/month) to start training!`,
     };
   }
 
@@ -241,7 +274,7 @@ export function canStartNewSession(
  * Get next higher tier (for upgrade suggestions)
  */
 function getNextTier(currentTier: MembershipTier): MembershipTier | null {
-  const hierarchy: MembershipTier[] = ['free', 'athlete', 'pro', 'elite'];
+  const hierarchy: MembershipTier[] = ['free', 'starter', 'performance', 'hybrid', 'pro'];
   const currentIndex = hierarchy.indexOf(currentTier);
   return currentIndex < hierarchy.length - 1 ? hierarchy[currentIndex + 1] : null;
 }
@@ -255,9 +288,10 @@ export function hasTierAccess(
 ): boolean {
   const hierarchy: Record<MembershipTier, number> = {
     free: 0,
-    athlete: 1,
-    pro: 2,
-    elite: 3,
+    starter: 1,
+    performance: 2,
+    hybrid: 3,
+    pro: 4,
   };
   return hierarchy[userTier] >= hierarchy[requiredTier];
 }
