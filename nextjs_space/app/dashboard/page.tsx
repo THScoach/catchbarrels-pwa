@@ -23,11 +23,29 @@ export default async function DashboardPage() {
   // Build dashboard summary using new Functional Health-style layout
   const summary = await buildDashboardSummaryForUser((session.user as any).id);
 
+  // Calculate sessions used this week (Monday-Sunday)
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek; // Adjust to Monday
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() + diff);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const sessionsThisWeek = await prisma.video.count({
+    where: {
+      userId: (session.user as any).id,
+      uploadDate: {
+        gte: startOfWeek,
+      },
+    },
+  });
+
   // Extract membership info
   const membershipInfo = {
     tier: user?.membershipTier || 'free',
     status: user?.membershipStatus || 'inactive',
     expiresAt: user?.membershipExpiresAt,
+    sessionsThisWeek,
   };
 
   // Extract VIP offer info (Assessment → VIP Pricing)

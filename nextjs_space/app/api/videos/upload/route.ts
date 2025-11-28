@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/db';
 import { uploadFile } from '@/lib/s3';
-import { canStartNewSession } from '@/lib/assessment-vip-config';
+import { canStartNewSession, type MembershipTier } from '@/lib/membership-tiers';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       console.log(`[Video Upload] User ${userId} has ${sessionsThisWeek} sessions this week (tier: ${user.membershipTier})`);
 
       // Check if user can start a new session
-      const canStart = canStartNewSession(user.membershipTier, sessionsThisWeek);
+      const canStart = canStartNewSession(user.membershipTier as MembershipTier, sessionsThisWeek);
       if (!canStart.allowed) {
         console.log(`[Video Upload] Session cap reached for user ${userId}: ${canStart.reason}`);
         return NextResponse.json(

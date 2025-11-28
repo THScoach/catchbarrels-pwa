@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { HelpBeacon } from '@/components/help/HelpBeacon'
 import { FTUEModal } from '@/components/onboarding/ftue-modal'
+import { MembershipUsageCard } from '@/components/membership-usage-card'
+import { type MembershipTier } from '@/lib/membership-tiers'
 
 interface DashboardClientProps {
   user: any
@@ -77,6 +79,14 @@ export default function DashboardClient({
 
         {/* Start New Session CTA */}
         <StartNewSessionCTA />
+
+        {/* Membership Usage Card */}
+        <MembershipUsageCard
+          tier={membershipInfo.tier as MembershipTier}
+          sessionsUsedThisWeek={membershipInfo.sessionsThisWeek || 0}
+          membershipStatus={membershipInfo.status}
+          membershipExpiresAt={membershipInfo.expiresAt}
+        />
 
         {/* Core Scores Row */}
         <CoreScoresRow scores={summary.coreScores} />

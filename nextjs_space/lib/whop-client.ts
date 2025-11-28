@@ -222,38 +222,21 @@ export async function getAllWhopMemberships(): Promise<WhopMembership[]> {
 
 /**
  * Map Whop product ID to BARRELS membership tier
+ * Uses centralized tier configuration from membership-tiers.ts
  */
 export function getWhopProductTier(productId: string): string {
-  // Product IDs from Whop dashboard (configured Nov 2024)
-  const productMapping: Record<string, string> = {
-    // BARRELS Athlete - $49/mo or $417/yr
-    "prod_kNyobCww4tc2p": "athlete",
-    
-    // BARRELS Pro - $99/mo or $839/yr
-    "prod_O4CB6y0IzNJLe": "pro",
-    
-    // BARRELS Elite (The Inner Circle) - $199/mo or $1,699/yr
-    "prod_vCV6UQH3K18QZ": "elite",
-    
-    // The 90-Day Transformation - $997 one-time
-    "prod_zH1wnZs0JKKfd": "elite", // Transformation grants elite access
-  };
-
-  return productMapping[productId] || "free";
+  // Import from centralized config
+  const { getTierFromProductId } = require('./membership-tiers');
+  return getTierFromProductId(productId);
 }
 
 /**
  * Check if a Whop product is an assessment product
- * Assessment purchases unlock VIP pricing for BARRELS Pro
+ * Uses centralized configuration from membership-tiers.ts
  */
 export function isAssessmentProduct(productId: string): boolean {
-  // Assessment product IDs (TODO: Update with real Whop product IDs)
-  const assessmentProducts = [
-    'prod_assessment_standard_299',  // Standard In-Person Assessment - $299
-    'prod_assessment_pro_399',       // Pro Assessment + S2 Cognition - $399
-  ];
-  
-  return assessmentProducts.includes(productId);
+  const { isAssessmentProductId } = require('./membership-tiers');
+  return isAssessmentProductId(productId);
 }
 
 /**
