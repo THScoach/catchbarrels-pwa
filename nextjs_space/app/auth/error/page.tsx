@@ -74,11 +74,24 @@ const errorMessages: Record<string, { title: string; description: string; sugges
 export default function AuthErrorPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const error = searchParams?.get('error');
+  const error = searchParams?.get('error') || 'undefined';
   
-  const errorInfo = error && errorMessages[error] 
+  // Collect all query parameters for debugging
+  const allParams: Record<string, string> = {};
+  if (searchParams) {
+    searchParams.forEach((value, key) => {
+      allParams[key] = value;
+    });
+  }
+  
+  const errorInfo = error && error !== 'undefined' && errorMessages[error] 
     ? errorMessages[error] 
     : errorMessages.default;
+
+  // Log to console for debugging
+  console.log('[Auth Error Page] Error code:', error);
+  console.log('[Auth Error Page] All query params:', allParams);
+  console.log('[Auth Error Page] Full URL:', typeof window !== 'undefined' ? window.location.href : 'N/A');
 
   const handleRetry = () => {
     router.push('/auth/login');
@@ -117,13 +130,27 @@ export default function AuthErrorPage() {
             </div>
 
             {/* Error code for debugging */}
-            {error && (
-              <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-3">
-                <p className="text-xs text-gray-500 font-mono">
-                  Error Code: {error}
-                </p>
-              </div>
-            )}
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-3 space-y-2">
+              <p className="text-xs text-gray-500 font-semibold mb-2">Debug Information:</p>
+              <p className="text-xs text-gray-600 font-mono">
+                Error Code: <span className={error === 'undefined' ? 'text-red-400' : 'text-yellow-400'}>
+                  {error === 'undefined' ? 'undefined (no error code in URL)' : error}
+                </span>
+              </p>
+              {Object.keys(allParams).length > 0 && (
+                <div className="pt-2 border-t border-gray-800">
+                  <p className="text-xs text-gray-500 font-semibold mb-1">Query Parameters:</p>
+                  {Object.entries(allParams).map(([key, value]) => (
+                    <p key={key} className="text-xs text-gray-600 font-mono">
+                      {key}: <span className="text-yellow-400">{value}</span>
+                    </p>
+                  ))}
+                </div>
+              )}
+              {Object.keys(allParams).length === 0 && (
+                <p className="text-xs text-gray-600 italic">No query parameters found in URL</p>
+              )}
+            </div>
 
             {/* Actions */}
             <div className="flex flex-col gap-3 pt-2">
