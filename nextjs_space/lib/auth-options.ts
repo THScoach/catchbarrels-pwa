@@ -219,7 +219,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/login',
-    error: '/auth/login',
+    error: '/auth/error', // Dedicated error page to show actual error messages
     newUser: '/dashboard', // Redirect new users here after first OAuth sign-in
   },
   debug: true, // TEMPORARY: Enable debug mode to diagnose OAuthSignin error
