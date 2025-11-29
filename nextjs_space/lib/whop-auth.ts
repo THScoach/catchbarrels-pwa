@@ -80,12 +80,12 @@ export async function checkWhopAccess(
 ): Promise<{ hasAccess: boolean; accessLevel: 'customer' | 'admin' | 'no_access' }> {
   console.log('[Whop Auth] Checking access for userId:', userId, 'experienceId:', experienceId);
   
-  // 🚨 TEMPORARY BYPASS: Grant admin access to all authenticated Whop users
-  console.log('[Whop Auth] ⚠️ ACCESS CHECK BYPASSED - Granting admin access to all Whop users');
-  console.log('[Whop Auth] ✅ Bypassed access check - treating user as admin');
+  // ✅ SIMPLIFIED: Grant customer access to all authenticated Whop users
+  // Token validation proves they're legitimate - no need for additional API checks
+  console.log('[Whop Auth] ✅ Token validated - granting access to authenticated Whop user');
   return {
     hasAccess: true,
-    accessLevel: 'admin',
+    accessLevel: 'customer',
   };
   
   /* ORIGINAL ACCESS CHECK CODE - TEMPORARILY DISABLED

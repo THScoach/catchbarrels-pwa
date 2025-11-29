@@ -60,9 +60,9 @@ export default async function LoginPage() {
 
       console.log('[Login Page] User has access, level:', accessCheck.accessLevel);
 
-      // Determine user role based on access level
-      const userRole = accessCheck.accessLevel === 'admin' ? 'coach' : 'player';
-      console.log('[Login Page] Determined user role:', userRole);
+      // All Whop users are assigned 'player' role
+      const userRole = 'player';
+      console.log('[Login Page] Assigning role:', userRole);
 
       // Step 3: Find or create user in database
       console.log('[Login Page] Step 3: Finding or creating user...');
@@ -76,10 +76,10 @@ export default async function LoginPage() {
           data: {
             whopUserId: whopUser.userId,
             email: whopUser.email || `whop_${whopUser.userId}@catchbarrels.app`,
-            name: whopUser.name || (userRole === 'coach' ? 'Coach' : 'Athlete'),
+            name: whopUser.name || 'Athlete',
             username: `whop_${whopUser.userId}`,
             role: userRole,
-            profileComplete: accessCheck.accessLevel === 'admin', // Admins skip onboarding
+            profileComplete: false,
             membershipTier: 'free',
             membershipStatus: 'active'
           }
@@ -87,18 +87,6 @@ export default async function LoginPage() {
         console.log('[Login Page] New user created:', user.id, 'with role:', user.role);
       } else {
         console.log('[Login Page] Existing user found:', user.id);
-        
-        // Update role if it changed (e.g., customer became admin or vice versa)
-        if (user.role !== userRole) {
-          console.log('[Login Page] Updating user role from', user.role, 'to', userRole);
-          user = await prisma.user.update({
-            where: { id: user.id },
-            data: { 
-              role: userRole,
-              profileComplete: accessCheck.accessLevel === 'admin' ? true : user.profileComplete
-            }
-          });
-        }
       }
 
       // Step 4: Sync Whop membership data
@@ -135,14 +123,8 @@ export default async function LoginPage() {
         // Continue anyway - user can still access
       }
 
-      // Step 5: Redirect to appropriate page
-      console.log('[Login Page] Step 5: Redirecting...');
-      
-      // Admins/coaches go to admin dashboard
-      if (user.role === 'admin' || user.role === 'coach') {
-        console.log('[Login Page] Admin/coach user, redirecting to admin dashboard');
-        redirect('/admin');
-      }
+      // Step 5: Redirect to player dashboard
+      console.log('[Login Page] Step 5: Redirecting to player dashboard...');
       
       // If profile is incomplete, redirect to onboarding
       if (!user.profileComplete) {
@@ -150,7 +132,7 @@ export default async function LoginPage() {
         redirect('/onboarding');
       }
       
-      // Otherwise redirect to player dashboard
+      // Otherwise redirect to dashboard
       console.log('[Login Page] Redirecting to dashboard');
       redirect('/dashboard');
 
