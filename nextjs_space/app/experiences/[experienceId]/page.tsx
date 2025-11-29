@@ -57,27 +57,44 @@ export default async function WhopExperiencePage({ params }: Props) {
     }
 
     console.log('[Whop Experience] Step 3: Finding or creating user...');
+    
+    // Determine user role based on access level
+    const userRole = accessCheck.accessLevel === 'admin' ? 'coach' : 'player';
+    console.log('[Whop Experience] Determined user role:', userRole);
+    
     let user = await prisma.user.findUnique({
       where: { whopUserId: whopUser.userId },
     });
 
     if (!user) {
-      console.log('[Whop Experience] User not found, creating new user...');
+      console.log('[Whop Experience] User not found, creating new user with role:', userRole);
       user = await prisma.user.create({
         data: {
           username: whopUser.email || `whop_${whopUser.userId}`,
           email: whopUser.email || null,
-          name: whopUser.name || null,
+          name: whopUser.name || (userRole === 'coach' ? 'Coach' : null),
           whopUserId: whopUser.userId,
           membershipTier: 'free',
           membershipStatus: 'inactive',
-          profileComplete: false,
-          role: accessCheck.accessLevel === 'admin' ? 'coach' : 'player',
+          profileComplete: accessCheck.accessLevel === 'admin', // Admins skip onboarding
+          role: userRole,
         },
       });
-      console.log('[Whop Experience] New user created with ID:', user.id);
+      console.log('[Whop Experience] New user created with ID:', user.id, 'and role:', user.role);
     } else {
       console.log('[Whop Experience] Existing user found with ID:', user.id);
+      
+      // Update role if it changed (e.g., customer became admin or vice versa)
+      if (user.role !== userRole) {
+        console.log('[Whop Experience] Updating user role from', user.role, 'to', userRole);
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { 
+            role: userRole,
+            profileComplete: accessCheck.accessLevel === 'admin' ? true : user.profileComplete
+          }
+        });
+      }
     }
 
     // Sync memberships
@@ -123,15 +140,23 @@ export default async function WhopExperiencePage({ params }: Props) {
       console.error('[Whop Experience] Error stack:', error instanceof Error ? error.stack : 'No stack');
     }
 
-    console.log('[Whop Experience] Step 5: Checking profile completion...');
+    console.log('[Whop Experience] Step 5: Determining redirect...');
+    console.log('[Whop Experience] User role:', user.role);
     console.log('[Whop Experience] Profile complete:', user.profileComplete);
     
+    // Admins/owners always go directly to dashboard (skip onboarding)
+    if (user.role === 'admin' || user.role === 'coach') {
+      console.log('[Whop Experience] Admin/coach user, redirecting directly to dashboard');
+      redirect(`/experiences/${experienceId}/dashboard`);
+    }
+    
+    // Regular customers check profile completion
     if (!user.profileComplete) {
-      console.log('[Whop Experience] Redirecting to onboarding');
+      console.log('[Whop Experience] Customer with incomplete profile, redirecting to onboarding');
       redirect(`/experiences/${experienceId}/onboarding`);
     }
 
-    console.log('[Whop Experience] Redirecting to dashboard');
+    console.log('[Whop Experience] Customer with complete profile, redirecting to dashboard');
     redirect(`/experiences/${experienceId}/dashboard`);
     
   } catch (error) {

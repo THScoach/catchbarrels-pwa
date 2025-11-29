@@ -60,6 +60,10 @@ export default async function LoginPage() {
 
       console.log('[Login Page] User has access, level:', accessCheck.accessLevel);
 
+      // Determine user role based on access level
+      const userRole = accessCheck.accessLevel === 'admin' ? 'coach' : 'player';
+      console.log('[Login Page] Determined user role:', userRole);
+
       // Step 3: Find or create user in database
       console.log('[Login Page] Step 3: Finding or creating user...');
       let user = await prisma.user.findUnique({
@@ -67,22 +71,34 @@ export default async function LoginPage() {
       });
 
       if (!user) {
-        console.log('[Login Page] User not found, creating new user');
+        console.log('[Login Page] User not found, creating new user with role:', userRole);
         user = await prisma.user.create({
           data: {
             whopUserId: whopUser.userId,
             email: whopUser.email || `whop_${whopUser.userId}@catchbarrels.app`,
-            name: whopUser.name || 'Athlete',
+            name: whopUser.name || (userRole === 'coach' ? 'Coach' : 'Athlete'),
             username: `whop_${whopUser.userId}`,
-            role: 'player',
-            profileComplete: false,
+            role: userRole,
+            profileComplete: accessCheck.accessLevel === 'admin', // Admins skip onboarding
             membershipTier: 'free',
             membershipStatus: 'active'
           }
         });
-        console.log('[Login Page] New user created:', user.id);
+        console.log('[Login Page] New user created:', user.id, 'with role:', user.role);
       } else {
         console.log('[Login Page] Existing user found:', user.id);
+        
+        // Update role if it changed (e.g., customer became admin or vice versa)
+        if (user.role !== userRole) {
+          console.log('[Login Page] Updating user role from', user.role, 'to', userRole);
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: { 
+              role: userRole,
+              profileComplete: accessCheck.accessLevel === 'admin' ? true : user.profileComplete
+            }
+          });
+        }
       }
 
       // Step 4: Sync Whop membership data
@@ -122,13 +138,19 @@ export default async function LoginPage() {
       // Step 5: Redirect to appropriate page
       console.log('[Login Page] Step 5: Redirecting...');
       
+      // Admins/coaches go to admin dashboard
+      if (user.role === 'admin' || user.role === 'coach') {
+        console.log('[Login Page] Admin/coach user, redirecting to admin dashboard');
+        redirect('/admin');
+      }
+      
       // If profile is incomplete, redirect to onboarding
       if (!user.profileComplete) {
         console.log('[Login Page] Profile incomplete, redirecting to onboarding');
         redirect('/onboarding');
       }
       
-      // Otherwise redirect to dashboard
+      // Otherwise redirect to player dashboard
       console.log('[Login Page] Redirecting to dashboard');
       redirect('/dashboard');
 
