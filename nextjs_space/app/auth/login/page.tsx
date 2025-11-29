@@ -134,11 +134,53 @@ export default async function LoginPage() {
 
     } catch (error) {
       console.error('[Login Page] Whop authentication error:', error);
-      // Fall through to show normal login form
+      
+      // NEVER show login form for Whop users - show error instead
+      return (
+        <div className="min-h-screen bg-barrels-black flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-barrels-black-light border border-red-500/20 rounded-lg p-8 text-center">
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            <h1 className="text-2xl font-bold text-white mb-4">
+              Access Issue
+            </h1>
+            
+            <p className="text-gray-300 mb-6">
+              We detected you're trying to access CatchBarrels from Whop, but there was an authentication error.
+            </p>
+            
+            <div className="bg-barrels-black border border-barrels-gold/20 rounded-lg p-4 mb-6 text-left">
+              <p className="text-sm text-gray-400 mb-2">
+                <strong className="text-barrels-gold">What to do:</strong>
+              </p>
+              <ol className="text-sm text-gray-300 space-y-2 list-decimal list-inside">
+                <li>Make sure you have an active CatchBarrels subscription in Whop</li>
+                <li>Try closing and reopening the CatchBarrels app from your Whop dashboard</li>
+                <li>If the issue persists, contact support</li>
+              </ol>
+            </div>
+            
+            <a 
+              href="https://whop.com" 
+              className="inline-block bg-barrels-gold hover:bg-barrels-gold-light text-barrels-black font-semibold px-6 py-3 rounded-lg transition-colors"
+            >
+              Back to Whop
+            </a>
+            
+            <p className="text-xs text-gray-500 mt-6">
+              Error details have been logged for debugging.
+            </p>
+          </div>
+        </div>
+      );
     }
   }
 
-  // Normal login flow - show login form
-  console.log('[Login Page] Showing normal login form');
+  // Normal login flow - show login form (ONLY for direct browser access, not Whop)
+  console.log('[Login Page] Showing normal login form (direct browser access)');
   return <LoginClient />;
 }
