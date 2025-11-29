@@ -80,6 +80,15 @@ export async function checkWhopAccess(
 ): Promise<{ hasAccess: boolean; accessLevel: 'customer' | 'admin' | 'no_access' }> {
   console.log('[Whop Auth] Checking access for userId:', userId, 'experienceId:', experienceId);
   
+  // 🚨 TEMPORARY BYPASS: Grant admin access to all authenticated Whop users
+  console.log('[Whop Auth] ⚠️ ACCESS CHECK BYPASSED - Granting admin access to all Whop users');
+  console.log('[Whop Auth] ✅ Bypassed access check - treating user as admin');
+  return {
+    hasAccess: true,
+    accessLevel: 'admin',
+  };
+  
+  /* ORIGINAL ACCESS CHECK CODE - TEMPORARILY DISABLED
   try {
     const apiKey = process.env.WHOP_API_KEY;
     const companyId = process.env.WHOP_COMPANY_ID;
@@ -163,4 +172,5 @@ export async function checkWhopAccess(
     console.error('[Whop Auth] Error stack:', error instanceof Error ? error.stack : 'No stack');
     return { hasAccess: false, accessLevel: 'no_access' };
   }
+  */
 }
