@@ -17,6 +17,15 @@ export async function middleware(request: NextRequest) {
   // Log all requests for debugging OAuth flow
   console.log('[Middleware] Request:', { pathname, search, method: request.method });
   
+  // ============================================
+  // WHOP APP STORE: Allow experience routes through
+  // These routes handle their own auth via x-whop-user-token header
+  // ============================================
+  if (pathname.startsWith('/experiences/')) {
+    console.log('[Middleware] Whop experience route - allowing through');
+    return NextResponse.next();
+  }
+
   // Public paths that don't require authentication
   const publicPaths = [
     '/auth/login',
