@@ -116,12 +116,13 @@ export async function middleware(request: NextRequest) {
     membershipStatus === 'active' &&
     membershipTier !== 'free';
 
-  // If no product, redirect to purchase page (except for onboarding/profile)
+  // If no product, redirect to purchase page (except for onboarding/profile/purchase-required)
   if (!hasProduct) {
     const exemptPaths = [
       '/onboarding',
       '/profile',
       '/welcome',
+      '/purchase-required', // CRITICAL: Don't redirect purchase-required to itself!
     ];
     
     const isExempt = exemptPaths.some(path => pathname.startsWith(path));
