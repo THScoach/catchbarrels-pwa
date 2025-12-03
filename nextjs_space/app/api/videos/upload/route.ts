@@ -40,19 +40,19 @@ export async function POST(request: NextRequest) {
       // Get start of current week (Sunday 12:01 AM CST)
       // CST is UTC-6 (or UTC-5 during DST)
       const now = new Date();
-      
+
       // Convert to CST (for simplicity, using UTC-6)
       const cstOffset = -6 * 60; // CST is UTC-6
       const cstNow = new Date(now.getTime() + (cstOffset + now.getTimezoneOffset()) * 60000);
-      
+
       // Get Sunday of this week at 00:01 CST
       const dayOfWeek = cstNow.getDay(); // 0 = Sunday, 1 = Monday, etc.
       const daysFromSunday = dayOfWeek; // Days since Sunday
-      
+
       const startOfWeek = new Date(cstNow);
       startOfWeek.setDate(cstNow.getDate() - daysFromSunday);
       startOfWeek.setHours(0, 1, 0, 0); // 12:01 AM
-      
+
       // Convert back to UTC for database comparison
       const startOfWeekUTC = new Date(startOfWeek.getTime() - (cstOffset + now.getTimezoneOffset()) * 60000);
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       if (!canStart.allowed) {
         console.log(`[Video Upload] Session cap reached for user ${userId}: ${canStart.reason}`);
         return NextResponse.json(
-          { 
+          {
             error: 'Session limit reached',
             message: canStart.reason,
             sessionsThisWeek,
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     // Get swing limit for user's tier
     const tierConfig = getTierConfig(user.membershipTier as MembershipTier);
     const swingLimit = tierConfig.swingsPerSession;
-    
+
     console.log(`[Video Upload] User tier: ${user.membershipTier}, Swing limit: ${swingLimit}`);
 
     // Create video record in database
@@ -177,87 +177,35 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Video Upload] Created video ${video.id} with skeleton status PENDING`);
 
-    // Simulate async AI analysis - in production, this would be a background job
-    setTimeout(async () => {
-      try {
-        // Generate main metric scores
-        const anchor = 68 + Math.floor(Math.random() * 25);  // Lower Body
-        const engine = 75 + Math.floor(Math.random() * 20);  // Trunk/Core
-        const whip = 70 + Math.floor(Math.random() * 25);    // Arms & Bat
-        
-        const overall = Math.round((anchor + engine + whip) / 3);
+    console.log(`✅ Video saved to database: ${video.id}`);
+    console.log(`🚀 Triggering analysis for video: ${video.id}`);
 
-        const tier =
-          overall >= 85
-            ? 'Elite'
-            : overall >= 75
-            ? 'Advanced'
-            : overall >= 65
-            ? 'Intermediate'
-            : 'Developing';
+    // Trigger analysis immediately
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://catchbarrels.app';
+    const analysisUrl = `${baseUrl}/api/videos/analyze`;
 
-        // Generate subcategory scores (variations around main scores)
-        const generateSubScores = (mainScore: number) => ({
-          sub1: Math.max(0, Math.min(100, mainScore + Math.floor(Math.random() * 7) - 3)),
-          sub2: Math.max(0, Math.min(100, mainScore + Math.floor(Math.random() * 7) - 3)),
-          sub3: Math.max(0, Math.min(100, mainScore + Math.floor(Math.random() * 7) - 3)),
-          sub4: Math.max(0, Math.min(100, mainScore + Math.floor(Math.random() * 7) - 3)),
-        });
+    console.log(`📡 Calling analysis endpoint: ${analysisUrl}`);
 
-        const anchorSubs = generateSubScores(anchor);
-        const engineSubs = generateSubScores(engine);
-        const whipSubs = generateSubScores(whip);
+    fetch(analysisUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ videoId: video.id }),
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        console.log(`✅ Analysis response:`, data);
+      })
+      .catch((error) => {
+        console.error(`❌ Analysis failed:`, error);
+      });
 
-        const strongestMetric = [
-          { name: 'anchor', score: anchor },
-          { name: 'engine', score: engine },
-          { name: 'whip', score: whip }
-        ].sort((a, b) => b.score - a.score)[0].name;
-        
-        const metricNames: Record<string, string> = {
-          anchor: 'lower body',
-          engine: 'trunk rotation',
-          whip: 'arms and bat path'
-        };
-
-        await prisma.video.update({
-          where: { id: video.id },
-          data: {
-            anchor,
-            engine,
-            whip,
-            overallScore: overall,
-            tier,
-            // Anchor subcategories
-            anchorStance: anchorSubs.sub1,
-            anchorWeightShift: anchorSubs.sub2,
-            anchorGroundConnection: anchorSubs.sub3,
-            anchorLowerBodyMechanics: anchorSubs.sub4,
-            // Engine subcategories
-            engineHipRotation: engineSubs.sub1,
-            engineSeparation: engineSubs.sub2,
-            engineCorePower: engineSubs.sub3,
-            engineTorsoMechanics: engineSubs.sub4,
-            // Whip subcategories
-            whipArmPath: whipSubs.sub1,
-            whipBatSpeed: whipSubs.sub2,
-            whipBatPath: whipSubs.sub3,
-            whipConnection: whipSubs.sub4,
-            exitVelocity: 80 + Math.floor(Math.random() * 20),
-            analyzed: true,
-            coachFeedback: `Nice swing! Your ${metricNames[strongestMetric]} is your strongest component. Keep working on consistency across all three areas.`,
-          },
-        });
-        
-        console.log(`[Video Upload] Analysis complete for video ${video.id}`);
-      } catch (error) {
-        console.error('Error updating video analysis:', error);
-      }
-    }, 5000); // 5 seconds to simulate processing time
+    console.log(`📤 Analysis request sent (non-blocking)`);
 
     // Return video with id at top level for easier client parsing
     return NextResponse.json(
-      { 
+      {
         id: video.id,
         videoId: video.id, // Backwards compatibility
         video,
@@ -267,7 +215,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error('[Video Upload] Error:', error);
-    
+
     // Return more specific error message
     const errorMessage = error?.message || 'Failed to upload video';
     return NextResponse.json(
